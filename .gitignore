@@ -30,6 +30,13 @@
 *.exe
 *.out
 *.app
+
+
+*.log
+*.ilk
+*.pdb
+
+
 CinderProject/
 
 .vs/

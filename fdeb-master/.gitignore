@@ -1,0 +1,5 @@
+release/
+*.pro
+*.pro.user
+*.o
+fdeb

@@ -1,0 +1,5 @@
+﻿  spiderThreeApp.cpp
+D:\Dokumente\Uni\programmieren\cindertesting\spiderThree\src\spiderThreeApp.cpp(62,35): error C2676: binary '[': 'const spiderThreeApp::edge' does not define this operator or a conversion to a type acceptable to the predefined operator
+D:\Dokumente\Uni\programmieren\cindertesting\spiderThree\src\spiderThreeApp.cpp(62,50): error C2676: binary '[': 'const spiderThreeApp::edge' does not define this operator or a conversion to a type acceptable to the predefined operator
+D:\Dokumente\Uni\programmieren\cindertesting\spiderThree\src\spiderThreeApp.cpp(62,62): error C2660: 'spiderThreeApp::linecp': function does not take 2 arguments
+D:\Dokumente\Uni\programmieren\cindertesting\spiderThree\src\spiderThreeApp.cpp(20,7): message : see declaration of 'spiderThreeApp::linecp'

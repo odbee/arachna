@@ -2,6 +2,7 @@
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
 
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -14,7 +15,6 @@ class spiderFourApp : public App {
 	void mouseDrag(MouseEvent event) override;
 	void update() override;
 	void draw() override;
-
 
 	//variables
 	bool l_dragged = false;
@@ -30,23 +30,45 @@ class spiderFourApp : public App {
 		//
 	vec2 closestEdgePointPos1;
 	vec2 closestEdgePointPos2;
+	vec2 cachedEdgePoint;
 
 	//
 	vec2 beampt1;
 	vec2 beampt2;
 
+	struct edge {
+		array<int, 2> endpts;
+		int start;
+		int end;
+		float tension=1;
+	};
+	struct pt {
+		vec2 pos;
+		vector<int> adjacentedges;
+	};
 	//saved arrays
-	vector<vec2> wPoints;
-	vector<array<int, 2>> edgeIndices;
+	vector<pt> wPoints;
+	vector<edge> edgeIndices;
 	
 
 
+
 	//exttra functions
-	string list_edges(vector<array<int, 2>> edgelist);
-	string list_vertices(vector<vec2> vertexlist);
+	string list_edges(vector<edge> edgelist);
+	string list_vertices(vector<pt> vertexlist);
 	vec2 linecp(vec2 start, vec2 end, vec2 point);
-	pair<int, vec2> closestedge(vec2 mousepos, vector<array<int, 2>> edgelist, vector<vec2> veclist);
+	pair<int, vec2> closestedge(vec2 mousepos, vector<edge> edgelist, vector<pt> veclist);
 	pair<vec2, vec2> line_line_pts(vec2 a0, vec2 a1, vec2 b0, vec2 b1);
+	pair<vector<pt>, vector<edge>> animate(vector<pt> vertexlist, vector<edge> edgelist) {
+		vector<pt> copyverts = vertexlist;
+		int counter = 0;
+		for (const pt& point : vertexlist) {
+
+			//copyverts[counter]=point+
+			counter++;
+		}
+		return make_pair(vertexlist, edgelist);
+	};
 };
 
 void spiderFourApp::setup()
@@ -58,7 +80,7 @@ void spiderFourApp::mouseDown( MouseEvent event )
 	// add point when click left
 	if (event.isLeft())
 	{
-		wPoints.push_back(event.getPos());
+		wPoints.push_back({ event.getPos() });
 	}
 
 	// connect two edges when push right
@@ -72,16 +94,21 @@ void spiderFourApp::mouseDown( MouseEvent event )
 		closestEdgeIndex = result.first;
 		closestp = result.second;
 		console() << closestp[0] << endl;
-
-
+		cachedEdgePoint= closestp;
+		
 		// cache closest edge point position
-		closestEdgePointPos1 = wPoints[edgeIndices[closestEdgeIndex][0]];
-		closestEdgePointPos2 = wPoints[edgeIndices[closestEdgeIndex][1]];
+		closestEdgePointPos1 = wPoints[edgeIndices[closestEdgeIndex].endpts[0]].pos;
+		closestEdgePointPos2 = wPoints[edgeIndices[closestEdgeIndex].endpts[1]].pos;
 
-		// add the closestpoint to the vertices and connect the edge to it
-		wPoints.push_back(closestp);
-		edgeIndices.push_back({ (int)wPoints.size() - 1, edgeIndices[closestEdgeIndex][1] });
-		edgeIndices[closestEdgeIndex][1] = (int)wPoints.size() - 1;
+		// add the closestpoint to the vertices 
+		wPoints.push_back({ closestp });
+		//connect new point to old edge 1
+		edgeIndices.push_back(edge{ { (int)wPoints.size() - 1, edgeIndices[closestEdgeIndex].endpts[1]} ,1 });
+		wPoints[(int)wPoints.size() - 1].adjacentedges.push_back(edgeIndices.size() - 1);
+		wPoints[edgeIndices[closestEdgeIndex].endpts[1]].adjacentedges.push_back(edgeIndices.size() - 1);
+		// replace other edge with new point
+		edgeIndices[closestEdgeIndex].endpts[1] = (int)wPoints.size() - 1;
+
 	}
 
 }
@@ -99,21 +126,32 @@ void spiderFourApp::mouseDrag(MouseEvent event)
 		r_dragged = true;
 		mousefollower = event.getPos();
 		//reset point position every frame
-		wPoints.back()= linecp(closestEdgePointPos1, closestEdgePointPos2, mousefollower);
+		wPoints.back().pos= cachedEdgePoint;
 		//move point towards mouse
-		wPoints.back() += (mousefollower - wPoints.back()) * 0.2f;
+		wPoints.back().pos += (mousefollower - wPoints.back().pos) * 0.2f;
 		//look for closest edge
 		
 		
 		pair<int, vec2> result = closestedge(mousefollower, edgeIndices, wPoints);
-		
+		float restlength1 = length(cachedEdgePoint - closestEdgePointPos1);
+		float restlength2 = length(cachedEdgePoint - closestEdgePointPos2);
+
+		float tenselength1 = length(wPoints.back().pos - closestEdgePointPos1);
+		float tenselength2 = length(wPoints.back().pos - closestEdgePointPos2);
+
+		edgeIndices[closestEdgeIndex].tension =  tenselength1 /restlength1;
+		edgeIndices[edgeIndices.size() - 1].tension = tenselength2 /restlength2;
+
 		closestEdgeIndex2=result.first;
 		secondfollower = result.second;
 
-		pair<vec2, vec2> res= line_line_pts(closestEdgePointPos1,closestEdgePointPos2,wPoints[edgeIndices[closestEdgeIndex2][0]], wPoints[edgeIndices[closestEdgeIndex2][1]]);
+		//pair<vec2, vec2> res= line_line_pts(closestEdgePointPos1,closestEdgePointPos2,wPoints[edgeIndices[closestEdgeIndex2][0]], wPoints[edgeIndices[closestEdgeIndex2][1]]);
 
-		beampt1 = res.first;
-		beampt2 = res.second;
+		//beampt1 = res.first;
+		//beampt2 = res.second;
+
+		
+
 	}
 }
 
@@ -121,30 +159,44 @@ void spiderFourApp::mouseUp(MouseEvent event)
 {
 	if (event.isLeft())
 	{
-		wPoints.push_back(event.getPos());
+		wPoints.push_back({ event.getPos() });
 		int wps = wPoints.size();
-		edgeIndices.push_back({ wps-2,wps-1});
+		edgeIndices.push_back(edge{ {wps - 2,wps - 1} });
 		l_dragged = false;
 	}
 
 	if (event.isRight()) {
 		//add mouse point to list
-		wPoints.push_back(mousefollower);
+		wPoints.push_back({ secondfollower });
+		wPoints.back().pos = wPoints.back().pos + (wPoints[(int)wPoints.size() - 2].pos-wPoints.back().pos)*0.2f;
 		// connect closest edge to mouse point
-		edgeIndices.push_back({ (int)wPoints.size() - 2,(int)wPoints.size() - 1 });
-		edgeIndices.push_back({ (int)wPoints.size() - 1, edgeIndices[closestEdgeIndex2][1] });
-		edgeIndices[closestEdgeIndex2][1] = (int)wPoints.size() - 1;
+		edgeIndices.push_back(edge{{ (int)wPoints.size() - 2,(int)wPoints.size() - 1 }});
+		edgeIndices.push_back(edge{ { (int)wPoints.size() - 1, edgeIndices[closestEdgeIndex2].endpts[1] } });
+
+		float restlength1 = length(secondfollower - wPoints[edgeIndices[closestEdgeIndex2].endpts[0]].pos);
+		float restlength2 = length(secondfollower - wPoints[edgeIndices[closestEdgeIndex2].endpts[1]].pos);
+
+		float tenselength1 = length(wPoints.back().pos - wPoints[edgeIndices[closestEdgeIndex2].endpts[0]].pos);
+		float tenselength2 = length(wPoints.back().pos - wPoints[edgeIndices[closestEdgeIndex2].endpts[1]].pos);
+
+		edgeIndices[closestEdgeIndex2].tension = tenselength1/ restlength1;
+		edgeIndices[edgeIndices.size() - 1].tension = tenselength2/restlength2;
+
+		
+		edgeIndices[closestEdgeIndex2].endpts[1] = (int)wPoints.size() - 1;
 		r_dragged = false;
 
 	}
 	console() << list_edges(edgeIndices) << endl;
-	console() << list_vertices(wPoints) << wPoints.size() <<  endl;
+	//console() << list_vertices(wPoints) << wPoints.size() <<  endl;
 }
 
 
 void spiderFourApp::update()
 {
-	//console() << "mosh" << "  " << "mosh" << endl;
+	if (!(l_dragged && r_dragged)) {
+		animate(wPoints, edgeIndices);
+	}
 }
 
 void spiderFourApp::draw()
@@ -152,26 +204,31 @@ void spiderFourApp::draw()
 	gl::clear( Color( 0, 0, 0 ) ); 
 	gl::color(1.0f, 1.f, 1.0f, 1.0f);
 	//draw points
-	for (const vec2& point : wPoints) {
-		gl::drawSolidCircle(point, 2.0f);
+	for (const pt& point : wPoints) {
+		gl::drawSolidCircle(point.pos, 2.0f);
+		gl::drawString(to_string((int)point.pos[0]) + "," + to_string((int)point.pos[1]), point.pos);
 	}
 	//draw edges
-	for (const std::array<int, 2>&arr : edgeIndices) {
-		gl::drawLine(wPoints[arr[0]], wPoints[arr[1]]);
+	for (const edge&arr : edgeIndices) {
+		gl::drawLine(wPoints[arr.endpts[0]].pos, wPoints[arr.endpts[1]].pos);
+
+		vec2 cpoint = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f;
+		gl::drawString(to_string(arr.tension), cpoint);
+
 	}
 
 	//realtime draw
 	gl::color(1.0f, 1.0f, 1.0f, 0.4f);
 	if (l_dragged) {
 		gl::drawSolidCircle(mousefollower, 4.0f);
-		gl::drawLine(wPoints.back(), mousefollower);
+		gl::drawLine(wPoints.back().pos, mousefollower);
 	}
 	if (r_dragged) {
 		gl::drawSolidCircle(secondfollower, 4.0f);
-		gl::drawLine(mousefollower, wPoints.back());
+		gl::drawLine(mousefollower, wPoints.back().pos);
 		if (!edgeIndices.empty()) {
-			gl::drawLine(wPoints[edgeIndices[closestEdgeIndex2][0]], mousefollower);
-			gl::drawLine(wPoints[edgeIndices[closestEdgeIndex2][1]], mousefollower);
+			gl::drawLine(wPoints[edgeIndices[closestEdgeIndex2].endpts[0]].pos, mousefollower);
+			gl::drawLine(wPoints[edgeIndices[closestEdgeIndex2].endpts[1]].pos, mousefollower);
 		}
 
 		gl::color(0.0f, 1.0f, 1.0f, 1.0f);
@@ -196,14 +253,14 @@ vec2 spiderFourApp::linecp(vec2 start, vec2 end, vec2 point) {
 	else	return  start + t * ab;
 }
 
-pair<int, vec2> spiderFourApp::closestedge(vec2 mousepos, vector<array<int, 2>> edgelist, vector<vec2> veclist) {
+pair<int, vec2> spiderFourApp::closestedge(vec2 mousepos, vector<edge> edgelist, vector<pt> veclist) {
 	float curdist = 100000000000000.0f;
 	vec2 closestp;
 	int counter = 0;
 	int referencer;
-	for (const std::array<int, 2>&arr : edgelist)
+	for (const edge&arr : edgelist)
 	{
-		vec2 distp = linecp(veclist[arr[0]], veclist[arr[1]], mousepos);
+		vec2 distp = linecp(veclist[arr.endpts[0]].pos, veclist[arr.endpts[1]].pos, mousepos);
 		float dist = distance(distp, mousepos);
 		if (dist < curdist)
 		{
@@ -218,13 +275,14 @@ pair<int, vec2> spiderFourApp::closestedge(vec2 mousepos, vector<array<int, 2>> 
 
 }
 
-string spiderFourApp::list_edges(vector<array<int, 2>> edgelist) {
+string spiderFourApp::list_edges(vector<edge> edgelist) {
 	ostringstream oss;
 	
 	oss << "list of edges: ";
-	for (const std::array<int, 2>&arr : edgelist) {
+	oss << "{";
+	for (const edge&arr : edgelist) {
 		
-		oss <<  "[" << arr[0] << "," << arr[1] << "]" << "  ";
+		oss << "[" << arr.endpts[0] << "," << arr.endpts[1] << "]" << "," << arr.tension << "   ";
 		/*outstring += (arr[0]);
 		outstring += ",";
 		outstring += arr[1];
@@ -232,17 +290,17 @@ string spiderFourApp::list_edges(vector<array<int, 2>> edgelist) {
 
 	
 	}
-	oss << endl;
+	oss << "}" << endl;
 	//outstring += "\n";
 	return oss.str();
 }
 
-string spiderFourApp::list_vertices(vector<vec2> vertexlist) {
+string spiderFourApp::list_vertices(vector<pt> vertexlist) {
 	ostringstream oss;
 	oss << "list of vertices: ";
-	for (const vec2& arr : vertexlist) {
+	for (const pt& arr : vertexlist) {
 
-		oss << "[" << arr[0] << "," << arr[1] << "]" << "  ";
+		oss << "[" << arr.pos[0] << "," << arr.pos[1]<< "]" << "  ";
 	}
 	oss << endl;
 
@@ -320,5 +378,6 @@ pair<vec2, vec2> spiderFourApp::line_line_pts(vec2 a0, vec2 a1, vec2 b0, vec2 b1
 	return make_pair(A, B);
 
 }
+
 
 CINDER_APP( spiderFourApp, RendererGl )

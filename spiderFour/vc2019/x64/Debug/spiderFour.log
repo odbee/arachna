@@ -1,3 +1,5 @@
 ﻿  spiderFourApp.cpp
-D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\src\spiderFourApp.cpp(89,27): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\src\spiderFourApp.cpp(159,27): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\src\spiderFourApp.cpp(368,16): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\src\spiderFourApp.cpp(369,16): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   spiderFour.vcxproj -> D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\x64\Debug\spiderFour.exe

@@ -40,3 +40,6 @@
 CinderProject/
 
 .vs/
+*.ilk
+*.log
+*.pdb

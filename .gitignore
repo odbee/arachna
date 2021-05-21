@@ -38,7 +38,7 @@
 
 
 CinderProject/
-
+Debug/
 .vs/
 *.ilk
 *.log

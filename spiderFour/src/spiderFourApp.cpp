@@ -3,8 +3,6 @@
 #include "cinder/gl/gl.h"
 #include "spiderprimitives.h"
 
-
-
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -22,20 +20,10 @@ class spiderFourApp : public App {
 	bool r_dragged = false;
 	vec2 mousefollower=vec2(-100.0f,-40.0f);
 	vec2 secondfollower = vec2(-100.0f, -40.0f);
-
-		//reference distance
-	float refdist = 100000000.0f;
-	int closestEdgeIndex;
-	int closestEdgeIndex2;
-
-		//
-	vec2 closestEdgePointPos1;
-	vec2 closestEdgePointPos2;
 	vec2 cachedEdgePoint;
 
 	//saved arrays
 	vector<pt> wPoints;
-
 	edgeList edges;
 	
 };
@@ -131,7 +119,6 @@ void spiderFourApp::draw()
 	//draw points
 	for (const pt& point : wPoints) {
 		gl::drawSolidCircle(point.pos, 2.0f);
-		//gl::drawString(to_string((int)point.pos[0]) + "," + to_string((int)point.pos[1]), point.pos);
 	}
 	//draw edges
 	for (const edge&arr : edges.edgeIndices) {
@@ -139,10 +126,10 @@ void spiderFourApp::draw()
 
 		vec2 cpoint = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f;
 		vec2 c2point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f+vec2(0.0f,10.0f);
-
-		gl::drawString(to_string((int)arr.restlength), cpoint);
-		gl::drawString(to_string((int)arr.currentlength), c2point);
-
+		vec2 c3point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f + vec2(0.0f, 20.0f);
+		gl::drawString(to_string((float)arr.restlength), cpoint);
+		gl::drawString(to_string((float)arr.currentlength), c2point);
+		gl::drawString(to_string((float)arr.currentlength-arr.restlength), c3point);
 
 	}
 

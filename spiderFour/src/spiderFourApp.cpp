@@ -35,10 +35,17 @@ void spiderFourApp::setup()
 
 void spiderFourApp::mouseDown( MouseEvent event )
 {
+
+	// testign::
+	if (event.isMiddle()) {
+		bool ok = edges.detect_cycles(edges.edgeIndices[0]);
+		console() << ok << endl;
+	}
+	
 	// add point when click left
 	if (event.isLeft())
 	{
-		wPoints.push_back({ event.getPos() });
+		wPoints.push_back({ event.getPos(),true });
 	}
 
 	// connect two edges when push right
@@ -86,7 +93,7 @@ void spiderFourApp::mouseUp(MouseEvent event)
 {
 	if (event.isLeft())
 	{
-		wPoints.push_back({ event.getPos() });
+		wPoints.push_back({ event.getPos(),true });
 		edges.push_back((int)wPoints.size() - 2,(int)wPoints.size() - 1);
 		l_dragged = false;
 	}
@@ -100,15 +107,16 @@ void spiderFourApp::mouseUp(MouseEvent event)
 		r_dragged = false;
 
 	}
-	console() << list_edges(edges.edgeIndices) << endl;
+	//console() << list_edges(edges.edgeIndices) << endl;
 	//console() << list_vertices(wPoints) << wPoints.size() <<  endl;
 }
 
 
 void spiderFourApp::update()
 {
-	if (!(l_dragged && r_dragged)) {
-		animate(wPoints, edges.edgeIndices);
+	if (!l_dragged && !r_dragged) {
+		wPoints=animate(wPoints, edges);
+		edges.recompute_currentlength();
 	}
 }
 
@@ -124,12 +132,12 @@ void spiderFourApp::draw()
 	for (const edge&arr : edges.edgeIndices) {
 		gl::drawLine(wPoints[arr.endpts[0]].pos, wPoints[arr.endpts[1]].pos);
 
-		vec2 cpoint = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f;
-		vec2 c2point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f+vec2(0.0f,10.0f);
-		vec2 c3point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f + vec2(0.0f, 20.0f);
-		gl::drawString(to_string((float)arr.restlength), cpoint);
-		gl::drawString(to_string((float)arr.currentlength), c2point);
-		gl::drawString(to_string((float)arr.currentlength-arr.restlength), c3point);
+		//vec2 cpoint = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f;
+		//vec2 c2point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f+vec2(0.0f,10.0f);
+		//vec2 c3point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f + vec2(0.0f, 20.0f);
+		//gl::drawString(to_string((float)arr.restlength), cpoint);
+		//gl::drawString(to_string((float)arr.currentlength), c2point);
+		//gl::drawString(to_string((float)arr.currentlength-arr.restlength), c3point);
 
 	}
 
@@ -150,7 +158,4 @@ void spiderFourApp::draw()
 
 	}
 }
-
-
-
 CINDER_APP( spiderFourApp, RendererGl )

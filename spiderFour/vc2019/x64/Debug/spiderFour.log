@@ -1,5 +1,2 @@
 ﻿  spiderprimitives.cpp
-D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\spiderprimitives.cpp(151,66): error C2572: 'edgeList::push_back_tense': redefinition of default argument: parameter 1
-D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\spiderprimitives.h(34): message : see declaration of 'edgeList::push_back_tense'
-D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\spiderprimitives.cpp(151,84): error C2572: 'edgeList::push_back_tense': redefinition of default argument: parameter 2
-D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\spiderprimitives.h(34): message : see declaration of 'edgeList::push_back_tense'
+  spiderFour.vcxproj -> D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\x64\Debug\spiderFour.exe

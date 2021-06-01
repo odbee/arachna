@@ -12,9 +12,19 @@ struct edge {
 	array<int, 2> endpts;
 	float restlength;
 	float currentlength;
+	bool isCyclic;
 };
-struct pt {
-	vec2 pos;
+class pt {
+	public:
+		vec2 pos;
+		bool isfixed = false;
+		vec2 movevec;
+};
+
+class pointList {
+	public:
+		vector<pt> wPoints;
+
 };
 
 class edgeList {
@@ -33,13 +43,16 @@ class edgeList {
 		void push_back(int ind1, int ind2);
 		void push_back_tense(int ind1, int ind2, float restl = 0, float tensel = 0);
 		void set_cachedpoints(int i);
+		void recompute_currentlength();
+		bool detect_cycles(edge e);
+		list<int> getAdjacent(int pindex);
 
 };
 
 
 
 vector<edge> connect_point_with_edge(int pointindex, int edgeindex, vector<edge> edgelist);
-void animate(vector<pt> vertexlist, vector<edge> edgelist);
+vector<pt> animate(vector<pt> vertexlist,edgeList edgelist);
 vec2 linecp(vec2 start, vec2 end, vec2 point);
 pair<int, vec2> closestedge(vec2 mousepos, vector<edge> edgelist, vector<pt> veclist);
 int nClosestEdge(vec2 *mousepos, vector<edge> edgelist, vector<pt> veclist);

@@ -7,6 +7,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+#define RELAXMULT  0.9f
+
 class spiderFourApp : public App {
   public:
 	void setup() override;

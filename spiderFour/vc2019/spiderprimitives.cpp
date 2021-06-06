@@ -3,6 +3,7 @@
 #include "cinder/gl/gl.h"
 #include "spiderprimitives.h"
 
+#define RELAXMULT  0.5f
 
 
 vector<edge> connect_point_with_edge(int pointindex, int edgeindex, vector<edge> edgelist) {
@@ -154,7 +155,7 @@ void edgeList::nconnect_point_with_edge(int pointindex, int edgeindex,vec2 cache
 
 	edgeIndices[edgeindex].endpts[1] = pointindex;
 	edgeIndices[edgeindex].currentlength = currlength2;
-	edgeIndices[edgeindex].restlength = restlength2;
+	edgeIndices[edgeindex].restlength = RELAXMULT* restlength2;
 
 
 }
@@ -173,12 +174,12 @@ void edgeList::set_cachedpoints(int i) {
 }
 
 void edgeList::push_back_tense(int ind1, int ind2, float restl, float tensel) {
-	edgeIndices.push_back(edge{ {ind1, ind2},restl,tensel });
+	edgeIndices.push_back(edge{ {ind1, ind2},restl*RELAXMULT,tensel });
 }
 
 void edgeList::push_back(int ind1, int ind2) {
 	edgeIndices.push_back(edge{ {ind1, ind2},
-	distance(pointlist->at(ind1).pos,pointlist->at(ind2).pos)
+	RELAXMULT*distance(pointlist->at(ind1).pos,pointlist->at(ind2).pos)
 		});
 	edgeIndices.back().currentlength = edgeIndices.back().restlength;
 };

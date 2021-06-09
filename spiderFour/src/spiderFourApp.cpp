@@ -13,6 +13,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+
 #define RELAXMULT  0.9f
 
 class spiderFourApp : public App {
@@ -44,7 +45,27 @@ class spiderFourApp : public App {
 	vector<pt> wPoints;
 	edgeList edges;
 	void autoRun();
-	
+	const int V = 5;
+
+
+	struct EdgeProperties
+	{
+		EdgeProperties(const std::string& n) : name(n) {}
+		std::string name;
+	};
+
+	struct VertexProperties
+	{
+		std::size_t index;
+		bool isfixed;
+		vec2 pos;
+		boost::default_color_type color;
+	};
+
+
+	typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS,VertexProperties,EdgeProperties> Graph;
+	const int N = 7;
+	Graph g;
 };
 
 void spiderFourApp::setup()
@@ -57,6 +78,9 @@ void spiderFourApp::setup()
 	mParams.addParam("detectIndex", &detectIndex);
 	mParams.addButton("check if closed", bind(&spiderFourApp::computeClosed, this));
 	edges.pointlist = &wPoints;
+
+	
+	
 }
 
 void spiderFourApp::computeClosed() {
@@ -78,6 +102,7 @@ void spiderFourApp::mouseDown( MouseEvent event )
 	if (event.isLeft())
 	{
 		wPoints.push_back({ event.getPos(),true });
+		auto a = boost::add_vertex(g); g[a].isfixed = true; g[a].pos = event.getPos();
 	}
 
 	// connect two edges when push right

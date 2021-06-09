@@ -1,7 +1,13 @@
 #include "cinder/app/App.h"
 #include "cinder/app/RendererGl.h"
 #include "cinder/gl/gl.h"
+#include "cinder/params/Params.h"
 #include "spiderprimitives.h"
+
+
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/graph_utility.hpp>
+#include <boost/property_map/property_map.hpp>
 
 using namespace ci;
 using namespace ci::app;
@@ -11,12 +17,22 @@ using namespace std;
 
 class spiderFourApp : public App {
   public:
+	params::InterfaceGl mParams;
+	int detectIndex=0;
+	bool toggleIndices = false;
+	bool toggleEdgeIndices = false;
+
+	bool toggleTension = false;
+
+
 	void setup() override;
 	void mouseDown( MouseEvent event ) override;
 	void mouseUp(MouseEvent event) override;
 	void mouseDrag(MouseEvent event) override;
 	void update() override;
 	void draw() override;
+
+	void computeClosed();
 	//variables
 	bool l_dragged = false;
 	bool r_dragged = false;
@@ -27,22 +43,36 @@ class spiderFourApp : public App {
 	//saved arrays
 	vector<pt> wPoints;
 	edgeList edges;
+	void autoRun();
 	
 };
 
 void spiderFourApp::setup()
 {
+	mParams = params::InterfaceGl("Parameters", ivec2(400, 100));
+	mParams.addParam("Draw Point Indices", &toggleIndices);
+	mParams.addParam("Draw Edge Indices", &toggleEdgeIndices);
+
+	mParams.addParam("Write Tension", &toggleTension);
+	mParams.addParam("detectIndex", &detectIndex);
+	mParams.addButton("check if closed", bind(&spiderFourApp::computeClosed, this));
 	edges.pointlist = &wPoints;
+}
+
+void spiderFourApp::computeClosed() {
+	bool ok = edges.detect_cycles(edges.edgeIndices[detectIndex]);
+	console() << ok << endl;
+}
+
+void spiderFourApp::autoRun() {
+
 }
 
 void spiderFourApp::mouseDown( MouseEvent event )
 {
 
 	// testign::
-	if (event.isMiddle()) {
-		bool ok = edges.detect_cycles(edges.edgeIndices[0]);
-		console() << ok << endl;
-	}
+
 	
 	// add point when click left
 	if (event.isLeft())
@@ -127,12 +157,26 @@ void spiderFourApp::draw()
 	gl::clear( Color( 0, 0, 0 ) ); 
 	gl::color(1.0f, 1.f, 1.0f, 1.0f);
 	//draw points
+	int ind =0;
 	for (const pt& point : wPoints) {
 		gl::drawSolidCircle(point.pos, 2.0f);
+		if (toggleIndices) {
+			gl::drawString(to_string(ind), point.pos);
+		}
+		ind++;
 	}
+	ind = 0;
 	//draw edges
 	for (const edge&arr : edges.edgeIndices) {
 		gl::drawLine(wPoints[arr.endpts[0]].pos, wPoints[arr.endpts[1]].pos);
+		if (toggleTension) {
+			vec2 c3point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f + vec2(0.0f, 20.0f);
+			gl::drawString(to_string((float)arr.currentlength - arr.restlength), c3point);
+		}
+		if (toggleEdgeIndices) {
+			vec2 c3point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f + vec2(0.0f, 20.0f);
+			gl::drawString(to_string(ind), c3point);
+		}
 
 		//vec2 cpoint = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f;
 		//vec2 c2point = wPoints[arr.endpts[0]].pos + (wPoints[arr.endpts[1]].pos - wPoints[arr.endpts[0]].pos) * 0.5f+vec2(0.0f,10.0f);
@@ -140,7 +184,7 @@ void spiderFourApp::draw()
 		//gl::drawString(to_string((float)arr.restlength), cpoint);
 		//gl::drawString(to_string((float)arr.currentlength), c2point);
 		//gl::drawString(to_string((float)arr.currentlength-arr.restlength), c3point);
-
+		ind++;
 	}
 
 	//realtime draw
@@ -159,5 +203,6 @@ void spiderFourApp::draw()
 		gl::color(0.0f, 1.0f, 1.0f, 1.0f);
 
 	}
+	mParams.draw();
 }
 CINDER_APP( spiderFourApp, RendererGl )

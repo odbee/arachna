@@ -1,2 +1,3 @@
-﻿  spiderprimitives.cpp
+﻿  spiderFourApp.cpp
+C:\libs\boost_1_76_0\boost\detail\iterator.hpp(13): message : This header is deprecated. Use <iterator> instead.
   spiderFour.vcxproj -> D:\Dokumente\Uni\programmieren\cindertesting\spiderFour\vc2019\x64\Debug\spiderFour.exe

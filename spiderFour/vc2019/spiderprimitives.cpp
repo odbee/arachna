@@ -204,36 +204,45 @@ bool edgeList::detect_cycles(edge e) {
 	}
 	// Create a queue for BFS
 	list<int> queue;
-	
+	vector<vector<int>> logger;
+
 	visited[e.endpts[0]] = 0;
 
 
 	queue.push_back(e.endpts[0]);
+	vector<int> v1;
+	v1.clear();
 
 	list<int>::iterator i;
 	int s;
 
 	while (!queue.empty())
 	{
+		console() << "queue:{";
+		for (auto v : queue)
+			console() << v << " ";
+		console() << "}";
 		// Dequeue a vertex from queue and print it
 		s = queue.front();
-		console()<< "queue item:" << s << " ";
+		visited[s] = 1;
+		//console()<< "(" << s << ")";
 		queue.pop_front();
 		list<int> adj = getAdjacent(s);
+		console() << "[";
 		for (i = adj.begin(); i != adj.end(); ++i)
 		{
-			console() << "adj" << s << " ";
-			
+			if (visited[*i] == 0) {
+				console() << "xx" << *i << "xx";
+				e.isCyclic = true;
+			}
+			console() << *i << " ";
 			if (visited[*i]==-1)
 			{
 				visited[*i] = 0;
 				queue.push_back(*i);
 			}
-			if (visited[*i] == 0) {
-				e.isCyclic = true;
-			}
-
 		}
+		console() << "]";
 	}
 	return e.isCyclic;
 }

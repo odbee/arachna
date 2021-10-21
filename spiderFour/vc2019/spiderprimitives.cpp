@@ -3,7 +3,7 @@
 #include "cinder/gl/gl.h"
 #include "spiderprimitives.h"
 
-#define RELAXMULT  0.5f
+#define RELAXMULT  0.9f
 
 
 vector<edge> connect_point_with_edge(int pointindex, int edgeindex, vector<edge> edgelist) {

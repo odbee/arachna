@@ -46,25 +46,22 @@ class spiderFourApp : public App {
 	edgeList edges;
 	void autoRun();
 	const int V = 5;
-
-
+	size_t startv,endv, start2v,end2v;
+	
+	
 	struct EdgeProperties
 	{
-		EdgeProperties(const std::string& n) : name(n) {}
-		std::string name;
+		float restlength;
+		float currentlength;
 	};
-
 	struct VertexProperties
 	{
-		std::size_t index;
 		bool isfixed;
 		vec2 pos;
-		boost::default_color_type color;
 	};
 
 
 	typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS,VertexProperties,EdgeProperties> Graph;
-	const int N = 7;
 	Graph g;
 };
 
@@ -102,7 +99,9 @@ void spiderFourApp::mouseDown( MouseEvent event )
 	if (event.isLeft())
 	{
 		wPoints.push_back({ event.getPos(),true });
-		auto a = boost::add_vertex(g); g[a].isfixed = true; g[a].pos = event.getPos();
+
+		startv = boost::add_vertex({ false, event.getPos() }, g);
+
 	}
 
 	// connect two edges when push right
@@ -114,6 +113,7 @@ void spiderFourApp::mouseDown( MouseEvent event )
 		edges.cachedProjectedPt1 = cachedEdgePoint;
 		edges.set_cachedpoints(edges.ce1i);
 		wPoints.push_back({ mousefollower });
+
 		//connect new point to old edge 1
 		edges.nconnect_point_with_edge((int)wPoints.size() - 1, edges.ce1i,edges.cachedProjectedPt1);
 
@@ -151,8 +151,15 @@ void spiderFourApp::mouseUp(MouseEvent event)
 	if (event.isLeft())
 	{
 		wPoints.push_back({ event.getPos(),true });
+		
+		endv = boost::add_vertex(g); g[endv].isfixed = true; g[endv].pos = event.getPos();
+		
+		float dst =distance(g[startv].pos, g[endv].pos);
+		auto e = boost::add_edge(startv, endv, { dst,dst }, g);
+		
 		edges.push_back((int)wPoints.size() - 2,(int)wPoints.size() - 1);
 		l_dragged = false;
+
 	}
 
 	if (event.isRight()) {

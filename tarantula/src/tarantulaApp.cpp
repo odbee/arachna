@@ -79,7 +79,7 @@ void tarantulaApp::draw()
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
 		{	
-			mWirePlane->draw();
+			//mWirePlane->draw();
 			drawGraph(&g, projection, viewport);
 		}
 	}

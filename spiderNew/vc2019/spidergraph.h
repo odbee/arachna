@@ -8,6 +8,10 @@
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
 
+using namespace ci;
+using namespace ci::app;
+using namespace std;
+
 struct EdgeProperties
 {
 	float restlength;

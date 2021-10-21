@@ -3,12 +3,13 @@
 #include "cinder/gl/gl.h"
 #include "cinder/CameraUi.h"
 #include "cinder/params/Params.h"
-#include "spiderprimitives.h"
+
 #include "spidergraph.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
+
 
 using namespace ci;
 using namespace ci::app;

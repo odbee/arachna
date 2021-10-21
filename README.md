@@ -8,4 +8,4 @@ my research on algorithmic creation of spiderwebs. first experiments were two di
   * copying real spiders
 * tracking the last edge created
 * cycle tracking in graph
-
+* parallelisation!!!

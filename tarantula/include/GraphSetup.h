@@ -126,8 +126,8 @@ void addRandomEdge(Graph* g, float rc) {
 	position[e2] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
 	//set position of edge point 2 from random point on edge
 	connectAB(g, e1, e2, rc);
-	connectAB(g, e1, source(*ei, *g), rc);
-	connectAB(g, e1, target(*ei, *g), rc);
+	connectAB(g, e2, source(*ei, *g), rc);
+	connectAB(g, e2, target(*ei, *g), rc);
 	connectAB(g, e1, source(*eii, *g), rc);
 	connectAB(g, e1, target(*eii, *g), rc);
 	boost::remove_edge(*eii, *g);

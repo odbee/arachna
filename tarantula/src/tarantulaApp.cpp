@@ -10,6 +10,11 @@
 #include <boost/property_map/property_map.hpp>
 #include <udgcd.hpp>
 #include <typeinfo>
+#include "cinder/Log.h"
+#include "cinder/Text.h"
+#include "cinder/Unicode.h"
+#include "cinder/gl/Texture.h"
+
 
 using namespace ci;
 using namespace ci::app;
@@ -20,6 +25,7 @@ public:
 	void setup() override;
 	void update() override;
 	void draw() override;
+	void render();
 	//void mouseDown(MouseEvent event) override;
 	void keyDown(KeyEvent event) override;
 	CameraPersp		mCamera;
@@ -29,7 +35,10 @@ private:
 	float relaxc = 0.8f;
 	bool hasCycle=false;
 	std::vector<std::vector<size_t>> cycles;
-
+	string				mText;
+	gl::TextureRef		mTextTexture;
+	vec2				mSize;
+	Font				mFont;
 };
 
 
@@ -46,15 +55,36 @@ void tarantulaApp::setup()
 	}
 	//			END CAMERA SETUP
 
+	mText = "h";
+
+#if defined( CINDER_COCOA )
+	mFont = Font("Cochin-Italic", 32);
+#else
+	mFont = Font("Times New Roman", 24);
+#endif
+	mSize = vec2(300, 100);
+	render();
 
 	setInitialWeb(&g, relaxc);
 }
+
+void tarantulaApp::render()
+{
+	TextBox tbox = TextBox().alignment(TextBox::LEFT).font(mFont).size(ivec2(mSize.x, TextBox::GROW)).text(mText);
+	tbox.setColor(Color(1.0f, 0.65f, 0.35f));
+	tbox.setBackgroundColor(ColorA(0.5, 0, 0, 1));
+	ivec2 sz = tbox.measure();
+	mTextTexture = gl::Texture2d::create(tbox.render());
+}
+
+
 
 void tarantulaApp::keyDown(KeyEvent event) {
 	console() << ":" << event.getCode() << ":" << endl;
 	if (event.getCode() == 99) {
 		//addRandomEdge(&g, relaxc);
-		addRandomCyclicEdge(&g, relaxc, &cycles);
+		addRandomCyclicEdge(&g, relaxc, &cycles,mText);
+		
 		if (hasCycle==false)
 		{
 			cycles = udgcd::findCycles<Graph, vertex_t>(g);
@@ -62,9 +92,11 @@ void tarantulaApp::keyDown(KeyEvent event) {
 			hasCycle = cycles.size();
 			if (hasCycle) {
 				addCyclesToVertices(&g, cycles);
+				udgcd::printPaths(console(), cycles);
 			}
+
 		}
-		udgcd::printPaths(console(),cycles);
+		//udgcd::printPaths(console(),cycles);
 		
 	}
 	if (event.getCode() == 107) {
@@ -78,7 +110,7 @@ void tarantulaApp::keyDown(KeyEvent event) {
 	if (event.getChar() == 'p') {
 		console() << hasCycle << endl;
 	}
-
+	render();
 }
 void tarantulaApp::update()
 {
@@ -103,8 +135,11 @@ void tarantulaApp::draw()
 		{	
 			//mWirePlane->draw();
 			drawGraph(&g, projection, viewport);
+			
 		}
 	}
+	if (mTextTexture)
+		gl::draw(mTextTexture);
 	//			END CAMERA DRAW
 }
 CINDER_APP(tarantulaApp, RendererGl)

@@ -6,12 +6,14 @@
 #include "GraphSetup.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
+#include <boost/graph/breadth_first_search.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <udgcd.hpp>
+#include <typeinfo>
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
-
 
 class tarantulaApp : public App {
 public:
@@ -25,7 +27,11 @@ private:
 	gl::BatchRef		mWirePlane;
 	CameraUi			mCamUi;
 	float relaxc = 0.8f;
+	bool hasCycle=false;
+	std::vector<std::vector<size_t>> cycles;
+
 };
+
 
 void tarantulaApp::setup()
 {
@@ -47,14 +53,30 @@ void tarantulaApp::setup()
 void tarantulaApp::keyDown(KeyEvent event) {
 	console() << ":" << event.getCode() << ":" << endl;
 	if (event.getCode() == 99) {
-		addRandomEdge(&g, relaxc);
+		//addRandomEdge(&g, relaxc);
+		addRandomCyclicEdge(&g, relaxc, &cycles);
+		if (hasCycle==false)
+		{
+			cycles = udgcd::findCycles<Graph, vertex_t>(g);
+			cycles[0];
+			hasCycle = cycles.size();
+			if (hasCycle) {
+				addCyclesToVertices(&g, cycles);
+			}
+		}
+		udgcd::printPaths(console(),cycles);
+		
 	}
-	if (event.getChar() == 'k') {
+	if (event.getCode() == 107) {
 		for (int i = 0; i < 100; i++)
 		{
 			addRandomEdge(&g, relaxc);
 		}
 		
+	}
+
+	if (event.getChar() == 'p') {
+		console() << hasCycle << endl;
 	}
 
 }
@@ -75,7 +97,7 @@ void tarantulaApp::draw()
 		int w = getWindowWidth();
 		int h = getWindowHeight();
 		vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
-		drawPoints(&g, projection, viewport, false);
+		drawPoints(&g, projection, viewport);
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
 		{	

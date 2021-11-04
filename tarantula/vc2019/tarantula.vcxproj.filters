@@ -34,6 +34,9 @@
     <ClInclude Include="..\include\GraphSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\udgcd.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc">

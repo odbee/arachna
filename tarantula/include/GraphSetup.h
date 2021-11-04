@@ -10,6 +10,8 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <udgcd.hpp>
+
 
 using namespace ci;
 using namespace ci::app;
@@ -27,15 +29,17 @@ struct VertexProperties
 	bool isfixed;
 	vec3 pos;
 	vec3 movevec;
+	std::vector<size_t> cycles;
 };
-typedef boost::adjacency_list<boost::listS,
-	boost::listS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
+typedef boost::adjacency_list<boost::vecS,
+	boost::vecS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
 Graph g;
 
 
 boost::property_map< Graph, vec3 VertexProperties::* >::type position = boost::get(&VertexProperties::pos, g);
 boost::property_map< Graph, bool VertexProperties::* >::type fixedBool = boost::get(&VertexProperties::isfixed, g);
 boost::property_map< Graph, vec3 VertexProperties::* >::type moveVecPm = boost::get(&VertexProperties::movevec, g);
+boost::property_map< Graph, std::vector<size_t> VertexProperties::* >::type cyclesPm = boost::get(&VertexProperties::cycles, g);
 
 
 boost::property_map< Graph, float EdgeProperties::* >::type currentLengthPm = boost::get(&EdgeProperties::currentlength, g);
@@ -44,6 +48,9 @@ boost::property_map< Graph, float EdgeProperties::* >::type restLengthPm = boost
 
 boost::graph_traits<Graph>::edge_iterator ei, eiend;
 boost::graph_traits< Graph >::vertex_iterator vi, viend;
+typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+
+typedef Graph::edge_descriptor edge_t;
 
 void connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc) {
 	float dd = distance(position[endPointA], position[endPointB]);
@@ -53,6 +60,23 @@ void connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descr
 	return;
 }
 
+edge_t my_find_edge(vertex_t v, vertex_t u, Graph const& g)
+{
+	for (auto e : boost::make_iterator_range(out_edges(v, g))) {
+		if (target(e, g) == u)
+			return e;
+	}
+	throw std::domain_error("my_find_edge: not found");
+}
+
+string getCyclesString(std::vector<size_t> cycleslist) {
+	string outtext;
+	for (const auto& elem : cycleslist) {
+		outtext.append(to_string(elem) + "  ");
+
+	}
+	return outtext;
+}
 
 void setInitialWeb(Graph* g,float rc) {
 	auto a = boost::add_vertex(*g);
@@ -80,6 +104,14 @@ void setInitialWeb(Graph* g,float rc) {
 	connectAB(g, c, d, rc);
 	connectAB(g, e, d, rc);
 
+}
+
+void addCyclesToVertices(Graph* g, std::vector<std::vector<size_t>> cycles) {
+	for (int i = 0; i < cycles.size(); i++)
+	{
+		for (const auto& elem : cycles[i])
+			cyclesPm[elem].push_back(i);
+	}
 }
 
 void addRandomEdge(Graph* g, float rc) {
@@ -133,6 +165,153 @@ void addRandomEdge(Graph* g, float rc) {
 	boost::remove_edge(*eii, *g);
 	boost::remove_edge(*ei, *g);
 }
+
+
+//https://stackoverflow.com/questions/5225820/compare-two-vectors-c
+// rethink usage of const vector<size_t>
+vector<size_t> compareVectors(const vector<size_t> vec1, const vector<size_t> vec2) {
+	std::set<size_t> s1(vec1.begin(), vec1.end());
+	std::set<size_t> s2(vec2.begin(), vec2.end());
+	std::vector<size_t> v3;
+	std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(v3));
+	return v3;
+}
+
+
+void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
+	tie(ei, eiend) = boost::edges(*g);
+	
+	int iteratorLength = 0;
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		iteratorLength++;
+	}
+	auto itlen =std::distance(ei,eiend);
+	auto e1 = boost::add_vertex(*g);
+	fixedBool[e1] = false;
+	auto e2 = boost::add_vertex(*g);
+	fixedBool[e2] = false;
+	//created 2 points
+
+	ei = boost::edges(*g).first;
+	auto randiter = rand() % iteratorLength;
+	for (size_t i = 0; i < randiter; i++)
+	{
+		ei++;
+	}
+	//gotten iterator from random iterator 1
+
+	vector<size_t> adjacentCycles= compareVectors(cyclesPm[source(*ei, *g)], cyclesPm[target(*ei, *g)]);
+
+	auto eii = ei;
+	auto tp1 = position[source(*ei, *g)];
+	auto tp2 = position[target(*ei, *g)];
+	size_t firstInd= source(*ei, *g);
+	const size_t secondInd = target(*ei, *g);
+
+	position[e1] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+	// taken positions of edge points from iterator edge
+	int seconditer;
+	edge_t edgedesci;
+
+	if (adjacentCycles.size()) {
+
+		//zwischen hier
+		int whichAdjacentCycle = rand() % (adjacentCycles.size());
+		size_t cycleIndex = adjacentCycles[whichAdjacentCycle];
+		vector<size_t> currentcycle= cycs->at(cycleIndex);
+
+		auto p = std::find(currentcycle.begin(), currentcycle.end(), firstInd);
+		auto q = std::find(currentcycle.begin(), currentcycle.end(), secondInd);
+		auto cyclesize= currentcycle.size();
+
+		if (p + 1 == q) {
+			rotate(currentcycle.begin(), q, currentcycle.end());
+		}
+		else if (q + 1 == p) {
+			rotate(currentcycle.begin(), q, currentcycle.end());
+		}
+
+		int randomIndexinCycle = (rand() % (currentcycle.size() - 2)) +1;
+		
+		size_t vertexIndex1 = currentcycle[randomIndexinCycle];
+		size_t vertexIndex2 = currentcycle[randomIndexinCycle+1];
+		// und hier
+		
+		vector<size_t> left(currentcycle.begin(), currentcycle.begin() + randomIndexinCycle);
+		vector<size_t> right(currentcycle.begin() + randomIndexinCycle, currentcycle.end());
+		cycs->at(0) = left;
+		cycs->push_back(right);
+		size_t lastindex = cycs->size() - 1;
+
+		std::replace(cyclesPm[firstInd].begin(), cyclesPm[firstInd].end(),cycleIndex,lastindex);
+		std::replace(cyclesPm[randomIndexinCycle].begin(), cyclesPm[randomIndexinCycle].end(), cycleIndex, lastindex);
+		cyclesPm[e1].push_back(cycleIndex);
+		cyclesPm[e1].push_back(lastindex);
+		cyclesPm[e2].push_back(cycleIndex);
+		cyclesPm[e2].push_back(lastindex);
+		//if (p + 1 == q) {
+		//	std::replace(cyclesPm[firstInd].begin(), cyclesPm[firstInd].end(), cycleIndex, lastindex);
+		//	std::replace(cyclesPm[randomIndexinCycle].begin(), cyclesPm[randomIndexinCycle].end(), cycleIndex, lastindex);
+
+		//	cycs[cycleIndex].push_back();
+		//	cycs[cycleIndex].push_back();
+		//	cycs[lastindex].push_back();
+		//	cycs[lastindex].push_back();
+		//}
+		//else if (q + 1 == p) {
+		//	std::replace(cyclesPm[firstInd].begin(), cyclesPm[firstInd].end(), cycleIndex, lastindex);
+		//	std::replace(cyclesPm[randomIndexinCycle].begin(), cyclesPm[randomIndexinCycle].end(), cycleIndex, lastindex);
+
+		//	cycs[cycleIndex].push_back();
+		//	cycs[cycleIndex].push_back();
+		//	cycs[lastindex].push_back();
+		//	cycs[lastindex].push_back();
+		//}
+		//cycs[cycleIndex].push_back();
+		//cycs[cycleIndex].push_back();
+		//cycs[lastindex].push_back();
+		//cycs[lastindex].push_back();
+
+
+		edgedesci = my_find_edge(vertexIndex1, vertexIndex2, *g);
+
+
+	}
+	else {
+		seconditer = rand() % iteratorLength;
+		position[e1] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+		//set position of edge point 1 from random point on edge
+
+		while (randiter == seconditer)
+		{
+			seconditer = rand() % iteratorLength;
+		}
+		ei = boost::edges(*g).first;
+
+		for (size_t i = 0; i < seconditer; i++)
+		{
+			ei++;
+		}
+		edgedesci = *ei;
+	}
+
+
+
+	//gotten iterator from random iterator 2 
+	tp1 = position[source(edgedesci, *g)];
+	tp2 = position[target(edgedesci, *g)];
+	position[e2] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+	//set position of edge point 2 from random point on edge
+	connectAB(g, e1, e2, rc);
+	connectAB(g, e2, source(edgedesci, *g), rc);
+	connectAB(g, e2, target(edgedesci, *g), rc);
+	connectAB(g, e1, source(*eii, *g), rc);
+	connectAB(g, e1, target(*eii, *g), rc);
+	boost::remove_edge(*eii, *g);
+	boost::remove_edge(edgedesci, *g);
+}
+
+
 void relaxPhysics(Graph* g) {
 	float k = 1.1f;
 	float eps = 0.1f;
@@ -164,7 +343,7 @@ void relaxPhysics(Graph* g) {
 		currentLengthPm[*ei] = distance(position[v1], position[v2]);
 	}
 }
-void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers = true, bool drawVertexPoints = true) {
+void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers = false, bool drawVertexPoints = false, bool drawCycleList= true) {
 	
 	if (drawNumbers) {
 		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
@@ -184,8 +363,21 @@ void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers = true, bool d
 			//console() << position[*vi].x << " , " << position[*vi].y << " , " << position[*vi].z << endl;
 		}
 	}
-	
+
+	if (drawCycleList)
+	{
+		for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
+
+			gl::drawStrokedCube(position[*vi], vec3(0.2f, 0.2f, 0.2f));
+			vec2 anchorp1 = glm::project(position[*vi], mat4(), proj, viewp);
+			
+			gl::drawString(getCyclesString(cyclesPm[*vi]), anchorp1);
+
+			//console() << position[*vi].x << " , " << position[*vi].y << " , " << position[*vi].z << endl;
+		}
+	}
 }
+
 void drawGraph(Graph *g, mat4 proj, vec4 viewp) {
 	gl::ScopedColor color(Color::gray(0.2f));
 	gl::color(1.0f, 1.0f, 1.0f, 0.8f);
@@ -193,4 +385,6 @@ void drawGraph(Graph *g, mat4 proj, vec4 viewp) {
 		gl::drawLine(position[boost::source(*ei, *g)], position[boost::target(*ei, *g)]);
 	}
 }
+
+
 #endif // GRAPHSETUP

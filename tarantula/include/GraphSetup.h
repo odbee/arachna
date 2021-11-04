@@ -120,10 +120,10 @@ void addRandomEdge(Graph* g, float rc) {
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
 		iteratorLength++;
 	}
-	auto e1 = boost::add_vertex(*g);
-	fixedBool[e1] = false;
-	auto e2 = boost::add_vertex(*g);
-	fixedBool[e2]= false;
+	auto v_insert1 = boost::add_vertex(*g);
+	fixedBool[v_insert1] = false;
+	auto v_insert2 = boost::add_vertex(*g);
+	fixedBool[v_insert2]= false;
 	//created 2 points
 
 	ei = boost::edges(*g).first;
@@ -135,11 +135,11 @@ void addRandomEdge(Graph* g, float rc) {
 	//gotten iterator from random iterator 1
 	
 	auto eii = ei;
-	auto tp1 = position[source(*ei, *g)];
-	auto tp2 = position[target(*ei, *g)];
+	auto p_edgeVertex1 = position[source(*ei, *g)];
+	auto p_edgeVertex2 = position[target(*ei, *g)];
 	// taken positions of edge points from iterator edge
 	auto randiter2 = rand() % iteratorLength;
-	position[e1]= tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+	position[v_insert1]= p_edgeVertex1 + (p_edgeVertex2 - p_edgeVertex1) * float(float(rand() % 1000) / 1000);
 	//set position of edge point 1 from random point on edge
 	while (randiter == randiter2)
 	{
@@ -153,15 +153,15 @@ void addRandomEdge(Graph* g, float rc) {
 	}
 
 	//gotten iterator from random iterator 2 
-	tp1 = position[source(*ei, *g)];
-	tp2 = position[target(*ei, *g)];
-	position[e2] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+	p_edgeVertex1 = position[source(*ei, *g)];
+	p_edgeVertex2 = position[target(*ei, *g)];
+	position[v_insert2] = p_edgeVertex1 + (p_edgeVertex2 - p_edgeVertex1) * float(float(rand() % 1000) / 1000);
 	//set position of edge point 2 from random point on edge
-	connectAB(g, e1, e2, rc);
-	connectAB(g, e2, source(*ei, *g), rc);
-	connectAB(g, e2, target(*ei, *g), rc);
-	connectAB(g, e1, source(*eii, *g), rc);
-	connectAB(g, e1, target(*eii, *g), rc);
+	connectAB(g, v_insert1, v_insert2, rc);
+	connectAB(g, v_insert2, source(*ei, *g), rc);
+	connectAB(g, v_insert2, target(*ei, *g), rc);
+	connectAB(g, v_insert1, source(*eii, *g), rc);
+	connectAB(g, v_insert1, target(*eii, *g), rc);
 	boost::remove_edge(*eii, *g);
 	boost::remove_edge(*ei, *g);
 }
@@ -184,34 +184,32 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 	int iteratorLength = 0;
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
 		iteratorLength++;
-	}
-	auto itlen =std::distance(ei,eiend);
-	auto e1 = boost::add_vertex(*g);
-	fixedBool[e1] = false;
-	auto e2 = boost::add_vertex(*g);
-	fixedBool[e2] = false;
+	auto v_insert1 = boost::add_vertex(*g);
+	fixedBool[v_insert1] = false;
+	auto v_insert2 = boost::add_vertex(*g);
+	fixedBool[v_insert2] = false;
 	//created 2 points
 
-	ei = boost::edges(*g).first;
+	auto e_startEdge = boost::edges(*g).first;
 	auto randiter = rand() % iteratorLength;
 	for (size_t i = 0; i < randiter; i++)
 	{
-		ei++;
+		e_startEdge++;
 	}
 	//gotten iterator from random iterator 1
 
 	vector<size_t> adjacentCycles= compareVectors(cyclesPm[source(*ei, *g)], cyclesPm[target(*ei, *g)]);
 
-	auto eii = ei;
-	auto tp1 = position[source(*ei, *g)];
-	auto tp2 = position[target(*ei, *g)];
-	size_t firstInd= source(*ei, *g);
-	const size_t secondInd = target(*ei, *g);
+	auto eii = e_startEdge;
+	auto p_edgeVertex1 = position[source(*e_startEdge, *g)];
+	auto p_edgeVertex2 = position[target(*e_startEdge, *g)];
+	size_t i_firstVertexIndex= source(*e_startEdge, *g);
+	size_t i_secondVertexIndex = target(*e_startEdge, *g);
 
-	position[e1] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+	position[v_insert1] = p_edgeVertex1 + (p_edgeVertex2 - p_edgeVertex1) * float(float(rand() % 1000) / 1000);
 	// taken positions of edge points from iterator edge
 	int seconditer;
-	edge_t edgedesci;
+	edge_t e_goalEdge;
 
 	if (adjacentCycles.size()) {
 
@@ -220,8 +218,8 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		size_t cycleIndex = adjacentCycles[whichAdjacentCycle];
 		vector<size_t> currentcycle= cycs->at(cycleIndex);
 
-		auto p = std::find(currentcycle.begin(), currentcycle.end(), firstInd);
-		auto q = std::find(currentcycle.begin(), currentcycle.end(), secondInd);
+		auto p = std::find(currentcycle.begin(), currentcycle.end(), i_firstVertexIndex);
+		auto q = std::find(currentcycle.begin(), currentcycle.end(), i_secondVertexIndex);
 		auto cyclesize= currentcycle.size();
 
 		if (p + 1 == q) {
@@ -243,14 +241,14 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		cycs->push_back(right);
 		size_t lastindex = cycs->size() - 1;
 
-		std::replace(cyclesPm[firstInd].begin(), cyclesPm[firstInd].end(),cycleIndex,lastindex);
+		std::replace(cyclesPm[i_firstVertexIndex].begin(), cyclesPm[i_firstVertexIndex].end(),cycleIndex,lastindex);
 		std::replace(cyclesPm[randomIndexinCycle].begin(), cyclesPm[randomIndexinCycle].end(), cycleIndex, lastindex);
-		cyclesPm[e1].push_back(cycleIndex);
-		cyclesPm[e1].push_back(lastindex);
-		cyclesPm[e2].push_back(cycleIndex);
-		cyclesPm[e2].push_back(lastindex);
+		cyclesPm[v_insert1].push_back(cycleIndex);
+		cyclesPm[v_insert1].push_back(lastindex);
+		cyclesPm[v_insert2].push_back(cycleIndex);
+		cyclesPm[v_insert2].push_back(lastindex);
 		//if (p + 1 == q) {
-		//	std::replace(cyclesPm[firstInd].begin(), cyclesPm[firstInd].end(), cycleIndex, lastindex);
+		//	std::replace(cyclesPm[i_firstVertexIndex].begin(), cyclesPm[i_firstVertexIndex].end(), cycleIndex, lastindex);
 		//	std::replace(cyclesPm[randomIndexinCycle].begin(), cyclesPm[randomIndexinCycle].end(), cycleIndex, lastindex);
 
 		//	cycs[cycleIndex].push_back();
@@ -259,7 +257,7 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		//	cycs[lastindex].push_back();
 		//}
 		//else if (q + 1 == p) {
-		//	std::replace(cyclesPm[firstInd].begin(), cyclesPm[firstInd].end(), cycleIndex, lastindex);
+		//	std::replace(cyclesPm[i_firstVertexIndex].begin(), cyclesPm[i_firstVertexIndex].end(), cycleIndex, lastindex);
 		//	std::replace(cyclesPm[randomIndexinCycle].begin(), cyclesPm[randomIndexinCycle].end(), cycleIndex, lastindex);
 
 		//	cycs[cycleIndex].push_back();
@@ -273,13 +271,13 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		//cycs[lastindex].push_back();
 
 
-		edgedesci = my_find_edge(vertexIndex1, vertexIndex2, *g);
+		e_goalEdge = my_find_edge(vertexIndex1, vertexIndex2, *g);
 
 
 	}
 	else {
 		seconditer = rand() % iteratorLength;
-		position[e1] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+		position[v_insert1] = p_edgeVertex1 + (p_edgeVertex2 - p_edgeVertex1) * float(float(rand() % 1000) / 1000);
 		//set position of edge point 1 from random point on edge
 
 		while (randiter == seconditer)
@@ -292,23 +290,23 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		{
 			ei++;
 		}
-		edgedesci = *ei;
+		e_goalEdge = *ei;
 	}
 
 
 
 	//gotten iterator from random iterator 2 
-	tp1 = position[source(edgedesci, *g)];
-	tp2 = position[target(edgedesci, *g)];
-	position[e2] = tp1 + (tp2 - tp1) * float(float(rand() % 1000) / 1000);
+	p_edgeVertex1 = position[source(e_goalEdge, *g)];
+	p_edgeVertex2 = position[target(e_goalEdge, *g)];
+	position[v_insert2] = p_edgeVertex1 + (p_edgeVertex2 - p_edgeVertex1) * float(float(rand() % 1000) / 1000);
 	//set position of edge point 2 from random point on edge
-	connectAB(g, e1, e2, rc);
-	connectAB(g, e2, source(edgedesci, *g), rc);
-	connectAB(g, e2, target(edgedesci, *g), rc);
-	connectAB(g, e1, source(*eii, *g), rc);
-	connectAB(g, e1, target(*eii, *g), rc);
+	connectAB(g, v_insert1, v_insert2, rc);
+	connectAB(g, v_insert2, source(e_goalEdge, *g), rc);
+	connectAB(g, v_insert2, target(e_goalEdge, *g), rc);
+	connectAB(g, v_insert1, source(*eii, *g), rc);
+	connectAB(g, v_insert1, target(*eii, *g), rc);
 	boost::remove_edge(*eii, *g);
-	boost::remove_edge(edgedesci, *g);
+	boost::remove_edge(e_goalEdge, *g);
 }
 
 

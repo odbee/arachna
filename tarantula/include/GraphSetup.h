@@ -35,6 +35,7 @@ struct VertexProperties
 	vec3 movevec;
 	std::vector<size_t> cycles;
 };
+
 typedef boost::adjacency_list<boost::vecS,
 	boost::vecS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
 Graph g;
@@ -85,16 +86,16 @@ void connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descr
 	return;
 }
 
-edge_t my_find_edge(vertex_t v, vertex_t u, Graph const& g)
+edge_t GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g)
 {
 	for (auto e : boost::make_iterator_range(out_edges(v, g))) {
 		if (target(e, g) == u)
 			return e;
 	}
-	throw std::domain_error("my_find_edge: not found");
+	throw std::domain_error("edgeFromItsVerts: not found");
 }
 
-string getCyclesString(std::vector<size_t> cycleslist) {
+string stringfromCyclesShort(std::vector<size_t> cycleslist) {
 	string outtext;
 	for (const auto& elem : cycleslist) {
 		outtext.append(to_string(elem) + "  ");
@@ -194,7 +195,7 @@ void addRandomEdge(Graph* g, float rc) {
 
 //https://stackoverflow.com/questions/5225820/compare-two-vectors-c
 // rethink usage of const vector<size_t>
-vector<size_t> compareVectors(const vector<size_t> vec1, const vector<size_t> vec2) {
+vector<size_t> compareVectorsReturnIntersection(const vector<size_t> vec1, const vector<size_t> vec2) {
 	std::set<size_t> s1(vec1.begin(), vec1.end());
 	std::set<size_t> s2(vec2.begin(), vec2.end());
 	std::vector<size_t> v3;
@@ -216,9 +217,7 @@ std::pair<edge_ti, int> getRandomEdge(Graph* g) {
 	return make_pair(ei_startEdge, randiter);
 }
 
-void splitCyclesAtIndexAndPushBacksecondHalf(std::vector<std::vector<size_t>>* cycles) {
 
-}
 
 void hello() {
 	console() << hello;
@@ -237,7 +236,7 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 	tie(ei_startEdge, randiter) = getRandomEdge(g);
 	//gotten iterator from random iterator 1
 
-	vector<size_t> commonCyclesStartEdge= compareVectors(cyclesPm[source(*ei_startEdge, *g)], cyclesPm[target(*ei_startEdge, *g)]);
+	vector<size_t> commonCyclesStartEdge= compareVectorsReturnIntersection(cyclesPm[source(*ei_startEdge, *g)], cyclesPm[target(*ei_startEdge, *g)]);
 	
 	auto p_edgeVertex1 = position[source(*ei_startEdge, *g)];
 	auto p_edgeVertex2 = position[target(*ei_startEdge, *g)];
@@ -270,7 +269,7 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		size_t i_goal1VertexIndex = currentcycle[randomIndexinCycle];
 		size_t i_goal2VertexIndex = currentcycle[randomIndexinCycle + 1];
 		// get vetex indices
-		vector<size_t> commonCyclesGoalEdge = compareVectors(cyclesPm[i_goal1VertexIndex], cyclesPm[i_goal1VertexIndex]);
+		vector<size_t> commonCyclesGoalEdge = compareVectorsReturnIntersection(cyclesPm[i_goal1VertexIndex], cyclesPm[i_goal1VertexIndex]);
 
 		vector<size_t> left(currentcycle.begin(), currentcycle.begin() + randomIndexinCycle+1);
 		vector<size_t> right(currentcycle.begin() + randomIndexinCycle+1, currentcycle.end());
@@ -297,7 +296,7 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		cyclesPm[vd_insert1].insert(cyclesPm[vd_insert1].end(), { cycleIndex, lastindex });
 		cyclesPm[vd_insert2].insert(cyclesPm[vd_insert2].end(), { cycleIndex, lastindex });
 
-		ed_goalEdge = my_find_edge(i_goal1VertexIndex, i_goal2VertexIndex, *g);
+		ed_goalEdge = GetEdgeFromItsVerts(i_goal1VertexIndex, i_goal2VertexIndex, *g);
 		// TODO ADD INTERSECTION VERTEX TO ALL INTERSECTED CYCLES
 		for (const auto& cycle : commonCyclesGoalEdge) {
 			if (cycle!= cycleIndex)
@@ -443,7 +442,7 @@ void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers = false, bool 
 			
 			gl::drawString(to_string(*vi), anchorp1, Color::white(), Font("Times New Roman", 20));
 			vec2 offset = vec2(0.0f, 22.0f);
-			gl::drawString(getCyclesString(cyclesPm[*vi]), anchorp1+offset, Color::hex(0xFF0000), Font("Times New Roman", 20));
+			gl::drawString(stringfromCyclesShort(cyclesPm[*vi]), anchorp1+offset, Color::hex(0xFF0000), Font("Times New Roman", 20));
 
 			//console() << position[*vi].x << " , " << position[*vi].y << " , " << position[*vi].z << endl;
 		}

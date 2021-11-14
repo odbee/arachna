@@ -134,7 +134,7 @@ void setInitialWeb(Graph* g, float rc) {
 	cycles.push_back({ b,c,d });
 	cycles.push_back({ b,e,d });
 	cycles.push_back({ c,e,d });
-
+	addCyclesToVertices(g, cycles);
 
 
 

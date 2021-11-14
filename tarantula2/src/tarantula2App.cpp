@@ -36,7 +36,7 @@ class tarantula2App : public App {
 private:
 	gl::BatchRef		mWirePlane;
 	CameraUi			mCamUi;
-	float relaxc = 0.8f;
+	float relaxc = 0.3f;
 	bool hasCycle = false;
 
 

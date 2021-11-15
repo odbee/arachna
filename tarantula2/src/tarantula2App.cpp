@@ -37,7 +37,13 @@ private:
 	gl::BatchRef		mWirePlane;
 	CameraUi			mCamUi;
 	float relaxc = 0.3f;
-	bool hasCycle = false;
+	bool hasCycle = false;	
+	int	mName=0;
+	bool mDrawVertices=false;
+	bool mDrawNumbers = false;
+	bool mDrawVertexInfo = false;
+	bool colorEdges = false;
+
 
 
 };
@@ -56,15 +62,9 @@ void tarantula2App::setup()
 	}
 	//			END CAMERA SETUP
 
-	mText = "h";
 
-#if defined( CINDER_COCOA )
-	mFont = Font("Cochin-Italic", 32);
-#else
-	mFont = Font("Times New Roman", 24);
-#endif
-	mSize = vec2(300, 100);
-	render();
+	ImGui::Initialize();
+
 
 	setInitialWeb(&g, relaxc);
 }
@@ -73,8 +73,8 @@ void tarantula2App::keyDown( KeyEvent event )
 {
 	if (event.getCode() == 99) { // "c"
 		//addRandomEdge(&g, relaxc);
-		addRandomCyclicEdge(&g, relaxc, &cycles, mText);
-
+		addRandomCyclicEdge(&g, relaxc, &cycles);
+		//console() << stringfromCycles(cycles) << endl;
 
 
 		//if (hasCycle == false) // find cycles every time it has no cycles
@@ -90,20 +90,12 @@ void tarantula2App::keyDown( KeyEvent event )
 		//udgcd::printPaths(console(),cycles);
 
 	}
+
+
 	if (event.getCode() == 107) {
-
-		addRandomCyclicEdge(&g, relaxc, &cycles, mText);
-		cycles = udgcd::findCycles<Graph, vertex_t>(g);
-		emptyCyclesFromVertices(&g);
-		addCyclesToVertices(&g, cycles);
-		//udgcd::printPaths(console(),cycles);
-
+		console() << stringfromCycles(cycles) << endl;
 	}
 
-	if (event.getChar() == 'p') {
-		console() << hasCycle << endl;
-	}
-	render();
 }
 
 void tarantula2App::update()
@@ -115,6 +107,13 @@ void tarantula2App::update()
 
 void tarantula2App::draw()
 {
+	ImGui::InputInt("cycle number", &mName);
+	ImGui::Checkbox("Draw Vertices", &mDrawVertices);
+	ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
+	ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
+	ImGui::Checkbox("Color Edges", &colorEdges);
+
+
 	gl::clear( Color( 0, 0, 0 ) ); 
 	//gl::clear(Color::gray(0.5f));
 	gl::color(1.0f, 1.0f, 1.0f, 0.5f);
@@ -125,16 +124,17 @@ void tarantula2App::draw()
 		int w = getWindowWidth();
 		int h = getWindowHeight();
 		vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
-		drawPoints(&g, projection, viewport, false,false, false);
+
+		drawPoints(&g, projection, viewport, mDrawNumbers, mDrawVertices, mDrawVertexInfo);
+		drawCycle(&g, projection, viewport, cycles, mName);
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
 		{
 			//mWirePlane->draw();
-			drawGraph(&g, projection, viewport);
+			drawGraph(&g, projection, viewport, colorEdges);
+			drawCycleEdges(&g, projection, viewport, cycles, mName);
 		}
 	}
-	if (mTextTexture)
-		gl::draw(mTextTexture);
 	//			END CAMERA DRAW
 }
 

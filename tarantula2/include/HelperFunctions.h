@@ -33,12 +33,19 @@ string stringfromCyclesShort(std::vector<size_t> cycleslist) {
 
 
 
-void connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc) {
+edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind =0, bool isforbidden=false) {
 	float dd = distance(position[endPointA], position[endPointB]);
-	Graph::edge_descriptor edge = boost::add_edge(endPointA, endPointB, *g).first;
+	edge_t edge = boost::add_edge(endPointA, endPointB, *g).first;
 	currentLengthPm[edge] = dd;
 	restLengthPm[edge] = dd * rc;
-	return;
+	forbiddenPm[edge] = isforbidden;
+	if (ind == 0) {
+		indexPm[edge] = ++GLOBALINT;
+	}
+	else {
+		indexPm[edge] = ind;
+	}
+	return edge;
 }
 
 edge_t GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g)
@@ -79,14 +86,28 @@ vector<size_t> compareVectorsReturnIntersection(const vector<size_t> vec1, const
 std::pair<edge_ti, int> getRandomEdge(Graph* g) {
 	tie(ei, eiend) = boost::edges(*g);
 	int iteratorLength = 0;
+	int randiter;
+	bool isforbidden = true;
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei)
 		iteratorLength++;
+
 	auto ei_startEdge = boost::edges(*g).first;
-	auto randiter = rand() % iteratorLength;
-	for (size_t i = 0; i < randiter; i++)
+	
+	while (isforbidden)
 	{
-		ei_startEdge++;
+		ei_startEdge = boost::edges(*g).first;
+		randiter = rand() % iteratorLength;
+
+		for (size_t i = 0; i < randiter; i++)
+		{
+			ei_startEdge++;
+		}
+
+		isforbidden=forbiddenPm[*ei_startEdge];
+		//isforbidden = false;
 	}
+	
+
 	return make_pair(ei_startEdge, randiter);
 }
 
@@ -112,19 +133,18 @@ void setInitialWeb(Graph* g, float rc) {
 
 
 	connectAB(g, a, d, rc);
-	connectAB(g, a, b, rc);
-	connectAB(g, a, c, rc);
-	connectAB(g, a, e, rc);
-
-
-
+	
+	cache_edge = connectAB(g, a, b, rc, 0, true);
+	cache_edge = connectAB(g, a, c, rc, 0, true);
+	cache_edge = connectAB(g, a, e, rc, 0, true);
 
 	connectAB(g, b, d, rc);
-	connectAB(g, b, c, rc);
-	connectAB(g, b, e, rc);
+	cache_edge = connectAB(g, b, c, rc,0, true);
+	cache_edge = connectAB(g, b, e, rc, 0, true);
 
 	connectAB(g, c, d, rc);
-	connectAB(g, c, e, rc);
+	cache_edge = connectAB(g, c, e, rc, 0, true);
+	
 
 	connectAB(g, e, d, rc);
 	
@@ -142,4 +162,14 @@ void setInitialWeb(Graph* g, float rc) {
 
 vec3 interpolateBetweenPoints(vec3 point1, vec3 point2, float t) {
 	return point1 + (point2 - point1) * t;
+}
+
+Color getColorFromInt(int val) {
+	float r = sin(val)/2+.5;
+	float g = (cos(val))/2+0.5;
+	float b = sin(2* val) + cos(val) / 2/2+.5 ;
+
+	//console() << "r " << r << "g  " << g << "b " << b << endl;
+
+	return Color( r,g,b);
 }

@@ -8,6 +8,7 @@
 #include "cinder/Text.h"
 #include "cinder/Unicode.h"
 #include "cinder/gl/Texture.h"
+#include "cinder/CinderImGui.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
@@ -18,10 +19,15 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+
+int GLOBALINT = 1;
+
 struct EdgeProperties
 {
 	float restlength;
 	float currentlength;
+	int index;
+	bool isforbidden;
 };
 
 struct VertexProperties
@@ -32,6 +38,11 @@ struct VertexProperties
 	vec3 movevec;
 	std::vector<size_t> cycles;
 };
+
+struct GraphProperties {
+	int currentindex;
+};
+
 
 typedef boost::adjacency_list<boost::vecS,
 	boost::vecS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
@@ -46,6 +57,9 @@ boost::property_map< Graph, std::vector<size_t> VertexProperties::* >::type cycl
 
 boost::property_map< Graph, float EdgeProperties::* >::type currentLengthPm = boost::get(&EdgeProperties::currentlength, g);
 boost::property_map< Graph, float EdgeProperties::* >::type restLengthPm = boost::get(&EdgeProperties::restlength, g);
+boost::property_map< Graph, int EdgeProperties::* >::type indexPm = boost::get(&EdgeProperties::index, g);
+
+boost::property_map< Graph, bool EdgeProperties::* >::type forbiddenPm = boost::get(&EdgeProperties::isforbidden, g);
 
 
 boost::graph_traits<Graph>::edge_iterator ei, eiend;
@@ -56,3 +70,6 @@ typedef Graph::edge_descriptor edge_t;
 typedef boost::graph_traits<Graph>::edge_iterator edge_ti;
 
 std::vector<std::vector<size_t>> cycles;
+edge_t cache_edge;
+boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>::null_vertex();
+// null edge

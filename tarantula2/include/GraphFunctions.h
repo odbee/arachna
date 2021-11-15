@@ -7,6 +7,7 @@
 
 
 
+
 struct cyclicvert {
 	size_t index;
 	vec3 pos;
@@ -46,9 +47,9 @@ void addIntersectionVertexToCycles(cyclicedge& edge, int cycleIndex, std::vector
 	}
 }
 
-void updatetext(string& text, string in) {
-	text = in;
-	//render();
+void updatetext(string in) {
+
+
 	//gl::draw(mTextTexture);
 	////std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	ofstream myfile;
@@ -58,21 +59,19 @@ void updatetext(string& text, string in) {
 }
 
 
-void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs, string& text) {
-	updatetext(text, to_string(counter) + "v");
+void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
+	updatetext( to_string(counter) + "v");
 
 
 	cyclicedge startedge, goaledge;
-	startedge.divisionvert= boost::add_vertex(*g); fixedBool[startedge.divisionvert] = false;
-	goaledge.divisionvert = boost::add_vertex(*g); fixedBool[goaledge.divisionvert] = false;
-	//created 2 points
+
 
 	edge_ti ei_startEdge;
 	int randiter;
-	updatetext(text, to_string(counter) + "w");
+	updatetext( to_string(counter) + "w");
 
 
-
+	
 	tie(ei_startEdge, randiter) = getRandomEdge(g);
 	startedge.descriptor = *ei_startEdge;
 	//gotten iterator from random iterator 1
@@ -83,19 +82,18 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 	startedge.start = { source(startedge.descriptor, *g), position[source(startedge.descriptor, *g)] };
 	startedge.end = { boost::target(startedge.descriptor, *g), position[boost::target(startedge.descriptor, *g)] };
 
-	updatetext(text, to_string(counter) + "x");
+	updatetext( to_string(counter) + "x");
 	auto p_edgeVertex1 = position[source(startedge.descriptor, *g)];
 	auto p_edgeVertex2 = position[boost::target(startedge.descriptor, *g)];
 	size_t start1VertInd_i = source(startedge.descriptor, *g);
 	size_t start2VertInd_i = boost::target(startedge.descriptor, *g);
-	position[startedge.divisionvert] =interpolate(startedge, float(float(rand() % 1000) / 1000));
 	// taken positions of edge points from iterator edge
-	updatetext(text, to_string(counter) + "y");
+	updatetext( to_string(counter) + "y");
 	counter++;
 	int seconditer;
 	edge_t ed_goalEdge;
 	if (startedge.cycles.size()) {
-		updatetext(text, to_string(counter) + "a");
+		updatetext( to_string(counter) + "a");
 
 		size_t cycleIndex = startedge.cycles[rand() % (startedge.cycles.size())];
 		// get random cycle index
@@ -103,8 +101,8 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		auto cyclesize = currCyc.size();
 		auto edge1indInCycle_i = std::find(currCyc.begin(), currCyc.end(), start1VertInd_i);
 		auto edge2indInCycle_i = std::find(currCyc.begin(), currCyc.end(), start2VertInd_i);
-		updatetext(text, to_string(counter) + "b");
-		updatetext(text, stringfromVec(currCyc) + "( " +
+		updatetext( to_string(counter) + "b");
+		updatetext( stringfromVec(currCyc) + "( " +
 			to_string(std::distance(currCyc.begin(), edge1indInCycle_i)) + " , " +
 			to_string(std::distance(currCyc.begin(), edge2indInCycle_i)) +  " )");
 
@@ -113,38 +111,72 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 			rotate(currCyc.begin(), edge2indInCycle_i, currCyc.end());
 		else if ((std::distance(currCyc.begin(), edge2indInCycle_i) + 1) % cyclesize == std::distance(currCyc.begin(), edge1indInCycle_i)) // if counterclockwise shift first vertex to first index
 			rotate(currCyc.begin(), edge1indInCycle_i, currCyc.end());
-		updatetext(text, to_string(counter) + "c");
-		int randIndInCyc = (rand() % (currCyc.size() - 2)) + 1;
-		goaledge.start.index = currCyc[randIndInCyc];
-		goaledge.end.index = currCyc[randIndInCyc + 1];
+		updatetext( to_string(counter) + "c");
+		int randIndInCyc = 0;
+		bool isforbidden = true;
+		int seed1=0;
+		int rint = 0;
+		int cc;
+
+		while (isforbidden) {
+			rint = rand();
+			cc = (currCyc.size());
+			randIndInCyc = (rint % (currCyc.size() - 1));
+
+			goaledge.start.index = currCyc[randIndInCyc];
+			goaledge.end.index = currCyc[(randIndInCyc + 1) %currCyc.size()];
+			ed_goalEdge = GetEdgeFromItsVerts(goaledge.start.index, goaledge.end.index, *g);
+			isforbidden = forbiddenPm[ed_goalEdge];
+		}
+		
 		// get vetex indices
 		goaledge.cycles = compareVectorsReturnIntersection(cyclesPm[goaledge.start.index], cyclesPm[goaledge.end.index]);
-		updatetext(text, to_string(counter) + "d");
+		updatetext( to_string(counter) + "d");
 		vector<size_t> left(currCyc.begin(), currCyc.begin() + randIndInCyc + 1);
 		vector<size_t> right(currCyc.begin() + randIndInCyc + 1, currCyc.end());
-		updatetext(text, to_string(counter) + "e");
+		updatetext( to_string(counter) + "e");
+
+		startedge.divisionvert = boost::add_vertex(*g); fixedBool[startedge.divisionvert] = false;
+		goaledge.divisionvert = boost::add_vertex(*g); fixedBool[goaledge.divisionvert] = false;
+		//created 2 points
+		position[startedge.divisionvert] = interpolate(startedge, float(float(rand() % 1000) / 1000));
 		left.insert(left.end(), { goaledge.divisionvert, startedge.divisionvert });
 		right.insert(right.begin(), { startedge.divisionvert, goaledge.divisionvert });
 		cycs->at(cycleIndex) = left;
 		cycs->push_back(right);
 		size_t lastindex = cycs->size() - 1;
-		updatetext(text, to_string(counter) + "f");
+		updatetext( to_string(counter) + "f");
+		auto commoncycles = compareVectorsReturnIntersection(goaledge.cycles, startedge.cycles);
+		console() << "common cycles of goal and start edge: " << stringfromCyclesShort(commoncycles) << endl;
 		for (const auto& elem : right) {
 			std::replace(cyclesPm[elem].begin(), cyclesPm[elem].end(), cycleIndex, lastindex);
+			//console() << "cycles before: " << stringfromCyclesShort(cyclesPm[elem]) << endl;
+			//
+			//if (elem != startedge.divisionvert && elem != goaledge.divisionvert) {
+			//	for (const size_t& cycleN : commoncycles) {
+			//		vector<size_t> curcur = cycs->at(cycleN);
+			//		cyclesPm[elem].erase(std::remove(cyclesPm[elem].begin(), cyclesPm[elem].end(), cc), cyclesPm[elem].end());
+			//		curcur.erase(std::remove(curcur.begin(), curcur.end(), elem), curcur.end());
+			//		cycs->at(cycleN) = curcur;
+			//	}
+			//}
+			//
+			//console() << "cycles after: " << stringfromCyclesShort(cyclesPm[elem]) << endl;
+
 		}
+
+
 		cyclesPm[startedge.divisionvert].insert(cyclesPm[startedge.divisionvert].end(), { cycleIndex, lastindex });
 		cyclesPm[goaledge.divisionvert].insert(cyclesPm[goaledge.divisionvert].end(), { cycleIndex, lastindex });
-		updatetext(text, to_string(counter) + "g");
-		ed_goalEdge = GetEdgeFromItsVerts(goaledge.start.index, goaledge.end.index, *g);
+		updatetext( to_string(counter) + "g");
 		// TODO ADD INTERSECTION VERTEX TO ALL INTERSECTED CYCLES
-		updatetext(text, to_string(counter) + "é");
+		updatetext( to_string(counter) + "é");
 
 		addIntersectionVertexToCycles(goaledge, cycleIndex, cycs);
 		addIntersectionVertexToCycles(startedge, cycleIndex, cycs);
-		updatetext(text, to_string(counter) + "h");
+		updatetext( to_string(counter) + "h");
 	}
 	else {
-		text = "nocyc";
 		tie(ei, eiend) = boost::edges(*g);
 		int iteratorLength = 0;
 		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
@@ -169,22 +201,24 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		goaledge.descriptor = *ei;
 	}
 
-	updatetext(text, to_string(counter) + "i");
+	updatetext( to_string(counter) + "i");
 	//udgcd::printPaths(console(), *cycs);
 	//gotten iterator from random iterator 2 
 	goaledge.start = { source(ed_goalEdge, *g), position[source(ed_goalEdge, *g)] };
 	goaledge.end = { boost::target(ed_goalEdge, *g), position[boost::target(ed_goalEdge, *g)] };
 
 	position[goaledge.divisionvert] = interpolate(goaledge, float(float(rand() % 1000) / 1000));
-	updatetext(text, to_string(counter) + "j");
+	updatetext( to_string(counter) + "j");
 	connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc);
-	connectAB(g, goaledge.divisionvert, goaledge.start.index, rc);
-	connectAB(g, goaledge.divisionvert, goaledge.end.index, rc);
-	connectAB(g, startedge.divisionvert, startedge.start.index, rc);
-	connectAB(g, startedge.divisionvert, startedge.end.index, rc);
-	updatetext(text, to_string(counter) + "k");
+
+	connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[ed_goalEdge]);
+	connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[ed_goalEdge]);
+	
+	connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor]);
+	connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor]);
+	updatetext( to_string(counter) + "k");
 	boost::remove_edge(startedge.descriptor, *g);
 	boost::remove_edge(ed_goalEdge, *g);
 	//text = stringfromCycles(*cycs);
-	updatetext(text, to_string(counter) + "l");
+	updatetext( to_string(counter) + "l");
 }

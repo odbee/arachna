@@ -41,8 +41,6 @@ void addIntersectionVertexToCycles(cyclicedge& edge, int cycleIndex, std::vector
 				cyc.insert(edge2indInCycle_i + 1, edge.divisionvert);
 			cycs->at(cycle) = cyc;
 			cyclesPm[edge.divisionvert].push_back(cycle);
-
-
 		}
 	}
 }
@@ -75,7 +73,8 @@ void addRandomCyclicEdge(Graph* g, float rc, std::vector<std::vector<size_t>>* c
 		startedge.start = { source(startedge.descriptor, *g), position[source(startedge.descriptor, *g)] };
 		startedge.end = { boost::target(startedge.descriptor, *g), position[boost::target(startedge.descriptor, *g)] };
 	}
-	// taken positions of edge points from iterator edge
+
+
 	updatetext( to_string(counter) + "y");
 	counter++;
 	int seconditer;

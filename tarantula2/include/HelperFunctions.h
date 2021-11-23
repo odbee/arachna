@@ -48,12 +48,13 @@ edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_des
 	return edge;
 }
 
-edge_t GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g)
+std::optional<edge_t> GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g)
 {
 	for (auto e : boost::make_iterator_range(out_edges(v, g))) {
 		if (target(e, g) == u)
 			return e;
 	}
+	return {};
 	throw std::domain_error("my_find_edge: not found");
 }
 
@@ -103,7 +104,7 @@ std::pair<edge_ti, int> getRandomEdge(Graph* g) {
 			ei_startEdge++;
 		}
 
-		isforbidden=forbiddenPm[*ei_startEdge];
+		isforbidden=forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
 		//isforbidden = false;
 	}
 	
@@ -111,54 +112,6 @@ std::pair<edge_ti, int> getRandomEdge(Graph* g) {
 	return make_pair(ei_startEdge, randiter);
 }
 
-void setInitialWeb(Graph* g, float rc) {
-	auto a = boost::add_vertex(*g);
-	position[a] = vec3(-5, -1, 10);
-	fixedBool[a] = true;
-	auto b = boost::add_vertex(*g);
-	position[b] = vec3(15, 10, 0);
-	fixedBool[b] = true;
-
-	auto c = boost::add_vertex(*g);
-	position[c] = vec3(10, -10, 20);
-	fixedBool[c] = true;
-
-	auto d = boost::add_vertex(*g);
-	position[d] = vec3(0, 0, 0);
-	fixedBool[d] = false;
-
-	auto e = boost::add_vertex(*g);
-	position[e] = vec3(-30, -40, 0);
-	fixedBool[e] = true;
-
-
-	connectAB(g, a, d, rc);
-	
-	cache_edge = connectAB(g, a, b, rc, 0, true);
-	cache_edge = connectAB(g, a, c, rc, 0, true);
-	cache_edge = connectAB(g, a, e, rc, 0, true);
-
-	connectAB(g, b, d, rc);
-	cache_edge = connectAB(g, b, c, rc,0, true);
-	cache_edge = connectAB(g, b, e, rc, 0, true);
-
-	connectAB(g, c, d, rc);
-	cache_edge = connectAB(g, c, e, rc, 0, true);
-	
-
-	connectAB(g, e, d, rc);
-	
-	cycles.push_back({ a,b,d });
-	cycles.push_back({ a,c,d });
-	cycles.push_back({ a,e,d });
-	cycles.push_back({ b,c,d });
-	cycles.push_back({ b,e,d });
-	cycles.push_back({ c,e,d });
-	addCyclesToVertices(g, cycles);
-
-
-
-}
 
 vec3 interpolateBetweenPoints(vec3 point1, vec3 point2, float t) {
 	return point1 + (point2 - point1) * t;
@@ -172,4 +125,20 @@ Color getColorFromInt(int val) {
 	//console() << "r " << r << "g  " << g << "b " << b << endl;
 
 	return Color( r,g,b);
+}
+
+string to_string(vec3 vector) {
+	return to_string(vector.x) + "," + to_string(vector.y) + "," + to_string(vector.z);
+}
+
+void exportGraph(Graph g) {
+	ofstream myfile;
+	myfile.open("positions.txt", std::ofstream::trunc);
+	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+
+		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
+		myfile << "[" << "{" << to_string(position[boost::source(*ei, g)]) << "};{" << to_string(position[boost::target(*ei, g)]) << "}" << "]" << endl;
+
+	}
+	myfile.close();
 }

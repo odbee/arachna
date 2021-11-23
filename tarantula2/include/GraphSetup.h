@@ -19,8 +19,9 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-
+bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
+
 
 struct EdgeProperties
 {

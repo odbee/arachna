@@ -21,6 +21,8 @@
 #include "PhysicsFunctions.h"
 #include "DrawFunctions.h"
 #include "TextHelper.h"
+#include "InitialWebs.h"
+
 
 using namespace ci;
 using namespace ci::app;
@@ -36,7 +38,7 @@ class tarantula2App : public App {
 private:
 	gl::BatchRef		mWirePlane;
 	CameraUi			mCamUi;
-	float relaxc = 0.3f;
+	float relaxc = 0.5f;
 	bool hasCycle = false;	
 	int	mName=0;
 	bool mDrawVertices=false;
@@ -66,7 +68,7 @@ void tarantula2App::setup()
 	ImGui::Initialize();
 
 
-	setInitialWeb(&g, relaxc);
+	setInitialWeb2(&g, relaxc);
 }
 
 void tarantula2App::keyDown( KeyEvent event )
@@ -96,6 +98,9 @@ void tarantula2App::keyDown( KeyEvent event )
 		console() << stringfromCycles(cycles) << endl;
 	}
 
+	if (event.getChar() == 'p') {
+		exportGraph(g);
+	}
 }
 
 void tarantula2App::update()
@@ -112,6 +117,8 @@ void tarantula2App::draw()
 	ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
 	ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
 	ImGui::Checkbox("Color Edges", &colorEdges);
+	ImGui::Checkbox("check for forbidden edges", &CHECKFORBIDDEN);
+
 
 
 	gl::clear( Color( 0, 0, 0 ) ); 

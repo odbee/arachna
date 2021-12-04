@@ -21,6 +21,18 @@ using namespace std;
 
 bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
+int	displayCycle_i = 0;
+int	displayCycle_ii = 0;
+int displayEdgeV_i=0;
+int displayEdgeV_ii=0;
+int displayEdgeV_iii = 0;
+int displayEdgeV_iv = 0;
+int iterationcounter = 0;
+
+vector<size_t> vertlist;
+
+
+
 
 
 struct EdgeProperties

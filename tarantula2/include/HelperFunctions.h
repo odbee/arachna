@@ -2,6 +2,7 @@
 #include "GraphSetup.h"
 
 
+
 string stringfromVec(vector<size_t> vec) {
 	string result = "[ ";
 	for (auto it = vec.begin(); it != vec.end(); it++) {
@@ -141,4 +142,26 @@ void exportGraph(Graph g) {
 
 	}
 	myfile.close();
+}
+
+Color cRamp(double ratio) {
+
+	//we want to normalize ratio so that it fits in to 6 regions
+//where each region is 256 units long
+	ratio = std::clamp(ratio, double(0), double(10));
+	ratio = ratio / 11;
+
+	int normalized = int(ratio * 256 * 3);
+	
+	//find the distance to the start of the closest region
+	int x = normalized % 256;
+
+	float red = 0, grn = 0, blu = 0;
+	switch (normalized / 256)
+	{
+	case 0: red = 0;        grn = 255;      blu = x;       break;//green
+	case 1: red = 255 - x;  grn = 255;      blu = 0;       break;//yellow
+	case 2: red = 255;      grn = x;        blu = 0;       break;//red
+	}
+	return Color(red/255, grn/255, blu/255);
 }

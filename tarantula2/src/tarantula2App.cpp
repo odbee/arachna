@@ -38,13 +38,15 @@ class tarantula2App : public App {
 private:
 	gl::BatchRef		mWirePlane;
 	CameraUi			mCamUi;
-	float relaxc = 0.5f;
+	float relaxc = 0.2f;
 	bool hasCycle = false;	
-	int	mName=0;
 	bool mDrawVertices=false;
 	bool mDrawNumbers = false;
 	bool mDrawVertexInfo = false;
 	bool colorEdges = false;
+	bool colorTens = false;
+	bool drawNCycle = true;
+
 
 
 
@@ -68,7 +70,7 @@ void tarantula2App::setup()
 	ImGui::Initialize();
 
 
-	setInitialWeb2(&g, relaxc);
+	setInitialWeb(&g, relaxc);
 }
 
 void tarantula2App::keyDown( KeyEvent event )
@@ -76,6 +78,7 @@ void tarantula2App::keyDown( KeyEvent event )
 	if (event.getCode() == 99) { // "c"
 		//addRandomEdge(&g, relaxc);
 		addRandomCyclicEdge(&g, relaxc, &cycles);
+		iterationcounter++;
 		//console() << stringfromCycles(cycles) << endl;
 
 
@@ -90,7 +93,6 @@ void tarantula2App::keyDown( KeyEvent event )
 
 		//}
 		//udgcd::printPaths(console(),cycles);
-
 	}
 
 
@@ -112,11 +114,20 @@ void tarantula2App::update()
 
 void tarantula2App::draw()
 {
-	ImGui::InputInt("cycle number", &mName);
+	ImGui::Text("number of iterations = %i", iterationcounter);
+	ImGui::InputInt("cycle number", &displayCycle_i);
+	if (displayCycle_i >= cycles.size()) {
+		displayCycle_i = displayCycle_i % cycles.size();
+	}
 	ImGui::Checkbox("Draw Vertices", &mDrawVertices);
+	
+	
 	ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
 	ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
 	ImGui::Checkbox("Color Edges", &colorEdges);
+	ImGui::Checkbox("highlight Nth Cycle", &drawNCycle);
+	ImGui::Checkbox("Color Edge Tensions", &colorTens);
+
 	ImGui::Checkbox("check for forbidden edges", &CHECKFORBIDDEN);
 
 
@@ -133,13 +144,25 @@ void tarantula2App::draw()
 		vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
 
 		drawPoints(&g, projection, viewport, mDrawNumbers, mDrawVertices, mDrawVertexInfo);
-		drawCycle(&g, projection, viewport, cycles, mName);
+		if (drawNCycle)
+			drawCycle(&g, projection, viewport, cycles, displayCycle_i);
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
 		{
 			//mWirePlane->draw();
-			drawGraph(&g, projection, viewport, colorEdges);
-			drawCycleEdges(&g, projection, viewport, cycles, mName);
+			drawGraph(&g, projection, viewport, colorEdges,colorTens);
+			if (drawNCycle) {
+				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
+				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
+			}
+			gl::color(0.0f, 0.0f, 1.0f,0.6f);
+			gl::drawLine(position[displayEdgeV_ii], position[displayEdgeV_i]);
+			gl::drawLine(position[displayEdgeV_iii], position[displayEdgeV_iv]);
+			//gl::drawLine(position[displayEdgeV_i], position[displayEdgeV_iii]);
+			//gl::drawLine(position[displayEdgeV_iv], position[displayEdgeV_ii]);
+
+
+			
 		}
 	}
 	//			END CAMERA DRAW

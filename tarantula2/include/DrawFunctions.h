@@ -3,6 +3,11 @@
 
 #include "HelperFunctions.h"
 
+double cLamp(double ratio) {
+	ratio = std::clamp(ratio, double(0), double(10));
+	ratio = ratio / 10;
+	return ratio;
+}
 void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers, bool drawVertexPoints, bool drawCycleList) {
 
 	if (drawNumbers) {
@@ -10,9 +15,12 @@ void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers, bool drawVert
 			gl::drawLine(position[boost::source(*ei, *g)], position[boost::target(*ei, *g)]);
 			vec3 danchorp = position[boost::source(*ei, *g)] + (position[boost::target(*ei, *g)] - position[boost::source(*ei, *g)]) * 0.5f;
 			vec2 anchorp1 = glm::project(danchorp, mat4(), proj, viewp);
-			gl::drawString(to_string(currentLengthPm[*ei] / restLengthPm[*ei]), anchorp1);
+			
+			
+			gl::drawString(to_string(cLamp(currentLengthPm[*ei] / restLengthPm[*ei])), anchorp1);
 		}
 	}
+
 	if (drawVertexPoints)
 	{
 		for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
@@ -39,13 +47,16 @@ void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers, bool drawVert
 	}
 }
 
-void drawGraph(Graph* g, mat4 proj, vec4 viewp, bool colorEdges= false) {
+void drawGraph(Graph* g, mat4 proj, vec4 viewp, bool colorEdges= false, bool colorTension = true) {
 	gl::ScopedColor color(Color::gray(0.2f));
 	gl::color(1.0f, 1.0f, 1.0f, 0.8f);
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
 		
 		if (colorEdges){
 			gl::color(getColorFromInt(indexPm[*ei]));
+		}
+		if (colorTension) {
+			gl::color(cRamp(currentLengthPm[*ei] / restLengthPm[*ei]));
 		}
 		
 		gl::drawLine(position[boost::source(*ei, *g)], position[boost::target(*ei, *g)]);
@@ -66,10 +77,10 @@ void drawCycle(Graph* g, mat4 proj, vec4 viewp, std::vector<std::vector<size_t>>
 	
 }
 
-void drawCycleEdges(Graph* g, mat4 proj, vec4 viewp, std::vector<std::vector<size_t>> cycles, int cycleNumber) {
+void drawCycleEdges(Graph* g, mat4 proj, vec4 viewp, std::vector<std::vector<size_t>> cycles, int cycleNumber, Color col = Color(1.0f, 0.0f, 0.0f)) {
 
 	auto cycle = cycles[cycleNumber % (cycles.size())];
-	gl::color(1.0f, 0.0f, 0.0f, 1.0f);
+	gl::color(col);
 	int j;
 	for (int i=0; i < cycle.size(); i++)	{
 		j = (i + 1) % cycle.size();

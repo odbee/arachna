@@ -86,6 +86,14 @@ void updatetext(string in) {
 	myfile.close();
 }
 
+std::vector<size_t> vectorcycles(std::vector<size_t> vec) {
+	std::vector<size_t> result = cyclesPm[vec[0]];
+	for (size_t i = 1; i < vec.size(); i++) {
+		result= compareVectorsReturnIntersection(result, cyclesPm[vec[i]]);
+	}
+	return result;
+}
+
 void resolveIntersections(cyclicedge start,cyclicedge goal,size_t cycle1index, size_t cycle2index,Graph& g, std::vector<std::vector<size_t>>& cycs) {
 	auto& left = cycs[cycle1index];
 	auto& right = cycs[cycle2index];
@@ -96,9 +104,12 @@ void resolveIntersections(cyclicedge start,cyclicedge goal,size_t cycle1index, s
 	addIntersectionVertexToCycles(goal, cycle1index, &cycs);
 	addIntersectionVertexToCycles(start, cycle1index, &cycs);
 	auto commoncycles = compareVectorsReturnIntersection(goal.cycles, start.cycles);
-	for (const auto& cycleN : commoncycles)
-	{
+	auto cright=vectorcycles(right);
+	auto cleft = vectorcycles(left);
 
+
+	for (const auto& cycleN : cright)
+	{
 		for (size_t i = 2; i < right.size(); i++)
 		{
 			auto elem = right[i];
@@ -106,6 +117,17 @@ void resolveIntersections(cyclicedge start,cyclicedge goal,size_t cycle1index, s
 			removebyindex(cycs.at(cycleN), elem);
 		}
 	}
+
+	for (const auto& cycleN : cleft)
+	{
+		for (size_t i = 2; i < left.size(); i++)
+		{
+			auto elem = left[i];
+			removebyindex(cyclesPm[elem], cycleN);
+			removebyindex(cycs.at(cycleN), elem);
+		}
+	}
+
 	cyclesPm[start.divisionvert].insert(cyclesPm[start.divisionvert].end(), { cycle1index, cycle2index });
 	cyclesPm[goal.divisionvert].insert(cyclesPm[goal.divisionvert].end(), { cycle1index, cycle2index });
 }

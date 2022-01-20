@@ -322,37 +322,56 @@ edge_t getRandomEdgeFromEdgeList(Graph* g, std::vector<edge_t> edges, std::vecto
 }
 
 
-edge_t getRandomEdgeFromEdgeListXX(Graph* g, std::vector<edge_t> edges, std::vector<size_t> edgeindices, size_t& cycleind) {
+
+template <typename T>
+
+edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = false) {
+	T cachebegin = begin;
+	T cacheend = end;
+
 	std::random_device rd;  // Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 	int iteratorLength = 0;
 	int randiter;
 	float fulllength = 0, tensionlength = 0, voxellength = 0;
+	bool isforbidden = true;
+
 	edge_t ed_resultedge;
-	std::uniform_real_distribution<> dis(-5, 5);
+
 	// calculate max values:
+	{
+		for (auto iter = begin; iter != end; ++iter) {
+			iteratorLength++;
+			//fulllength += voxelMap[int(position[boost::source(*iter, *g)].x), int(position[boost::source(*iter, *g)].y), int(position[boost::source(*iter, *g)].z)];
 
-	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-		iteratorLength++;
-		fulllength += pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y) + 10) / 20, 5);
-	}
-	auto randn = dis(gen);
-	size_t countr = 0;
-	for (auto ei = edges.begin(); ei != edges.end(); ++ei) {
-		
-		auto val = pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y) + 10) / 20, 5);
-		if (randn < val) {
-			ed_resultedge = *ei;
-			break;
+			fulllength += pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
+
 		}
-		randn -= val;
-
-		countr++;
 	}
+	std::uniform_real_distribution<> dis(0.0, fulllength);
 
+	while (isforbidden)
+	{
+		begin = cachebegin;
+		auto randn = dis(gen);
+		size_t countr = 0;
+		for (auto iter = begin; iter != end; ++iter) {
+			auto val = pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
+			//auto val = voxelMap[int(position[boost::source(*iter, *g)].x), int(position[boost::source(*iter, *g)].y), int(position[boost::source(*iter, *g)].z)];
+			if (randn < val) {
+				ed_resultedge = *iter;
+
+				break;
+			}
+			randn -= val;
+			//randn -= currentLengthPm[*ei] / fulllength / 2;
+			countr++;
+		}
+		isforbidden = forbiddenPm[ed_resultedge] && CHECKFORBIDDEN && forbcheck;
+
+	}
 	return ed_resultedge;
 }
-
 
 
 

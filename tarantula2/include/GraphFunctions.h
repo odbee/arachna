@@ -430,7 +430,8 @@ std::vector<edge_t> getConnectedEdges(Graph* g, cyclicedge edge, std::vector<std
 void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
 	cyclicedge startedge, goaledge;	edge_ti ei_startEdge;
 	ei_startEdge = getRandomEdgeWeightedByX(g);
-	initEdge(*ei_startEdge, startedge, *g);
+	edge_t ed_startEdge = getRandomEdgeFromEdgeListT(g, boost::edges(*g).first, boost::edges(*g).second,true);
+	initEdge(ed_startEdge, startedge, *g);
 	{
 		displayEdgeV_i = startedge.start.index;
 		displayEdgeV_ii = startedge.end.index;
@@ -438,9 +439,9 @@ void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size
 	int seconditer;	edge_t ed_goalEdge; edge_ti ei_goalEdge;
 	if (startedge.cycles.size()) {
 		std::vector<size_t>edgeinds;
-		size_t cycleIndex;
 		auto connedges = getConnectedEdges(g, startedge, cycs, edgeinds);
-		ed_goalEdge = getRandomEdgeFromEdgeList(g, connedges, edgeinds, cycleIndex);
+		ed_goalEdge = getRandomEdgeFromEdgeListT(g, connedges.begin(),connedges.end());
+		size_t cycleIndex = *(edgeinds.begin() + std::distance(connedges.begin(), std::find(connedges.begin(), connedges.end(), ed_goalEdge)));
 
 		initEdge(ed_goalEdge, goaledge, *g);
 		updatetext(to_string(counter) + "a");

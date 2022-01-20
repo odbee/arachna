@@ -22,6 +22,7 @@
 #include "DrawFunctions.h"
 #include "TextHelper.h"
 #include "InitialWebs.h"
+#include "quickhull/QuickHull.hpp"
 
 
 using namespace ci;
@@ -45,11 +46,13 @@ private:
 	bool mDrawVertexInfo = false;
 	bool colorEdges = false;
 	bool colorTens = false;
-	bool drawNCycle = true;
+	bool drawNCycle = false;
 
+	std::pair<edge_t, bool> c, d;
 
-
-
+	string profilername="profiler.csv";
+	ofstream profile_out;
+	int cachediter;
 };
 
 void tarantula2App::setup()
@@ -69,30 +72,90 @@ void tarantula2App::setup()
 
 	ImGui::Initialize();
 
+	
+	InitialWebFromPc(&g,relaxc, "txtf.txt");
+	std::ofstream ofs;
 
-	setInitialWeb(&g, relaxc);
+	profile_out.open(profilername, std::ios_base::trunc);
+	profile_out << "counter,command,duration" << endl;
+	profile_out.close();
+
+
+	{
+		using FloatType = float;
+		using vex3 = quickhull::Vector3<FloatType>;
+
+		quickhull::QuickHull<FloatType> qh;
+		std::vector<vex3> pc;
+
+		for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+
+			pc.emplace_back(float(position[*vi][0]), float(position[*vi][1]), float(position[*vi][2]));
+
+		}
+		auto hull = qh.getConvexHull(&pc[0].x, pc.size(), true, true);
+		auto indexbuffer = hull.getIndexBuffer();
+		for (size_t i = 0; i < indexbuffer.size() / 3; i++)
+		{
+			convhull.push_back({ indexbuffer.begin() + 3 * i,indexbuffer.begin() + 3 * i + 3 });
+		}
+
+		for (const auto& cycl : convhull) {
+			for (size_t i = 0; i < cycl.size(); i++)
+			{
+				auto v1 = cycl[i];
+				auto v2 = cycl[(i + 1) % cycl.size()];
+				//console() << v1 << "," << v2 << endl;
+				typename boost::graph_traits<Graph>::adjacency_iterator ai, ai2, ai_end, ai_end2;
+				boost::graph_traits< Graph >::vertex_iterator vi2, viend2;
+				for (boost::tie(ai, ai_end) = boost::adjacent_vertices(v1, g),
+					boost::tie(ai2, ai_end2) = boost::adjacent_vertices(v2, g);
+					ai != ai_end && ai2 != ai_end2; ai++, ai2++) {
+					if (*ai2 == *ai && v1 > v2) {
+						//console() << " adjacancyts" << *ai << ',' << *ai2 << " ";
+						cycles.push_back({ v1,v2,*ai });
+
+					}
+				}
+			}
+		}
+		for (const auto& cycl : convhull) {
+			for (size_t i = 0; i < cycl.size(); i++)
+			{
+				auto v1 = cycl[i];
+				auto v2 = cycl[(i + 1) % cycl.size()];
+				connectAB(&g, v1, v2, relaxc, 0, true);
+			}
+		}
+
+		//cycles.insert(cycles.begin(), convhull.begin(), convhull.end());
+		addCyclesToVertices(&g, cycles);
+
+	}
+
 }
 
-void tarantula2App::keyDown( KeyEvent event )
+void tarantula2App::keyDown(KeyEvent event)
 {
 	if (event.getCode() == 99) { // "c"
 		//addRandomEdge(&g, relaxc);
-		addRandomCyclicEdge(&g, relaxc, &cycles);
+		auto start = std::chrono::high_resolution_clock::now();
+		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
+		auto end = std::chrono::high_resolution_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end- start);
+		profile_out.open(profilername, std::ios_base::app);
+		profile_out << iterationcounter << "," << "addcyc" << "," << duration.count() << endl;
+		profile_out.close();
 		iterationcounter++;
-		//console() << stringfromCycles(cycles) << endl;
+	}
+	if (event.getChar() == 'm') { // "c"
+	//addRandomEdge(&g, relaxc);
+		for (int i = 0; i < 50; i++)
+		{
+			addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
 
-
-		//if (hasCycle == false) // find cycles every time it has no cycles
-		//{
-		//	cycles = udgcd::findCycles<Graph, vertex_t>(g);
-		//	hasCycle = cycles.size();
-		//	if (hasCycle) {
-		//		addCyclesToVertices(&g, cycles);
-		//		udgcd::printPaths(console(), cycles);
-		//	}
-
-		//}
-		//udgcd::printPaths(console(),cycles);
+			iterationcounter++;
+		}
 	}
 
 
@@ -103,11 +166,28 @@ void tarantula2App::keyDown( KeyEvent event )
 	if (event.getChar() == 'p') {
 		exportGraph(g);
 	}
+	if (event.getChar() == 'x') {
+		getVertsFromFile("textfile.txt");
+	}
+
+	//console() << event.getCode() << endl;
 }
 
 void tarantula2App::update()
 {
+	auto start = std::chrono::high_resolution_clock::now();
 	relaxPhysics(&g);
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	
+	if (cachediter != iterationcounter) {
+		profile_out.open(profilername, std::ios_base::app);
+		profile_out << iterationcounter << "," << "physics" << "," << duration.count() << endl;
+		profile_out.close();
+
+	}
+	
+	cachediter = iterationcounter;
 }
 
 
@@ -116,9 +196,9 @@ void tarantula2App::draw()
 {
 	ImGui::Text("number of iterations = %i", iterationcounter);
 	ImGui::InputInt("cycle number", &displayCycle_i);
-	if (displayCycle_i >= cycles.size()) {
-		displayCycle_i = displayCycle_i % cycles.size();
-	}
+	//if (displayCycle_i >= cycles.size()) {
+	//	displayCycle_i = displayCycle_i % cycles.size();
+	//}
 	ImGui::Checkbox("Draw Vertices", &mDrawVertices);
 	
 	
@@ -148,22 +228,29 @@ void tarantula2App::draw()
 			drawCycle(&g, projection, viewport, cycles, displayCycle_i);
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
+
 		{
 			//mWirePlane->draw();
 			drawGraph(&g, projection, viewport, colorEdges,colorTens);
 			if (drawNCycle) {
 				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
-				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
+				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
 			}
-			gl::color(0.0f, 0.0f, 1.0f,0.6f);
-			gl::drawLine(position[displayEdgeV_ii], position[displayEdgeV_i]);
-			gl::drawLine(position[displayEdgeV_iii], position[displayEdgeV_iv]);
+
+
+			//for (int i=0; i < convhull.size();i++) {
+			//	drawCycleEdges(&g, projection, viewport, convhull, i,Color(0.0f,1.0f,0.0f));
+			//}
+			//gl::color(0.0f, 0.0f, 1.0f,0.6f);
+			//gl::drawLine(position[displayEdgeV_ii], position[displayEdgeV_i]);
+			//gl::drawLine(position[displayEdgeV_iii], position[displayEdgeV_iv]);
 			//gl::drawLine(position[displayEdgeV_i], position[displayEdgeV_iii]);
 			//gl::drawLine(position[displayEdgeV_iv], position[displayEdgeV_ii]);
 
 
 			
 		}
+
 	}
 	//			END CAMERA DRAW
 }

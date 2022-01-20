@@ -86,3 +86,5 @@ std::vector<std::vector<size_t>> cycles;
 edge_t cache_edge;
 boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>::null_vertex();
 // null edge
+
+vector<vector<size_t>> convhull;

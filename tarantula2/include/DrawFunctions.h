@@ -58,7 +58,12 @@ void drawGraph(Graph* g, mat4 proj, vec4 viewp, bool colorEdges= false, bool col
 		if (colorTension) {
 			gl::color(cRamp(currentLengthPm[*ei] / restLengthPm[*ei]));
 		}
-		
+		if (forbiddenPm[*ei]) {
+			gl::color(1.0f,1.0f,0.0f,0.02f);
+		}
+		else {
+			gl::color(1.0f, 1.0f, 1.0f);
+		}
 		gl::drawLine(position[boost::source(*ei, *g)], position[boost::target(*ei, *g)]);
 
 	}

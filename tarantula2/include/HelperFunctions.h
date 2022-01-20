@@ -1,5 +1,6 @@
 #pragma once
 #include "GraphSetup.h"
+#include <random>
 
 
 
@@ -49,6 +50,28 @@ edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_des
 	return edge;
 }
 
+pair<edge_t, bool> connectAB2(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind = 0, bool isforbidden = false) {
+	float dd = distance(position[endPointA], position[endPointB]);
+	edge_t edge;
+	bool result;
+	auto res= boost::add_edge(endPointA, endPointB, *g);
+	edge = res.first;
+
+	currentLengthPm[edge] = dd;
+	restLengthPm[edge] = dd * rc;
+	forbiddenPm[edge] = isforbidden;
+	if (ind == 0) {
+		indexPm[edge] = ++GLOBALINT;
+	}
+	else {
+		indexPm[edge] = ind;
+	}
+	return res;
+}
+
+
+
+
 std::optional<edge_t> GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g)
 {
 	for (auto e : boost::make_iterator_range(out_edges(v, g))) {
@@ -84,8 +107,160 @@ vector<size_t> compareVectorsReturnIntersection(const vector<size_t> vec1, const
 	std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(v3));
 	return v3;
 }
+edge_ti getRandomEdgeWeightedByLength(Graph* g) {
 
-std::pair<edge_ti, int> getRandomEdge(Graph* g) {
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;
+	int randiter;
+	bool isforbidden = true;
+	float fulllength = 0;
+
+
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		iteratorLength++;
+		fulllength += currentLengthPm[*ei];
+	}
+	std::uniform_real_distribution<> dis(0.0, fulllength);
+	
+	edge_ti ei_startEdge;
+
+	while (isforbidden)
+	{
+		auto randn = dis(gen);
+		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+			if (randn < currentLengthPm[*ei]) {
+				ei_startEdge = ei;
+				break;
+			}
+			randn -= currentLengthPm[*ei];
+		}
+
+
+		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
+		//isforbidden = false;
+	}
+	
+
+	return ei_startEdge;
+}
+
+edge_ti getRandomEdgeWeightedByTension(Graph* g) {
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;
+	int randiter;
+	bool isforbidden = true;
+	float fulllength = 0;
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		iteratorLength++;
+		fulllength += restLengthPm[*ei]/currentLengthPm[*ei];
+	}
+	std::uniform_real_distribution<> dis(0.0, fulllength);
+
+	edge_ti ei_startEdge;
+
+	while (isforbidden)
+	{
+		auto randn = dis(gen);
+		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+			if (randn < restLengthPm[*ei] / currentLengthPm[*ei]) {
+				ei_startEdge = ei;
+				break;
+			}
+			randn -= restLengthPm[*ei] / currentLengthPm[*ei];
+		}
+
+
+		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
+		//isforbidden = false;
+	}
+	return ei_startEdge;
+}
+
+
+edge_ti getRandomEdgeWeightedByX(Graph* g) {
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;
+	int randiter;
+	bool isforbidden = true;
+	float fulllength= 0;
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		iteratorLength++;
+		fulllength+=pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y)+ 10)/20,5);
+	}
+	std::uniform_real_distribution<> dis(0,fulllength);
+
+	edge_ti ei_startEdge;
+
+	while (isforbidden)
+	{
+		auto randn = dis(gen);
+		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+			
+			auto val = pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y) + 10) / 20, 5);
+			if (randn < val) {
+				ei_startEdge = ei;
+				break;
+			}
+			randn -= val;
+		}
+
+
+		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
+		//isforbidden = false;
+	}
+	return ei_startEdge;
+}
+
+
+
+
+edge_ti getRandomEdgeWeighted(Graph* g) {
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;
+	int randiter;
+	bool isforbidden = true;
+	float fulllength = 0, tensionlength = 0, voxellength=0;
+
+
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		iteratorLength++;
+
+		tensionlength += restLengthPm[*ei] / currentLengthPm[*ei];
+		fulllength += currentLengthPm[*ei];
+	}
+
+	std::uniform_real_distribution<> dis(0.0, 1.0);
+
+	edge_ti ei_startEdge;
+
+	while (isforbidden)
+	{
+		auto randn = dis(gen);
+		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+			if (randn < restLengthPm[*ei] / currentLengthPm[*ei]) {
+				ei_startEdge = ei;
+				break;
+			}
+			randn -= restLengthPm[*ei] / currentLengthPm[*ei]/tensionlength/2;
+			randn -= currentLengthPm[*ei] / fulllength/2;
+
+
+		}
+		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
+		//isforbidden = false;
+	}
+
+
+	return ei_startEdge;
+}
+
+
+
+edge_ti getRandomEdge(Graph* g) {
 	tie(ei, eiend) = boost::edges(*g);
 	int iteratorLength = 0;
 	int randiter;
@@ -110,8 +285,75 @@ std::pair<edge_ti, int> getRandomEdge(Graph* g) {
 	}
 	
 
-	return make_pair(ei_startEdge, randiter);
+	return ei_startEdge;
 }
+
+
+edge_t getRandomEdgeFromEdgeList(Graph* g, std::vector<edge_t> edges, std::vector<size_t> edgeindices, size_t& cycleind) {
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;
+	int randiter;
+	float fulllength = 0, tensionlength = 0, voxellength = 0;
+	edge_t ed_resultedge;
+	std::uniform_real_distribution<> dis(0.0, 1.0);
+	// calculate max values:
+	{
+		for (auto ei = edges.begin(); ei != edges.end(); ++ei) {
+			iteratorLength++;
+			tensionlength += restLengthPm[*ei] / currentLengthPm[*ei];
+			fulllength += currentLengthPm[*ei];
+		}
+	}
+	auto randn = dis(gen);
+	size_t countr = 0;
+	for (auto ei = edges.begin(); ei != edges.end(); ++ei) {
+		if (randn < restLengthPm[*ei] / currentLengthPm[*ei]/tensionlength) {
+			ed_resultedge = *ei;
+			cycleind = edgeindices[countr];
+			break;
+		}
+		randn -= restLengthPm[*ei] / currentLengthPm[*ei] / tensionlength;
+		//randn -= currentLengthPm[*ei] / fulllength / 2;
+		countr++;
+	}
+
+	return ed_resultedge;
+}
+
+
+edge_t getRandomEdgeFromEdgeListXX(Graph* g, std::vector<edge_t> edges, std::vector<size_t> edgeindices, size_t& cycleind) {
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;
+	int randiter;
+	float fulllength = 0, tensionlength = 0, voxellength = 0;
+	edge_t ed_resultedge;
+	std::uniform_real_distribution<> dis(-5, 5);
+	// calculate max values:
+
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		iteratorLength++;
+		fulllength += pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y) + 10) / 20, 5);
+	}
+	auto randn = dis(gen);
+	size_t countr = 0;
+	for (auto ei = edges.begin(); ei != edges.end(); ++ei) {
+		
+		auto val = pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y) + 10) / 20, 5);
+		if (randn < val) {
+			ed_resultedge = *ei;
+			break;
+		}
+		randn -= val;
+
+		countr++;
+	}
+
+	return ed_resultedge;
+}
+
+
 
 
 vec3 interpolateBetweenPoints(vec3 point1, vec3 point2, float t) {
@@ -138,8 +380,9 @@ void exportGraph(Graph g) {
 	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
 
 		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
-		myfile << "[" << "{" << to_string(position[boost::source(*ei, g)]) << "};{" << to_string(position[boost::target(*ei, g)]) << "}" << "]" << endl;
-
+		if (!forbiddenPm[*ei]) {
+			myfile << "[" << "{" << to_string(position[boost::source(*ei, g)]) << "};{" << to_string(position[boost::target(*ei, g)]) << "}" << "]" << endl;
+		}
 	}
 	myfile.close();
 }

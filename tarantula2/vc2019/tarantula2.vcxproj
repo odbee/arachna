@@ -103,6 +103,7 @@
   <ItemGroup />
   <ItemGroup />
   <ItemGroup>
+    <ClCompile Include="..\include\quickhull\QuickHull.cpp" />
     <ClCompile Include="..\src\tarantula2App.cpp" />
   </ItemGroup>
   <ItemGroup>

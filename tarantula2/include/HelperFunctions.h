@@ -342,9 +342,11 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 	{
 		for (auto iter = begin; iter != end; ++iter) {
 			iteratorLength++;
-			//fulllength += voxelMap[int(position[boost::source(*iter, *g)].x), int(position[boost::source(*iter, *g)].y), int(position[boost::source(*iter, *g)].z)];
+			fulllength += voxelMap[{(int)(position[boost::source(*iter, *g)].x),
+				(int)(position[boost::source(*iter, *g)].y),
+				(int)(position[boost::source(*iter, *g)].z)}];
 
-			fulllength += pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
+			//fulllength += pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
 
 		}
 	}
@@ -356,8 +358,10 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 		auto randn = dis(gen);
 		size_t countr = 0;
 		for (auto iter = begin; iter != end; ++iter) {
-			auto val = pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
-			//auto val = voxelMap[int(position[boost::source(*iter, *g)].x), int(position[boost::source(*iter, *g)].y), int(position[boost::source(*iter, *g)].z)];
+			//auto val = pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
+			auto val = voxelMap[{(int)(position[boost::source(*iter, *g)].x),
+				(int)(position[boost::source(*iter, *g)].y),
+				(int)(position[boost::source(*iter, *g)].z)}];
 			if (randn < val) {
 				ed_resultedge = *iter;
 
@@ -426,4 +430,37 @@ Color cRamp(double ratio) {
 	case 2: red = 255;      grn = x;        blu = 0;       break;//red
 	}
 	return Color(red/255, grn/255, blu/255);
+}
+
+void initVoxelMap(string filename) {
+	ifstream MyReadFile(filename);
+	string line;
+	vector<vec3> result;
+	vec3 cachevec = {};
+	std::array<int, 3> key{ {0, 0, 0} };
+	size_t counter = 0;
+	while (getline(MyReadFile, line)) {
+		counter = 0;
+		std::string s = line;
+		std::string delimiter = ",";
+		size_t pos = 0;
+		std::string token;
+		while ((pos = s.find(delimiter)) != std::string::npos) {
+			token = s.substr(0, pos);
+			if (counter == 0) {
+				key[0] = (stof(token));
+			}
+			else if (counter == 1) {
+				key[1] = stof(token);
+			}
+			else if (counter == 2) {
+				key[2] = stof(token);
+			}
+			s.erase(0, pos + delimiter.length());
+			counter++;
+		}
+		voxelMap[{key[0], key[1], key[2]}] = stof(s);
+		result.push_back(cachevec);
+
+	}
 }

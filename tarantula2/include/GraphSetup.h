@@ -88,3 +88,6 @@ boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>:
 // null edge
 
 vector<vector<size_t>> convhull;
+
+
+std::map<std::array<signed int, 3>, float> voxelMap;

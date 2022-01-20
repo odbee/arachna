@@ -72,7 +72,8 @@ void tarantula2App::setup()
 
 	ImGui::Initialize();
 
-	
+	initVoxelMap("voxelvals.txt");
+	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
 	InitialWebFromPc(&g,relaxc, "txtf.txt");
 	std::ofstream ofs;
 

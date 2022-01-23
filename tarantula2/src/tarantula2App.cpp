@@ -48,11 +48,7 @@ private:
 	bool colorTens = false;
 	bool drawNCycle = false;
 
-	float density=0.0005f, length=.999f, tension=0.0005f;
-	vector<float*> vallist{ &density,&length,&tension };
 
-	float cachedensity = 0.0005f, cachelength = .999f, cachetension = 0.0005f;
-	vector<float*> cachelist{ &cachedensity,&cachelength,&cachetension };
 	std::pair<edge_t, bool> c, d;
 
 	string profilername="profiler.csv";
@@ -214,9 +210,9 @@ void tarantula2App::draw()
 		//ImGui::PushID(0);
 
 		
-		ImGui::SliderFloat("density", &density, 0.0001f, .999f, "%.2f");
-		ImGui::SliderFloat("length", &length, 0.0001f, .999f, "%.2f");
-		ImGui::SliderFloat("tension", &tension, 0.0001f, .999f, "%.2f");
+		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
+		ImGui::SliderFloat("length", &G_length, 0.0001f, .999f, "%.2f");
+		ImGui::SliderFloat("tension", &G_tension, 0.0001f, .999f, "%.2f");
 
 
 		checkforchange(vallist, cachelist);

@@ -342,16 +342,17 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 	{
 		for (auto iter = begin; iter != end; ++iter) {
 			iteratorLength++;
-			fulllength += voxelMap[{(int)(position[boost::source(*iter, *g)].x),
+			voxellength += voxelMap[{(int)(position[boost::source(*iter, *g)].x),
 				(int)(position[boost::source(*iter, *g)].y),
 				(int)(position[boost::source(*iter, *g)].z)}];
-
+			fulllength+= currentLengthPm[*ei];
+			tensionlength+= restLengthPm[*ei] / currentLengthPm[*ei];
 
 			//fulllength += pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
 
 		}
 	}
-	std::uniform_real_distribution<> dis(0.0, fulllength);
+	std::uniform_real_distribution<> dis(0.0, 1.0);
 
 	while (isforbidden)
 	{
@@ -359,10 +360,14 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 		auto randn = dis(gen);
 		size_t countr = 0;
 		for (auto iter = begin; iter != end; ++iter) {
-			//auto val = pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
-			auto val = voxelMap[{(int)(position[boost::source(*iter, *g)].x),
+			auto voxelval= voxelMap[{(int)(position[boost::source(*iter, *g)].x),
 				(int)(position[boost::source(*iter, *g)].y),
-				(int)(position[boost::source(*iter, *g)].z)}];
+				(int)(position[boost::source(*iter, *g)].z)}]*G_density/voxellength;
+
+			auto lengthval= currentLengthPm[*ei]*G_length/fulllength;
+			auto tensionval = (restLengthPm[*ei] / currentLengthPm[*ei]) * G_tension / tensionlength;
+
+			auto val = voxelval + lengthval + tensionval;
 			if (randn < val) {
 				ed_resultedge = *iter;
 

@@ -31,6 +31,11 @@ int iterationcounter = 0;
 
 vector<size_t> vertlist;
 
+float G_density = 0.0005f, G_length = .999f, G_tension = 0.0005f;
+vector<float*> vallist{ &G_density,&G_length,&G_tension };
+
+float G_cachedensity = 0.0005f, G_cachelength = .999f, G_cachetension = 0.0005f;
+vector<float*> cachelist{ &G_cachedensity,&G_cachelength,&G_cachetension };
 
 
 

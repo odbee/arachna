@@ -48,6 +48,11 @@ private:
 	bool colorTens = false;
 	bool drawNCycle = false;
 
+	float density=0.0005f, length=.999f, tension=0.0005f;
+	vector<float*> vallist{ &density,&length,&tension };
+
+	float cachedensity = 0.0005f, cachelength = .999f, cachetension = 0.0005f;
+	vector<float*> cachelist{ &cachedensity,&cachelength,&cachetension };
 	std::pair<edge_t, bool> c, d;
 
 	string profilername="profiler.csv";
@@ -71,6 +76,12 @@ void tarantula2App::setup()
 
 
 	ImGui::Initialize();
+	ImGui::GetStyle().WindowRounding = 0.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	ImGui::GetStyle().ChildRounding = 0.0f;
+	ImGui::GetStyle().FrameRounding = 0.0f;
+	ImGui::GetStyle().GrabRounding = 0.0f;
+	ImGui::GetStyle().PopupRounding = 0.0f;
+	ImGui::GetStyle().ScrollbarRounding = 0.0f;
 
 	initVoxelMap("voxelvals.txt");
 	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
@@ -191,26 +202,67 @@ void tarantula2App::update()
 	cachediter = iterationcounter;
 }
 
+using namespace ImGui;        static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9f, 0.70f, 0.20f, 0.0f };
 
 
 void tarantula2App::draw()
 {
-	ImGui::Text("number of iterations = %i", iterationcounter);
-	ImGui::InputInt("cycle number", &displayCycle_i);
-	//if (displayCycle_i >= cycles.size()) {
-	//	displayCycle_i = displayCycle_i % cycles.size();
-	//}
-	ImGui::Checkbox("Draw Vertices", &mDrawVertices);
-	
-	
-	ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
-	ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
-	ImGui::Checkbox("Color Edges", &colorEdges);
-	ImGui::Checkbox("highlight Nth Cycle", &drawNCycle);
-	ImGui::Checkbox("Color Edge Tensions", &colorTens);
+	ImGui::SetNextItemOpen(true);
+	if (ImGui::TreeNode(" Web Settings")) {
 
-	ImGui::Checkbox("check for forbidden edges", &CHECKFORBIDDEN);
+		static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9f, 0.70f, 0.20f, 0.0f };
+		//ImGui::PushID(0);
 
+		
+		ImGui::SliderFloat("density", &density, 0.0001f, .999f, "%.2f");
+		ImGui::SliderFloat("length", &length, 0.0001f, .999f, "%.2f");
+		ImGui::SliderFloat("tension", &tension, 0.0001f, .999f, "%.2f");
+
+
+		checkforchange(vallist, cachelist);
+
+
+		//for (int i = 0; i < 7; i++)
+		//{
+
+		//	if (i > 0) ImGui::SameLine();
+		//	ImGui::PushID(i);
+		//	ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
+		//	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
+		//	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
+		//	ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
+		//	ImGui::VSliderFloat("##v", ImVec2(18, 160), &values[i], 0.0f, 1.0f, "");
+		//	ImGui::SliderFloat()
+		//	if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+		//		ImGui::SetTooltip("%.3f", values[i]);
+		//	ImGui::PopStyleColor(4);
+		//	ImGui::PopID();
+		//}
+		
+		ImGui::Checkbox("check for forbidden edges", &CHECKFORBIDDEN);
+
+		ImGui::TreePop();
+	}
+	if (ImGui::TreeNode(" Debug Settings")) {
+		ImGui::Text("number of iterations = %i", iterationcounter);
+		ImGui::InputInt("cycle number", &displayCycle_i);
+		//if (displayCycle_i >= cycles.size()) {
+		//	displayCycle_i = displayCycle_i % cycles.size();
+		//}
+		ImGui::Checkbox("Draw Vertices", &mDrawVertices);
+
+
+		ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
+		ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
+		ImGui::Checkbox("Color Edges", &colorEdges);
+		ImGui::Checkbox("highlight Nth Cycle", &drawNCycle);
+		ImGui::Checkbox("Color Edge Tensions", &colorTens);
+
+
+
+		ImGui::TreePop();
+	}
+	
 
 
 	gl::clear( Color( 0, 0, 0 ) ); 

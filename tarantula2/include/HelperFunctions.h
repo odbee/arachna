@@ -346,6 +346,7 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 				(int)(position[boost::source(*iter, *g)].y),
 				(int)(position[boost::source(*iter, *g)].z)}];
 
+
 			//fulllength += pow(((position[boost::source(*iter, *g)].y + position[boost::target(*iter, *g)].y) + 10) / 20, 1);
 
 		}
@@ -463,4 +464,51 @@ void initVoxelMap(string filename) {
 		result.push_back(cachevec);
 
 	}
+}
+
+void adjustothers(vector<float*>& values, vector<float*>& cachedvalues,size_t index) {
+	float factor=*cachedvalues[index]- *values[index];
+	float sum = 0.0f;
+	//factor /= values.size()-1;
+	float multfactor;
+	for (size_t i = 0; i < values.size(); i++)
+	{
+		if (i != index) {
+
+			sum += *values[i];
+		}
+	}
+
+
+	for (size_t i = 0; i < values.size(); i++)
+	{
+		if (i != index) {
+			multfactor = (*values[i]) /sum;
+
+			*values[i] += factor*multfactor;
+		}
+	}
+	for (size_t i = 0; i < values.size(); i++) {
+		const float uu = *values[i];
+		*cachedvalues[i] = uu;
+	}
+}
+
+void checkforchange(vector<float*>& values, vector<float*>& cachedvalues) {
+	float  val, cachedval;
+	//console() << "checking " << endl;
+	for (size_t i = 0; i < values.size(); i++)
+	{
+		//console() << "checking " << endl;
+
+		val = *values[i];
+		cachedval= *cachedvalues[i];
+		
+		if (val!=cachedval)
+		{
+			adjustothers(values, cachedvalues, i);
+
+		}
+	}
+
 }

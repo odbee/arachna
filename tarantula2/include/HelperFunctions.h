@@ -83,7 +83,7 @@ std::optional<edge_t> GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g
 }
 
 
-void addCyclesToVertices(Graph* g, std::vector<std::vector<size_t>> cycles) {
+void addCyclesToVertices(Graph* g, std::vector<std::vector<size_t>>& cycles) {
 	for (int i = 0; i < cycles.size(); i++)
 	{
 		for (const auto& elem : cycles[i])
@@ -515,5 +515,56 @@ void checkforchange(vector<float*>& values, vector<float*>& cachedvalues) {
 
 		}
 	}
+
+}
+
+void addcyclesfromPc(float relaxc,Graph&g, std::vector<std::vector<size_t>>&cycles){
+	
+	using FloatType = float;
+	using vex3 = quickhull::Vector3<FloatType>;
+	vector<vector<size_t>> convhull;
+	quickhull::QuickHull<FloatType> qh;
+	std::vector<vex3> pc;
+
+	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+
+		pc.emplace_back(float(position[*vi][0]), float(position[*vi][1]), float(position[*vi][2]));
+
+	}
+	auto hull = qh.getConvexHull(&pc[0].x, pc.size(), true, true);
+	auto indexbuffer = hull.getIndexBuffer();
+	for (size_t i = 0; i < indexbuffer.size() / 3; i++)
+	{
+		convhull.push_back({ indexbuffer.begin() + 3 * i,indexbuffer.begin() + 3 * i + 3 });
+	}
+
+	for (const auto& cycl : convhull) {
+		for (size_t i = 0; i < cycl.size(); i++)
+		{
+			auto v1 = cycl[i];
+			auto v2 = cycl[(i + 1) % cycl.size()];
+			//console() << v1 << "," << v2 << endl;
+			typename boost::graph_traits<Graph>::adjacency_iterator ai, ai2, ai_end, ai_end2;
+			boost::graph_traits< Graph >::vertex_iterator vi2, viend2;
+			for (boost::tie(ai, ai_end) = boost::adjacent_vertices(v1, g),
+				boost::tie(ai2, ai_end2) = boost::adjacent_vertices(v2, g);
+				ai != ai_end && ai2 != ai_end2; ai++, ai2++) {
+				if (*ai2 == *ai && v1 > v2) {
+					//console() << " adjacancyts" << *ai << ',' << *ai2 << " ";
+					cycles.push_back({ v1,v2,*ai });
+				}
+			}
+		}
+	}
+	for (const auto& cycl : convhull) {
+		for (size_t i = 0; i < cycl.size(); i++)
+		{
+			auto v1 = cycl[i];
+			auto v2 = cycl[(i + 1) % cycl.size()];
+			connectAB(&g, v1, v2, relaxc, 0, true);
+		}
+	}
+
+	addCyclesToVertices(&g, cycles);
 
 }

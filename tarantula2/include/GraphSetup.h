@@ -9,6 +9,7 @@
 #include "cinder/Unicode.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/CinderImGui.h"
+#include "quickhull/QuickHull.hpp"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
@@ -92,7 +93,7 @@ edge_t cache_edge;
 boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>::null_vertex();
 // null edge
 
-vector<vector<size_t>> convhull;
+
 
 
 std::map<std::array<signed int, 3>, float> voxelMap;

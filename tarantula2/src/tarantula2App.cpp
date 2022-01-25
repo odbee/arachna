@@ -22,8 +22,8 @@
 #include "DrawFunctions.h"
 #include "TextHelper.h"
 #include "InitialWebs.h"
-#include "quickhull/QuickHull.hpp"
 
+#include "Resetter.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -72,12 +72,25 @@ void tarantula2App::setup()
 
 
 	ImGui::Initialize();
-	ImGui::GetStyle().WindowRounding = 0.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->AddFontFromFileTTF("../resources/fonts/RedHatText-Medium.ttf", 18);
+
+	ImGui::GetStyle().WindowRounding = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	ImGui::GetStyle().WindowPadding.x = 30.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	ImGui::GetStyle().WindowPadding.y = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	ImGui::GetStyle().FramePadding.y = 5.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	ImGui::GetStyle().FramePadding.x = 8.0f;// <- Set this on init or use ImGui::PushStyleVar()
+
 	ImGui::GetStyle().ChildRounding = 0.0f;
-	ImGui::GetStyle().FrameRounding = 0.0f;
-	ImGui::GetStyle().GrabRounding = 0.0f;
+	ImGui::GetStyle().FrameRounding = 15.0f;
+	ImGui::GetStyle().GrabRounding = 20.0f;
 	ImGui::GetStyle().PopupRounding = 0.0f;
-	ImGui::GetStyle().ScrollbarRounding = 0.0f;
+	ImGui::GetStyle().ScrollbarRounding = 12.0f;
+	ImGui::GetStyle().WindowBorderSize = 0.0f;
+	ImGui::GetStyle().FrameBorderSize = 0.0f;
+	ImGui::GetStyle().ChildBorderSize = 0.0f;
+	ImGui::GetStyle().GrabMinSize = 20.0f;
+
 
 	initVoxelMap("voxelvals.txt");
 	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
@@ -88,59 +101,7 @@ void tarantula2App::setup()
 	profile_out << "counter,command,duration" << endl;
 	profile_out.close();
 
-
-	{
-		using FloatType = float;
-		using vex3 = quickhull::Vector3<FloatType>;
-
-		quickhull::QuickHull<FloatType> qh;
-		std::vector<vex3> pc;
-
-		for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
-
-			pc.emplace_back(float(position[*vi][0]), float(position[*vi][1]), float(position[*vi][2]));
-
-		}
-		auto hull = qh.getConvexHull(&pc[0].x, pc.size(), true, true);
-		auto indexbuffer = hull.getIndexBuffer();
-		for (size_t i = 0; i < indexbuffer.size() / 3; i++)
-		{
-			convhull.push_back({ indexbuffer.begin() + 3 * i,indexbuffer.begin() + 3 * i + 3 });
-		}
-
-		for (const auto& cycl : convhull) {
-			for (size_t i = 0; i < cycl.size(); i++)
-			{
-				auto v1 = cycl[i];
-				auto v2 = cycl[(i + 1) % cycl.size()];
-				//console() << v1 << "," << v2 << endl;
-				typename boost::graph_traits<Graph>::adjacency_iterator ai, ai2, ai_end, ai_end2;
-				boost::graph_traits< Graph >::vertex_iterator vi2, viend2;
-				for (boost::tie(ai, ai_end) = boost::adjacent_vertices(v1, g),
-					boost::tie(ai2, ai_end2) = boost::adjacent_vertices(v2, g);
-					ai != ai_end && ai2 != ai_end2; ai++, ai2++) {
-					if (*ai2 == *ai && v1 > v2) {
-						//console() << " adjacancyts" << *ai << ',' << *ai2 << " ";
-						cycles.push_back({ v1,v2,*ai });
-
-					}
-				}
-			}
-		}
-		for (const auto& cycl : convhull) {
-			for (size_t i = 0; i < cycl.size(); i++)
-			{
-				auto v1 = cycl[i];
-				auto v2 = cycl[(i + 1) % cycl.size()];
-				connectAB(&g, v1, v2, relaxc, 0, true);
-			}
-		}
-
-		//cycles.insert(cycles.begin(), convhull.begin(), convhull.end());
-		addCyclesToVertices(&g, cycles);
-
-	}
-
+	addcyclesfromPc(relaxc, g, cycles);
 }
 
 void tarantula2App::keyDown(KeyEvent event)
@@ -203,44 +164,34 @@ using namespace ImGui;        static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9
 
 void tarantula2App::draw()
 {
+	bool isopen;
+	ImGui::Begin("Params",&isopen, 3);
+	ImGui::StyleColorsDark();
 	ImGui::SetNextItemOpen(true);
-	if (ImGui::TreeNode(" Web Settings")) {
 
-		static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9f, 0.70f, 0.20f, 0.0f };
-		//ImGui::PushID(0);
+	if (ImGui::CollapsingHeader("Settings")) {
+		ImGui::Text("number of iterations = %i", iterationcounter);
 
-		
 		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
 		ImGui::SliderFloat("length", &G_length, 0.0001f, .999f, "%.2f");
 		ImGui::SliderFloat("tension", &G_tension, 0.0001f, .999f, "%.2f");
 
 
 		checkforchange(vallist, cachelist);
-
-
-		//for (int i = 0; i < 7; i++)
-		//{
-
-		//	if (i > 0) ImGui::SameLine();
-		//	ImGui::PushID(i);
-		//	ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
-		//	ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
-		//	ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
-		//	ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
-		//	ImGui::VSliderFloat("##v", ImVec2(18, 160), &values[i], 0.0f, 1.0f, "");
-		//	ImGui::SliderFloat()
-		//	if (ImGui::IsItemActive() || ImGui::IsItemHovered())
-		//		ImGui::SetTooltip("%.3f", values[i]);
-		//	ImGui::PopStyleColor(4);
-		//	ImGui::PopID();
-		//}
-		
 		ImGui::Checkbox("check for forbidden edges", &CHECKFORBIDDEN);
-
-		ImGui::TreePop();
+		if (ImGui::Button("Reset web")) {
+			console() << "resetting web" << endl;
+			resetweb(g, relaxc, cycles);
+		}
+			
 	}
-	if (ImGui::TreeNode(" Debug Settings")) {
-		ImGui::Text("number of iterations = %i", iterationcounter);
+	
+	ImGui::Dummy(ImVec2(0.0f, 20.0f));
+
+
+
+	if (ImGui::CollapsingHeader(" Debug Settings")) {
+
 		ImGui::InputInt("cycle number", &displayCycle_i);
 		//if (displayCycle_i >= cycles.size()) {
 		//	displayCycle_i = displayCycle_i % cycles.size();
@@ -253,12 +204,9 @@ void tarantula2App::draw()
 		ImGui::Checkbox("Color Edges", &colorEdges);
 		ImGui::Checkbox("highlight Nth Cycle", &drawNCycle);
 		ImGui::Checkbox("Color Edge Tensions", &colorTens);
-
-
-
-		ImGui::TreePop();
 	}
-	
+	ImGui::End();
+
 
 
 	gl::clear( Color( 0, 0, 0 ) ); 
@@ -285,16 +233,6 @@ void tarantula2App::draw()
 				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
 				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
 			}
-
-
-			//for (int i=0; i < convhull.size();i++) {
-			//	drawCycleEdges(&g, projection, viewport, convhull, i,Color(0.0f,1.0f,0.0f));
-			//}
-			//gl::color(0.0f, 0.0f, 1.0f,0.6f);
-			//gl::drawLine(position[displayEdgeV_ii], position[displayEdgeV_i]);
-			//gl::drawLine(position[displayEdgeV_iii], position[displayEdgeV_iv]);
-			//gl::drawLine(position[displayEdgeV_i], position[displayEdgeV_iii]);
-			//gl::drawLine(position[displayEdgeV_iv], position[displayEdgeV_ii]);
 
 
 			

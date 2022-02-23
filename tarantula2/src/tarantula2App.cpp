@@ -35,11 +35,13 @@ class tarantula2App : public App {
 	void update() override;
 	void draw() override;
 	void keyDown(KeyEvent event) override;
+
+	void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_t>>& cycles);
 	CameraPersp		mCamera;
 private:
 	gl::BatchRef		mWirePlane;
 	CameraUi			mCamUi;
-	float relaxc = 0.2f;
+	float relaxc = 0.4f;
 	bool hasCycle = false;	
 	bool mDrawVertices=false;
 	bool mDrawNumbers = false;
@@ -48,6 +50,7 @@ private:
 	bool colorTens = false;
 	bool drawNCycle = false;
 
+	int x_iterations=1000;
 
 	std::pair<edge_t, bool> c, d;
 
@@ -58,6 +61,8 @@ private:
 
 void tarantula2App::setup()
 {
+	VERTEXFILENAME = "txtf.txt";
+	VOXELFILENAME = "voxelvals.txt";
 	console() << endl;
 	//			CAMERA SETUP
 	{
@@ -66,14 +71,14 @@ void tarantula2App::setup()
 		mCamUi = CameraUi(&mCamera, getWindow());
 		auto lambertShader = gl::getStockShader(gl::ShaderDef().color().lambert());
 		auto colorShader = gl::getStockShader(gl::ShaderDef().color());
-		mWirePlane = gl::Batch::create(geom::WirePlane().size(vec2(10)).subdivisions(ivec2(10)), colorShader);
+		mWirePlane = gl::Batch::create(geom::WirePlane().size(vec2(11)).subdivisions(ivec2(10)), colorShader);
 	}
 	//			END CAMERA SETUP
 
 
 	ImGui::Initialize();
 	ImGuiIO& io = ImGui::GetIO();
-	io.Fonts->AddFontFromFileTTF("../resources/fonts/RedHatText-Medium.ttf", 18);
+	//io.Fonts->AddFontFromFileTTF("../resources/fonts/RedHatText-Medium.ttf", 18);
 
 	ImGui::GetStyle().WindowRounding = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
 	ImGui::GetStyle().WindowPadding.x = 30.0f;// <- Set this on init or use ImGui::PushStyleVar()
@@ -92,7 +97,8 @@ void tarantula2App::setup()
 	ImGui::GetStyle().GrabMinSize = 20.0f;
 
 
-	initVoxelMap("voxelvals.txt");
+	initVoxelMap(VOXELFILENAME);
+	console() << voxelMap.size() << endl;
 	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
 	InitialWebFromPc(&g,relaxc, "txtf.txt");
 	std::ofstream ofs;
@@ -103,7 +109,7 @@ void tarantula2App::setup()
 
 	addcyclesfromPc(relaxc, g, cycles);
 }
-
+ 
 void tarantula2App::keyDown(KeyEvent event)
 {
 	if (event.getCode() == 99) { // "c"
@@ -134,9 +140,12 @@ void tarantula2App::keyDown(KeyEvent event)
 
 	if (event.getChar() == 'p') {
 		exportGraph(g);
+		exportGraphOBJ(g);
 	}
 	if (event.getChar() == 'x') {
-		getVertsFromFile("textfile.txt");
+
+		console() << voxelMap.size() << endl;
+
 	}
 
 	//console() << event.getCode() << endl;
@@ -145,7 +154,8 @@ void tarantula2App::keyDown(KeyEvent event)
 void tarantula2App::update()
 {
 	auto start = std::chrono::high_resolution_clock::now();
-	relaxPhysics(&g);
+	if (RUNRELAX)
+		relaxPhysics(&g);
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	
@@ -161,7 +171,17 @@ void tarantula2App::update()
 
 using namespace ImGui;        static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9f, 0.70f, 0.20f, 0.0f };
 
-
+void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_t>>& cycles) {
+	for (size_t i = 0; i < x; i++)
+	{
+		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
+		for (size_t j = 0; j < 7; j++)
+		{
+			relaxPhysics(&g);
+		}
+	}
+	iterationcounter++;
+}
 void tarantula2App::draw()
 {
 	bool isopen;
@@ -175,6 +195,12 @@ void tarantula2App::draw()
 		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
 		ImGui::SliderFloat("length", &G_length, 0.0001f, .999f, "%.2f");
 		ImGui::SliderFloat("tension", &G_tension, 0.0001f, .999f, "%.2f");
+
+		ImGui::InputInt("x iterations", &x_iterations, 50, 200);
+		if (ImGui::Button("run x iterations")) {
+			runxiterations(x_iterations,g,relaxc,cycles);
+
+		}
 
 
 		checkforchange(vallist, cachelist);
@@ -193,12 +219,19 @@ void tarantula2App::draw()
 	if (ImGui::CollapsingHeader(" Debug Settings")) {
 
 		ImGui::InputInt("cycle number", &displayCycle_i);
+		ImGui::InputInt("edge number", &EDGEINDEX);
+
+		ImGui::InputText("textfile points",&VERTEXFILENAME);
+		ImGui::InputText("textfile density", &VOXELFILENAME);
+
 		//if (displayCycle_i >= cycles.size()) {
 		//	displayCycle_i = displayCycle_i % cycles.size();
 		//}
 		ImGui::Checkbox("Draw Vertices", &mDrawVertices);
+		ImGui::SliderFloat("Alpha Value", &ALPHA, 0.0001f, .999f, "%.2f");
+		
 
-
+		ImGui::Checkbox("RELAX", &RUNRELAX);
 		ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
 		ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
 		ImGui::Checkbox("Color Edges", &colorEdges);
@@ -226,13 +259,34 @@ void tarantula2App::draw()
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
 
+		
+		//drawClosestVoxel(EDGEINDEX,g);
+		//drawVoxelLine(EDGEINDEX, g);
 		{
-			//mWirePlane->draw();
+			//gl::color(1.0f, 1.0f, 1.0f, 0.1f);
+			//gl::pushModelMatrix();
+			//gl::translate({ 0,-5.5 });
+			//for (int i = 0; i <= 11; ++i) {
+			//	mWirePlane->draw();
+			//	gl::translate({ 0,1 });
+			//}
+			//gl::popModelMatrix();
+
+			//gl::pushModelMatrix();
+			//gl::rotate(_Pi/2);
+			//gl::translate({ 0,-5.5 });
+			//for (int i = 0; i <= 11; ++i) {
+			//	mWirePlane->draw();
+			//	gl::translate({ 0,1 });
+			//}
+			//gl::popModelMatrix();
+			drawVoxels(voxelMap,ALPHA);
 			drawGraph(&g, projection, viewport, colorEdges,colorTens);
-			if (drawNCycle) {
-				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
-				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
-			}
+			//if (drawNCycle) {
+			//	drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
+			//	//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
+			//}
+			//drawDensityEdges(&g, projection, viewport);
 
 
 			

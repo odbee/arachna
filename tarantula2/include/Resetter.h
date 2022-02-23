@@ -3,7 +3,7 @@
 void resetweb(Graph& g,float relaxc, std::vector<std::vector<size_t>>& cycles) {
 	g.clear();
 	cycles.clear();
-	InitialWebFromPc(&g, relaxc, "txtf.txt");
+	InitialWebFromPc(&g, relaxc, VERTEXFILENAME);
 	addcyclesfromPc(relaxc, g, cycles);
 	iterationcounter = 0;
 }

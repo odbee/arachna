@@ -2,9 +2,12 @@
 #include "GraphSetup.h"
 #include <random>
 
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
+}
 
-
-string stringfromVec(vector<size_t> vec) {
+template <typename T>
+string stringfromVec(vector<T> vec) {
 	string result = "[ ";
 	for (auto it = vec.begin(); it != vec.end(); it++) {
 		result.append(to_string(*it));
@@ -13,6 +16,189 @@ string stringfromVec(vector<size_t> vec) {
 	result.append(" ]");
 	return result;
 }
+void checkIfInVoxelMap(int x, int y, int z) {
+	if (abs(x) > 5 && abs(y) > 5 && abs(z) > 5) {
+		console() << "[ERROR] Trying to access voxel outside of range! Voxel number " << x << "," << y << "," << z << endl;
+	}
+}
+
+float getProbablityFromParams(vector<std::array<float, 2>>& paramlist, float length) {
+	float result = 0.0f;
+	int paramslength = paramlist.size();
+
+	for (size_t i = 0; i < paramslength; i++)
+	{
+		auto param = (paramlist)[i];
+		auto paramplus = (paramlist)[(i + 1) % paramslength];
+		if (paramplus[0] < 0.001) {
+			paramplus[0] = 1;
+		}
+
+		result += (paramplus[0] - param[0]) * param[1];
+		
+	}
+	result *= length;
+	return result;
+}
+
+float getDivPoint(edge_t edge) {
+	vector<std::array<float, 2>> paramlist = densityPm[edge];
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	std::uniform_real_distribution<> dis(0.0, 1.0);
+	auto randn = dis(gen);
+	float result = 0.5;
+	float val= 0;
+	int paramslength = paramlist.size();
+
+	for (size_t i = 0; i < paramslength; i++)
+	{
+		auto param = (densityPm[edge])[i];
+		auto paramplus = (densityPm[edge])[(i + 1) % paramslength];
+		if (paramplus[0] < 0.001) {
+			paramplus[0] = 1;
+		}
+
+		val = (paramplus[0] - param[0]) * param[1];
+		if (randn < val) {
+			result = param[0] + (paramplus[0] - param[0]) * 0.5f;
+			break;
+		}
+
+
+
+	}
+	return result;
+}
+
+string stringfromVec(vector<array<float,2>> vec) {
+	string result = "[ ";
+	for (auto it = vec.begin(); it != vec.end(); it++) {
+		string str = to_string((*it)[0]) + "++" + to_string((*it)[1]) + "   ";
+		result.append(str);
+	}
+	result.append(" ]");
+	return result;
+}
+
+
+struct coordcont {
+	float start;
+	float end;
+	vec3 axis;
+	signed int sign;
+
+	int startvoxel;
+	int endvoxel;
+	float startvoxeldist;
+	float direction;
+	void calcvals() {
+		start = start;
+		end = end;
+		direction = end - start;
+		sign = sgn(direction);
+		if (round(start+0.5) != start+0.5) {
+			startvoxel = round(start);
+		} else {
+			startvoxel = (sign > 0) ? ceil(start) : floor(start);
+		}
+		if (round(end+0.5) != end+0.5) {
+			endvoxel = round(end);
+		}
+		else {
+			endvoxel = (sign > 0) ? ceil(end) : floor(end);
+		}
+		if (round(start + 0.5) == start + 0.5) {
+			startvoxeldist = (direction >= 1) ? 1 : direction;
+		}
+
+		else {
+			startvoxeldist = (sign > 0) ? abs(start + 0.5 - ceil(start + 0.5)) : abs(start + 0.5 - floor(start + 0.5)); //offset by 0.5 to properly get floor/ceil
+		}
+		
+		
+		
+		
+
+	}
+	bool compareendvoxels() {
+		return startvoxel != endvoxel;
+	}
+
+	void addparam(int index, vector<std::array<float,2>>&paramlist,vec3& currentvoxel) {
+		if (compareendvoxels()) {
+			if (index < sign * direction) {
+				float param = (startvoxel + (index+0.5) * sign - start) / direction;
+				checkIfInVoxelMap((int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z);
+				float voxe = voxelMap[{(int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z}];
+				if (param != 0&& param <1) {
+
+					if (!paramlist.empty()) {
+						if (paramlist.back()[0] != param) {
+
+							paramlist.push_back({ param,voxe });
+						}
+						else if (paramlist.back()[0] == param) {
+							paramlist.back()[1] = voxe;
+						}
+					}
+					else {
+						paramlist.push_back({ param,voxe });
+					}
+					currentvoxel += (float)sign*axis;
+				}
+				
+				
+			}
+		}
+	}
+	
+};
+bool sortbystartvoxeldist(const coordcont& x, const coordcont& y) {
+	return x.startvoxeldist < y.startvoxeldist;
+}
+
+
+float integrateEdge(edge_t edge, Graph& g) {
+	vec3 p_start = position[boost::source(edge, g)];
+	vec3 p_end = position[boost::target(edge, g)];
+	vec3 dir = p_end - p_start;
+	
+	float param = 0;
+	vector<std::array<float, 2>> params;
+
+
+	coordcont xcont = { p_start.x,p_end.x, {1,0,0} };	xcont.calcvals();
+	coordcont ycont = { p_start.y,p_end.y, {0,1,0} };	ycont.calcvals();
+	coordcont zcont = { p_start.z,p_end.z, {0,0,1} };	zcont.calcvals();
+
+	vec3 currvox = { xcont.startvoxel,ycont.startvoxel,zcont.startvoxel };
+	vector < coordcont > vecofconts = { xcont, ycont, zcont};
+	std::sort(vecofconts.begin(), vecofconts.end(),sortbystartvoxeldist);
+
+	checkIfInVoxelMap((int)xcont.startvoxel, (int)ycont.startvoxel, (int)zcont.startvoxel);
+	float voxe = voxelMap[{(int)xcont.startvoxel , (int)ycont.startvoxel, (int)zcont.startvoxel}];
+	params.push_back({ 0.0f,voxe });
+
+	for (int i = 0; i < max({ xcont.sign * xcont.direction, ycont.sign * ycont.direction, zcont.sign * zcont.direction }); i++)
+	{
+		for (auto s_voxel : vecofconts) {
+			s_voxel.addparam(i, params, currvox);
+		}
+
+	}
+	//console() << stringfromVec(params) <<endl;
+	densityPm[edge] = params;
+	probabilityPm[edge] = getProbablityFromParams(params, distance(p_start, p_end));
+	//console() << probabilityPm[edge] << endl;
+	return probabilityPm[edge];
+
+}
+
+
+
+
+
 string stringfromCycles(std::vector<std::vector<size_t>> cycles) {
 	string result = "[ \n";
 
@@ -107,225 +293,10 @@ vector<size_t> compareVectorsReturnIntersection(const vector<size_t> vec1, const
 	std::set_intersection(s1.begin(), s1.end(), s2.begin(), s2.end(), std::back_inserter(v3));
 	return v3;
 }
-edge_ti getRandomEdgeWeightedByLength(Graph* g) {
-
-	std::random_device rd;  // Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
-	int iteratorLength = 0;
-	int randiter;
-	bool isforbidden = true;
-	float fulllength = 0;
-
-
-	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-		iteratorLength++;
-		fulllength += currentLengthPm[*ei];
-	}
-	std::uniform_real_distribution<> dis(0.0, fulllength);
-	
-	edge_ti ei_startEdge;
-
-	while (isforbidden)
-	{
-		auto randn = dis(gen);
-		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-			if (randn < currentLengthPm[*ei]) {
-				ei_startEdge = ei;
-				break;
-			}
-			randn -= currentLengthPm[*ei];
-		}
-
-
-		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
-		//isforbidden = false;
-	}
-	
-
-	return ei_startEdge;
-}
-
-edge_ti getRandomEdgeWeightedByTension(Graph* g) {
-	std::random_device rd;  // Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
-	int iteratorLength = 0;
-	int randiter;
-	bool isforbidden = true;
-	float fulllength = 0;
-	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-		iteratorLength++;
-		fulllength += restLengthPm[*ei]/currentLengthPm[*ei];
-	}
-	std::uniform_real_distribution<> dis(0.0, fulllength);
-
-	edge_ti ei_startEdge;
-
-	while (isforbidden)
-	{
-		auto randn = dis(gen);
-		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-			if (randn < restLengthPm[*ei] / currentLengthPm[*ei]) {
-				ei_startEdge = ei;
-				break;
-			}
-			randn -= restLengthPm[*ei] / currentLengthPm[*ei];
-		}
-
-
-		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
-		//isforbidden = false;
-	}
-	return ei_startEdge;
-}
-
-
-edge_ti getRandomEdgeWeightedByX(Graph* g) {
-	std::random_device rd;  // Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
-	int iteratorLength = 0;
-	int randiter;
-	bool isforbidden = true;
-	float fulllength= 0;
-	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-		iteratorLength++;
-		fulllength+=pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y)+ 10)/20,5);
-	}
-	std::uniform_real_distribution<> dis(0,fulllength);
-
-	edge_ti ei_startEdge;
-
-	while (isforbidden)
-	{
-		auto randn = dis(gen);
-		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-			
-			auto val = pow(((position[boost::source(*ei, *g)].y + position[boost::target(*ei, *g)].y) + 10) / 20, 5);
-			if (randn < val) {
-				ei_startEdge = ei;
-				break;
-			}
-			randn -= val;
-		}
-
-
-		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
-		//isforbidden = false;
-	}
-	return ei_startEdge;
-}
-
-
-
-
-edge_ti getRandomEdgeWeighted(Graph* g) {
-	std::random_device rd;  // Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
-	int iteratorLength = 0;
-	int randiter;
-	bool isforbidden = true;
-	float fulllength = 0, tensionlength = 0, voxellength=0;
-
-
-	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-		iteratorLength++;
-
-		tensionlength += restLengthPm[*ei] / currentLengthPm[*ei];
-		fulllength += currentLengthPm[*ei];
-	}
-
-	std::uniform_real_distribution<> dis(0.0, 1.0);
-
-	edge_ti ei_startEdge;
-
-	while (isforbidden)
-	{
-		auto randn = dis(gen);
-		for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
-			if (randn < restLengthPm[*ei] / currentLengthPm[*ei]) {
-				ei_startEdge = ei;
-				break;
-			}
-			randn -= restLengthPm[*ei] / currentLengthPm[*ei]/tensionlength/2;
-			randn -= currentLengthPm[*ei] / fulllength/2;
-
-
-		}
-		isforbidden = forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
-		//isforbidden = false;
-	}
-
-
-	return ei_startEdge;
-}
-
-
-
-edge_ti getRandomEdge(Graph* g) {
-	tie(ei, eiend) = boost::edges(*g);
-	int iteratorLength = 0;
-	int randiter;
-	bool isforbidden = true;
-	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei)
-		iteratorLength++;
-
-	auto ei_startEdge = boost::edges(*g).first;
-	
-	while (isforbidden)
-	{
-		ei_startEdge = boost::edges(*g).first;
-		randiter = rand() % iteratorLength;
-
-		for (size_t i = 0; i < randiter; i++)
-		{
-			ei_startEdge++;
-		}
-
-		isforbidden=forbiddenPm[*ei_startEdge] && CHECKFORBIDDEN;
-		//isforbidden = false;
-	}
-	
-
-	return ei_startEdge;
-}
-
-
-edge_t getRandomEdgeFromEdgeList(Graph* g, std::vector<edge_t> edges, std::vector<size_t> edgeindices, size_t& cycleind) {
-	std::random_device rd;  // Will be used to obtain a seed for the random number engine
-	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
-	int iteratorLength = 0;
-	int randiter;
-	float fulllength = 0, tensionlength = 0, voxellength = 0;
-	edge_t ed_resultedge;
-	std::uniform_real_distribution<> dis(0.0, 1.0);
-	// calculate max values:
-	{
-		for (auto ei = edges.begin(); ei != edges.end(); ++ei) {
-			iteratorLength++;
-			tensionlength += restLengthPm[*ei] / currentLengthPm[*ei];
-			fulllength += currentLengthPm[*ei];
-		}
-	}
-	auto randn = dis(gen);
-	size_t countr = 0;
-	for (auto ei = edges.begin(); ei != edges.end(); ++ei) {
-		if (randn < restLengthPm[*ei] / currentLengthPm[*ei]/tensionlength) {
-			ed_resultedge = *ei;
-			cycleind = edgeindices[countr];
-			break;
-		}
-		randn -= restLengthPm[*ei] / currentLengthPm[*ei] / tensionlength;
-		//randn -= currentLengthPm[*ei] / fulllength / 2;
-		countr++;
-	}
-
-	return ed_resultedge;
-}
-
-
 
 template <typename T>
 
-edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = false) {
+edge_t getRandomEdgeFromEdgeListT(Graph* g, T& begin, T& end, bool forbcheck = false) {
 	T cachebegin = begin;
 	T cacheend = end;
 
@@ -336,15 +307,19 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 	float fulllength = 0, tensionlength = 0, voxellength = 0;
 	bool isforbidden = true;
 
-	edge_t ed_resultedge;
+	edge_t ed_resultedge=*begin; // ADD FIRST EDGE TO RESULTEDGE SO IF AN ERROR OCCURS FALL BACK TO FIRST EDGE
 
 	// calculate max values:
 	{
 		for (auto iter = begin; iter != end; ++iter) {
 			iteratorLength++;
-			voxellength += voxelMap[{(int)(position[boost::source(*iter, *g)].x),
-				(int)(position[boost::source(*iter, *g)].y),
-				(int)(position[boost::source(*iter, *g)].z)}];
+			array<signed int, 3> pos = {
+				(signed int)(position[boost::source(*iter, *g)].x + 0.5 * (position[boost::target(*iter, *g)].x - position[boost::source(*iter, *g)].x)),
+				(signed int)(position[boost::source(*iter, *g)].y + 0.5 * (position[boost::target(*iter, *g)].y - position[boost::source(*iter, *g)].y)),
+					(signed int)(position[boost::source(*iter, *g)].z + 0.5 * (position[boost::target(*iter, *g)].z - position[boost::source(*iter, *g)].z))
+					};
+
+			voxellength += voxelMap[pos];
 			fulllength+= currentLengthPm[*ei];
 			tensionlength+= restLengthPm[*ei] / currentLengthPm[*ei];
 
@@ -360,10 +335,12 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 		auto randn = dis(gen);
 		size_t countr = 0;
 		for (auto iter = begin; iter != end; ++iter) {
-			auto voxelval= voxelMap[{(int)(position[boost::source(*iter, *g)].x),
-				(int)(position[boost::source(*iter, *g)].y),
-				(int)(position[boost::source(*iter, *g)].z)}]*G_density/voxellength;
-
+			array<signed int, 3> pos = {
+				(signed int)(position[boost::source(*iter, *g)].x + 0.5 * (position[boost::target(*iter, *g)].x - position[boost::source(*iter, *g)].x)),
+				(signed int)(position[boost::source(*iter, *g)].y + 0.5 * (position[boost::target(*iter, *g)].y - position[boost::source(*iter, *g)].y)),
+				(signed int)(position[boost::source(*iter, *g)].z + 0.5 * (position[boost::target(*iter, *g)].z - position[boost::source(*iter, *g)].z))
+			};
+			auto voxelval= voxelMap[pos] *G_density/voxellength;
 			auto lengthval= currentLengthPm[*ei]*G_length/fulllength;
 			auto tensionval = (restLengthPm[*ei] / currentLengthPm[*ei]) * G_tension / tensionlength;
 
@@ -383,6 +360,60 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T begin, T end, bool forbcheck = fal
 	return ed_resultedge;
 }
 
+
+template <typename T>
+
+edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end, bool forbcheck = false) {
+	T cachebegin = begin;
+	T cacheend = end;
+
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+	int iteratorLength = 0;	int randiter;
+	float fulllength = 0, tensionlength = 0, voxellength = 0;
+	bool isforbidden = true;
+
+	edge_t ed_resultedge = *begin; // ADD FIRST EDGE TO RESULTEDGE SO IF AN ERROR OCCURS FALL BACK TO FIRST EDGE
+
+	// calculate max values:
+	{
+		for (auto iter = begin; iter != end; ++iter) {
+
+			integrateEdge(*iter, *g);
+			voxellength += probabilityPm[*iter];
+			fulllength += currentLengthPm[*iter];
+			tensionlength += restLengthPm[*iter] / currentLengthPm[*iter];
+
+		}
+	}
+	std::uniform_real_distribution<> dis(0.0, 1.0);
+
+	while (isforbidden)
+	{
+		begin = cachebegin;
+		auto randn = dis(gen);
+		size_t countr = 0;
+		for (auto iter = begin; iter != end; ++iter) {
+			auto voxelval = probabilityPm[*iter] * G_density / voxellength;
+			//auto voxelval = 0;
+			auto lengthval = currentLengthPm[*iter] * G_length / fulllength;
+			auto tensionval = (restLengthPm[*iter] / currentLengthPm[*iter]) * G_tension / tensionlength;
+
+			auto val = voxelval + lengthval + tensionval;
+			if (randn < val) {
+				ed_resultedge = *iter;
+
+				break;
+			}
+			randn -= val;
+			//randn -= currentLengthPm[*ei] / fulllength / 2;
+			countr++;
+		}
+		isforbidden = forbiddenPm[ed_resultedge] && CHECKFORBIDDEN && forbcheck;
+
+	}
+	return ed_resultedge;
+}
 
 
 vec3 interpolateBetweenPoints(vec3 point1, vec3 point2, float t) {
@@ -415,6 +446,28 @@ void exportGraph(Graph g) {
 	}
 	myfile.close();
 }
+
+void exportGraphOBJ(Graph g) {
+	ofstream myfile;
+	myfile.open("positions.obj", std::ofstream::trunc);
+	
+	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+		//gl::drawStrokedCube(position[*vi], vec3(0.2f, 0.2f, 0.2f));
+		myfile << "v "<< to_string(position[*vi].x) << " " << to_string(position[*vi].y) << " " << to_string(position[*vi].z) << endl;
+		
+	}
+	
+	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+
+		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
+		if (!forbiddenPm[*ei]) {
+			myfile << "l " << to_string(boost::source(*ei, g)+1) << " " << to_string(boost::target(*ei, g)+1)  << endl;
+		}
+	}
+	myfile.close();
+}
+
+
 
 Color cRamp(double ratio) {
 

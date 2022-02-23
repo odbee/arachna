@@ -22,6 +22,9 @@ using namespace std;
 
 bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
+int EDGEINDEX=0;
+bool RUNRELAX = true;
+float ALPHA = 0.15f;
 int	displayCycle_i = 0;
 int	displayCycle_ii = 0;
 int displayEdgeV_i=0;
@@ -29,7 +32,8 @@ int displayEdgeV_ii=0;
 int displayEdgeV_iii = 0;
 int displayEdgeV_iv = 0;
 int iterationcounter = 0;
-
+string VERTEXFILENAME = "";
+string VOXELFILENAME = "";
 vector<size_t> vertlist;
 
 float G_density = 0.0005f, G_length = .999f, G_tension = 0.0005f;
@@ -47,6 +51,8 @@ struct EdgeProperties
 	float currentlength;
 	int index;
 	bool isforbidden;
+	vector<array<float,2>> densityparams;
+	float probability;
 };
 
 struct VertexProperties
@@ -75,10 +81,13 @@ boost::property_map< Graph, std::vector<size_t> VertexProperties::* >::type cycl
 
 
 boost::property_map< Graph, float EdgeProperties::* >::type currentLengthPm = boost::get(&EdgeProperties::currentlength, g);
+boost::property_map< Graph, float EdgeProperties::* >::type probabilityPm = boost::get(&EdgeProperties::probability, g);
+
 boost::property_map< Graph, float EdgeProperties::* >::type restLengthPm = boost::get(&EdgeProperties::restlength, g);
 boost::property_map< Graph, int EdgeProperties::* >::type indexPm = boost::get(&EdgeProperties::index, g);
 
 boost::property_map< Graph, bool EdgeProperties::* >::type forbiddenPm = boost::get(&EdgeProperties::isforbidden, g);
+boost::property_map< Graph, vector<array<float, 2>> EdgeProperties::* >::type densityPm = boost::get(&EdgeProperties::densityparams, g);
 
 
 boost::graph_traits<Graph>::edge_iterator ei, eiend;

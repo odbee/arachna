@@ -54,6 +54,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <ResourceCompile>
       <AdditionalIncludeDirectories>"..\..\..\cdev\Cinder\include";..\include</AdditionalIncludeDirectories>
@@ -78,6 +79,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -113,10 +115,12 @@
     <ClInclude Include="..\include\HelperFunctions.h" />
     <ClInclude Include="..\include\InitialWebs.h" />
     <ClInclude Include="..\include\PhysicsFunctions.h" />
+    <ClInclude Include="..\include\PlotEdges.h" />
     <ClInclude Include="..\include\Resetter.h" />
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\TextHelper.h" />
     <ClInclude Include="..\include\udgcd.hpp" />
+    <ClInclude Include="..\include\udgcd_adamedit.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

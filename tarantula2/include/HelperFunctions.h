@@ -223,6 +223,7 @@ string stringfromCyclesShort(std::vector<size_t> cycleslist) {
 
 edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind =0, bool isforbidden=false) {
 	float dd = distance(position[endPointA], position[endPointB]);
+
 	edge_t edge = boost::add_edge(endPointA, endPointB, *g).first;
 	currentLengthPm[edge] = dd;
 	restLengthPm[edge] = dd * rc;
@@ -490,6 +491,29 @@ Color cRamp(double ratio) {
 	}
 	return Color(red/255, grn/255, blu/255);
 }
+
+ImU32 cRampU32(double ratio) {
+
+	//we want to normalize ratio so that it fits in to 6 regions
+//where each region is 256 units long
+	ratio = std::clamp(ratio, double(0), double(10));
+	ratio = ratio / 11;
+
+	int normalized = int(ratio * 256 * 3);
+
+	//find the distance to the start of the closest region
+	int x = normalized % 256;
+
+	float red = 0, grn = 0, blu = 0;
+	switch (normalized / 256)
+	{
+	case 0: red = 0;        grn = 255;      blu = x;       break;//green
+	case 1: red = 255 - x;  grn = 255;      blu = 0;       break;//yellow
+	case 2: red = 255;      grn = x;        blu = 0;       break;//red
+	}
+	return ImGui::ColorConvertFloat4ToU32({ red / 255, grn / 255, blu / 255,1.0f });
+}
+
 
 void initVoxelMap(string filename) {
 	ifstream MyReadFile(filename);

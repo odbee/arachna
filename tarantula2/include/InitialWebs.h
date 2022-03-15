@@ -3,7 +3,39 @@
 #include <iostream>
 #include <fstream>
 
+#include <boost/graph/tiernan_all_cycles.hpp>
 
+template<typename T>
+inline std::vector<T> erase_indices(const std::vector<T>& data, std::vector<size_t>& indicesToDelete/* can't assume copy elision, don't pass-by-value */)
+{
+	if (indicesToDelete.empty())
+		return data;
+
+	std::vector<T> ret;
+	ret.reserve(data.size() - indicesToDelete.size());
+
+	std::sort(indicesToDelete.begin(), indicesToDelete.end());
+
+	// new we can assume there is at least 1 element to delete. copy blocks at a time.
+	std::vector<T>::const_iterator itBlockBegin = data.begin();
+	for (std::vector<size_t>::const_iterator it = indicesToDelete.begin(); it != indicesToDelete.end(); ++it)
+	{
+		std::vector<T>::const_iterator itBlockEnd = data.begin() + *it;
+		if (itBlockBegin != itBlockEnd)
+		{
+			std::copy(itBlockBegin, itBlockEnd, std::back_inserter(ret));
+		}
+		itBlockBegin = itBlockEnd + 1;
+	}
+
+	// copy last block.
+	if (itBlockBegin != data.end())
+	{
+		std::copy(itBlockBegin, data.end(), std::back_inserter(ret));
+	}
+
+	return ret;
+}
 
 vector<vec3> getVertsFromFile(string filename) {
 	ifstream MyReadFile(filename);
@@ -59,32 +91,105 @@ void InitialWebFromPc(Graph* g,  float rc, string filename) {
 	}
 
 }
-void addVertsAndEdgesFromFile(string filename, Graph g) {
 
-}
 
-void InitialWebFromObj(Graph* g, float rc, string filename) {
 
-	addVertsAndEdgesFromFile(filename, *g);
-	vector<vec3>verts = getVertsFromFile(filename);
 
-	auto cvert = boost::add_vertex(*g);
-	position[cvert] = { 0, 0, 0 };
-	fixedBool[cvert] = false;
 
-	for (const auto& vert : verts)
-	{
-		position[cvert] += vert;
+void InitialWebFromObj(Graph* g, float rc, string filename, std::vector<std::vector<size_t>>& cycs) {
+	bool hasCycle;
+	ifstream MyReadFile(filename);
+	string line;
+	while (getline(MyReadFile, line)) {
+		std::stringstream ss(line);
+		std::istream_iterator<std::string> begin(ss);
+		std::istream_iterator<std::string> end;
+		std::vector<std::string> vstrings(begin, end);
+		if (!vstrings.empty()) {
+			if (vstrings[0] == "v") {
+				auto a = boost::add_vertex(*g);
+				position[a] = { stof(vstrings[1]),stof(vstrings[2]),stof(vstrings[3]) };
+				fixedBool[a] = true;
+			}
+			if (vstrings[0] == "l") {
+				edge_t e = connectAB(g, stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
+				forbiddenPm[e] = stoi(vstrings[3]);
+			}
+		}
 
 	}
-	position[cvert] /= verts.size();
 
-	for (const auto& vert : verts)
-	{
-		auto a = boost::add_vertex(*g);
-		position[a] = vert;
-		fixedBool[a] = true;
-		connectAB(g, a, cvert, rc);
-	}
+	//boost::tiernan_all_cycles(g, vis);
+	
+	cycs = udgcd::findCycles<Graph, vertex_t>(*g);
+	////		REMOVE NON MINIMAL CYCLES:
+	//ci::app::console() << cycs.size() << endl;
+	//vector<size_t> removeinds;
+	//bool nss1 = false;
+	//bool nss2 = false;
+	//int N = cycs.size();
+	//#pragma omp parallel for collapse(3) schedule(dynamic)
+	//for (int i = 0; i < N; i++) {
+	//	for (int j = 0; j < N; j++) {
+	//		for (int k = 0; k < N; k++) {
+
+	//			if (i < j && k!=j&& k!=i && cycs[i].size() +cycs[j].size()>cycs[k].size()) {
+	//				//nss1 = false;
+	//				//nss2 = false;
+	//				//// REPLACE SORTS WITH FIND
+
+	//				//for (auto elem : cycs[i]) {
+	//				//	if (find(cycs[k].begin(), cycs[k].end(), elem) == cycs[k].end()) {
+	//				//		nss1 = true;
+	//				//		break;
+	//				//	}
+	//				//}
+	//				//for (auto elem : cycs[j]) {
+	//				//	if (find(cycs[k].begin(), cycs[k].end(), elem) == cycs[k].end()) {
+	//				//		nss2 = true;
+	//				//		break;
+	//				//	}
+	//				//}
+	//				//if (nss1&&nss2) {
+	//				//	//console() << "isssssss the sane" << endl;
+	//				//	removeinds.push_back(k);
+	//				//	
+	//				//}
+	//				
+	//				vector <size_t> c1 = cycs[i];
+	//				vector <size_t> c2 = cycs[j];
+	//				vector <size_t>  c(c1.begin(), c1.end());
+	//				c.insert(c.end(), c2.begin(), c2.end());
+	//				sort(c.begin(), c.end());
+	//				c.erase(std::unique(c.begin(), c.end()), c.end());
+
+	//				vector <size_t> c3 = cycs[k];
+	//				sort(c3.begin(), c3.end());
+	//				
+	//				
+	//				if (c == c3) {
+	//					#pragma omp critical
+	//					{
+	//						removeinds.push_back(k);
+	//					}
+	//					
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	//sort(removeinds.begin(), removeinds.end());
+	//removeinds.erase(unique(removeinds.begin(), removeinds.end()), removeinds.end());
+
+	//ci::app::console() << stringfromVec(removeinds) << endl;
+	//cycs= erase_indices(cycs, removeinds);
+	//cycles[0];
+	//hasCycle = !cycles.size();
+	//console() << "has cycle? " << cycles.size() << endl;
+
+	//	//addCyclesToVertices(g, cycles);
+	//udgcd::printPaths(console(), cycles);
+	addCyclesToVertices(g, cycs);
+	ci::app::console() << stringfromCycles(cycs) << endl;
 
 }

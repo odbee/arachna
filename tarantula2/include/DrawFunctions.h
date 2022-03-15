@@ -48,7 +48,7 @@ void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawNumbers, bool drawVert
 	}
 }
 
-void drawGraph(Graph* g, mat4 proj, vec4 viewp, bool colorEdges= false, bool colorTension = true) {
+void drawGraph(Graph* g, mat4 proj, vec4 viewp, bool colorEdges= false, bool colorTension = true, bool colorLength=false) {
 	gl::ScopedColor color(Color::gray(0.2f));
 	gl::color(1.0f, 1.0f, 1.0f, 0.8f);
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
@@ -58,9 +58,13 @@ void drawGraph(Graph* g, mat4 proj, vec4 viewp, bool colorEdges= false, bool col
 		}
 		if (colorTension) {
 			gl::color(cRamp(currentLengthPm[*ei] / restLengthPm[*ei]));
+			console() << cRamp(currentLengthPm[*ei] / restLengthPm[*ei]).r << endl;
+		}
+		if (colorLength) {
+			gl::color(cRamp(currentLengthPm[*ei]));
 		}
 		if (forbiddenPm[*ei]) {
-			gl::color(1.0f,1.0f,0.0f,0.02f);
+			gl::color(1.0f,1.0f,1.0f,0.2f);
 		}
 		else {
 			//gl::color(1.0f, 1.0f, 1.0f);
@@ -194,10 +198,6 @@ void drawVoxelLine(int index, Graph& g) {
 	}
 	gl::color(1.0f, 0.0f, 0.0f);
 
-
-	
-
-
 }
 
 
@@ -212,4 +212,17 @@ void drawCycleEdges(Graph* g, mat4 proj, vec4 viewp, std::vector<std::vector<siz
 
 		gl::drawLine(position[cycle[i]], position[cycle[j]]);
 	}
+}
+
+void drawSelectedEdge(Graph* g, edge_t edg, ColorA col = Color(1.0f, 0.0f, 0.0f)) {
+	gl::color(col);
+	gl::drawLine(position[boost::source(edg, *g)], position[boost::target(edg, *g)]);
+
+}
+
+void drawEdges(Graph* g,vector<edge_t> edges,  ColorA col = ColorA(1.0f, 0.0f, 0.0f)) {
+	gl::color(col);
+	for (const auto& edg : edges)
+		gl::drawLine(position[boost::source(edg, *g)], position[boost::target(edg, *g)]);
+
 }

@@ -15,6 +15,7 @@
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
 #include <udgcd.hpp>
+#include <omp.h>
 
 using namespace ci;
 using namespace ci::app;
@@ -24,7 +25,16 @@ bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
 int EDGEINDEX=0;
 bool RUNRELAX = true;
+bool NOTTHESAME=false;
+bool CAROUSEL = true;
+bool RUNCYCLES = false;
+
+
+
+
 float ALPHA = 0.15f;
+size_t CURRENTFRAME = 1;
+
 int	displayCycle_i = 0;
 int	displayCycle_ii = 0;
 int displayEdgeV_i=0;
@@ -34,6 +44,7 @@ int displayEdgeV_iv = 0;
 int iterationcounter = 0;
 string VERTEXFILENAME = "";
 string VOXELFILENAME = "";
+string OBJFILENAME = "";
 vector<size_t> vertlist;
 
 float G_density = 0.0005f, G_length = .999f, G_tension = 0.0005f;
@@ -106,3 +117,15 @@ boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>:
 
 
 std::map<std::array<signed int, 3>, float> voxelMap;
+
+
+bool EDGEADDED = false;
+edge_t WHICHEDGE;
+int EDGEADDEDINT = 0;
+int runAnimation = 0;
+vector<edge_t> CONNEDGES;
+vector<edge_t> NEWEDGES;
+vector<int> CONNEDGESGRAPH;
+bool otherbool = false;
+edge_t HOVERED;
+edge_t EMPTY;

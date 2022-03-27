@@ -65,9 +65,9 @@ void InitialWebFromObj(Graph* g, float rc, std::string filename, std::vector<std
 
 	//boost::tiernan_all_cycles(g, vis);
 
-	cycs = udgcd::findCycles<Graph, vertex_t>(*g);
-	
-	addCyclesToVertices(g, cycs);
+	//cycs = udgcd::findCycles<Graph, vertex_t>(*g);
+	//
+	//addCyclesToVertices(g, cycs);
 
 }
 
@@ -330,4 +330,42 @@ void addCycle(Graph* g, std::vector<std::vector<size_t>>& cycs, string cyclestri
 	cycs.push_back(newcycle);
 	addCycleToVertices(g, newcycle, cycs.size() - 1);
 
+}
+
+void savecycles(std::vector<std::vector<size_t>>& cycles, string filename) {
+	ofstream myfile;
+	myfile.open(filename, std::ofstream::trunc);
+	string contents;
+
+	for each (std::vector<size_t> cycle in cycles)
+	{
+		stringstream buffer;
+		for each (size_t var in cycle) {
+			buffer << (int)var << ",";
+		}
+		contents = buffer.str();
+		contents.pop_back();
+		myfile << contents << endl;
+		buffer.clear();
+	}
+	myfile.close();
+}
+
+void loadcycles(Graph*g, std::vector<std::vector<size_t>>& cycles, string filename) {
+	ofstream myfile;
+	myfile.open(filename, std::ofstream::trunc);
+	string contents;
+
+	for each (std::vector<size_t> cycle in cycles)
+	{
+		stringstream buffer;
+		for each (size_t var in cycle) {
+			buffer << (int)var << ",";
+		}
+		contents = buffer.str();
+		contents.pop_back();
+		myfile << contents << endl;
+		buffer.clear();
+	}
+	myfile.close();
 }

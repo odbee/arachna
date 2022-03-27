@@ -85,6 +85,8 @@ private:
 	string FILEPATH="D:\\Dokumente\\Uni\\programmieren\\cindertesting\\tarantula2\\vc2019\\startmesh.obj";
 	vec2 mMousePos;
 	string CYCLEORDER = "";
+	string CYCLEFILENAME = "";
+	string CYCLEIMPORTFILENAME = "";
 };
 
 
@@ -189,6 +191,20 @@ void cyclistApp::draw()
 		InitialWebFromObj(&g, 0.8, FILEPATH, cycles);
 	}
 
+	if (ImGui::Button("compute cycles")) {
+		
+		cycles = udgcd::findCycles<Graph, vertex_t>(g);
+		addCyclesToVertices(&g, cycles);
+	}
+
+	ImGui::InputText("cycle import file name ", &CYCLEIMPORTFILENAME);
+	if (ImGui::Button("load cycles")) {
+
+		loadcycles(&g, cycles, CYCLEIMPORTFILENAME);
+
+	}
+
+
 	if (ImGui::Button("remove active cycle")) {
 
 		removeActiveCycle(&g, cycles, cycleN,index_in_commoncyc, commoncycles);
@@ -199,7 +215,12 @@ void cyclistApp::draw()
 		addCycle(&g, cycles, CYCLEORDER, cycleN, index_in_commoncyc, commoncycles);
 		CYCLEORDER.clear();
 	}
+	ImGui::InputText("cycle export file name ", &CYCLEFILENAME);
+	if (ImGui::Button("save cycles")) {
 
+		savecycles(cycles,CYCLEFILENAME);
+		
+	}
 	//ImGui::StyleColorsLight();
 
 	ImGui::End();

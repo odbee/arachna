@@ -122,6 +122,28 @@ void drawVoxels(std::map<std::array<signed int, 3>, float> grid,float alpha=1.0f
 	}
 }
 
+
+
+void drawVoxelsBatch(std::map<std::array<signed int, 3>, float> grid, gl::BatchRef &Instance, float alpha = 1.0f) {
+	if (alpha > 0.09) {
+		for each (auto vox in grid)
+		{
+			if (vox.second>0.3f||vox.second <0.01) {
+				gl::color(vox.second, 1.0f, 1.0f - vox.second, alpha);
+				gl::pushModelMatrix();
+				gl::translate({ vox.first[0],vox.first[1],vox.first[2] });
+				gl::scale({ 0.9f,0.9f,0.9f });
+
+				Instance->draw();
+				gl::popModelMatrix();
+				//gl::drawStrokedCube({ vox.first[0],vox.first[1],vox.first[2] }, { 0.9f,0.9f ,0.9f });
+			}
+		}
+	}
+}
+
+
+
 void drawClosestVoxel(int index, Graph& g) {
 	//console() << "edgeindex is now " << index << endl;
 	int counter = 0;
@@ -226,3 +248,4 @@ void drawEdges(Graph* g,vector<edge_t> edges,  ColorA col = ColorA(1.0f, 0.0f, 0
 		gl::drawLine(position[boost::source(edg, *g)], position[boost::target(edg, *g)]);
 
 }
+

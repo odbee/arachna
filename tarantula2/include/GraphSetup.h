@@ -129,3 +129,4 @@ vector<int> CONNEDGESGRAPH;
 bool otherbool = false;
 edge_t HOVERED;
 edge_t EMPTY;
+string EXPORTTITLE;

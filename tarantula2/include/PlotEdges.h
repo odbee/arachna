@@ -471,7 +471,7 @@ int PlotGraphEdges(const char* label, Graph &graph, const char* overlay_text, fl
 
         // CALCULATE BAR WIDTH
         float barwidth = ImLerp(0.0f, inner_bb.Max.x - inner_bb.Min.x, t_step);
-        float offset = (float)((barwidth / 2) - 2);
+        float offset = (float)((barwidth / 2) - 1);
         offset = (offset < 0) ? 0 : offset;
 
 

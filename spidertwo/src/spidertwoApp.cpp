@@ -38,6 +38,7 @@ void spidertwoApp::mouseDown( MouseEvent event )
 	if(event.isLeft())
 	{
 		mPoints.push_back(event.getPos());
+		console() << "downled" << endl;
 	}
 
 	if (event.isRight())

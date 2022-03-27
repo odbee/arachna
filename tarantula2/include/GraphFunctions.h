@@ -284,6 +284,7 @@ void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size
 	connectEdges(g, startedge, goaledge, rc);
 	updatetext(to_string(counter) + "j");
 	counter++;
+	console() << GLOBALINT << endl;
 	updatetext("\n");
 }
 

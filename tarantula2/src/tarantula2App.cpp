@@ -41,6 +41,7 @@ class tarantula2App : public App {
 	CameraPersp		mCamera;
 private:
 	gl::BatchRef		mWirePlane;
+	gl::BatchRef		mWireCube;
 	CameraUi			mCamUi;
 	float relaxc = 0.4f;
 	bool hasCycle = false;	
@@ -79,6 +80,7 @@ void tarantula2App::setup()
 	VERTEXFILENAME = "txtf.txt";
 	OBJFILENAME = "startmesh.obj";
 	VOXELFILENAME = "voxelvals.txt";
+	EXPORTTITLE = "positions.obj";
 
 	Color h;
 
@@ -95,6 +97,7 @@ void tarantula2App::setup()
 		auto lambertShader = gl::getStockShader(gl::ShaderDef().color().lambert());
 		auto colorShader = gl::getStockShader(gl::ShaderDef().color());
 		mWirePlane = gl::Batch::create(geom::WirePlane().size(vec2(11)).subdivisions(ivec2(10)), colorShader);
+		mWireCube = gl::Batch::create(geom::WireCube(), colorShader);
 	}
 	//			END CAMERA SETUP
 
@@ -176,7 +179,7 @@ void tarantula2App::keyDown(KeyEvent event)
 
 	if (event.getChar() == 'p') {
 		exportGraph(g);
-		exportGraphOBJ(g);
+		exportGraphOBJ(g, EXPORTTITLE);
 	}
 	if (event.getChar() == 'x') {
 
@@ -320,13 +323,14 @@ void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<st
 		{
 			relaxPhysics(&g);
 		}
+		iterationcounter++;
 	}
-	iterationcounter++;
+	
 }
 void tarantula2App::draw()
 {
 	bool isopen;
-	ImGui::Begin("STUFS", &isopen, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
+	ImGui::Begin("STUFS", &isopen, /*ImGuiWindowFlags_NoTitleBar +*/ ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
 
 		//	static float xs[51], ys1[51], ys2[51];
 		//for (int i = 0; i < 51; ++i) {
@@ -372,6 +376,8 @@ void tarantula2App::draw()
 
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Text("number of iterations = %i", iterationcounter);
+		
+
 
 		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
 		ImGui::SliderFloat("length", &G_length, 0.0001f, .999f, "%.2f");
@@ -404,7 +410,7 @@ void tarantula2App::draw()
 
 		ImGui::InputText("textfile points",&VERTEXFILENAME);
 		ImGui::InputText("textfile density", &VOXELFILENAME);
-
+		ImGui::InputText("export filename: ", &EXPORTTITLE);
 		//if (displayCycle_i >= cycles.size()) {
 		//	displayCycle_i = displayCycle_i % cycles.size();
 		//}
@@ -427,7 +433,7 @@ void tarantula2App::draw()
 
 	}
 	ImGui::End();
-
+	
 
 
 	gl::clear( Color( 0, 0, 0 ) ); 
@@ -468,7 +474,7 @@ void tarantula2App::draw()
 			//	gl::translate({ 0,1 });
 			//}
 			//gl::popModelMatrix();
-			drawVoxels(voxelMap,ALPHA);
+			drawVoxelsBatch(voxelMap,mWireCube,ALPHA);
 			drawGraph(&g, projection, viewport, colorEdges,colorTens,colorLength);
 			if (drawNCycle) {
 				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);

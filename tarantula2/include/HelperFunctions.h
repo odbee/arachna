@@ -448,9 +448,9 @@ void exportGraph(Graph g) {
 	myfile.close();
 }
 
-void exportGraphOBJ(Graph g) {
+void exportGraphOBJ(Graph g,string title="positions.obj") {
 	ofstream myfile;
-	myfile.open("positions.obj", std::ofstream::trunc);
+	myfile.open(title, std::ofstream::trunc);
 	
 	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
 		//gl::drawStrokedCube(position[*vi], vec3(0.2f, 0.2f, 0.2f));

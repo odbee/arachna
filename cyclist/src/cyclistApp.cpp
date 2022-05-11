@@ -82,11 +82,12 @@ private:
 	gl::BatchRef		mWireCube;
 	HeyCameraUi			mCamUi;
 	vec3 camPos = { 30.0f, 10.0f, 40.0f };
-	string FILEPATH="D:\\Dokumente\\Uni\\programmieren\\cindertesting\\tarantula2\\vc2019\\startmesh.obj";
+	string FILEPATH="startmesh.obj";
 	vec2 mMousePos;
 	string CYCLEORDER = "";
 	string CYCLEFILENAME = "";
 	string CYCLEIMPORTFILENAME = "";
+	bool redText = true;
 };
 
 
@@ -158,7 +159,9 @@ void cyclistApp::update()
 
 		commoncycles = compareVectorsReturnIntersection(cyclesPm[boost::source(selected_edge, g)], cyclesPm[boost::target(selected_edge, g)]);
 		index_in_commoncyc = 0;
-		cycleN = commoncycles[index_in_commoncyc];
+		if (!commoncycles.empty()) {
+			cycleN = commoncycles[index_in_commoncyc];
+		}
 	}
 	
 	if (!commoncycles.empty()) {
@@ -170,7 +173,8 @@ void cyclistApp::update()
 
 void cyclistApp::draw()
 {
-	gl::clear(Color::hex(0x282828));
+	//gl::clear(Color::hex(0x282828));
+	gl::clear(Color::black());
 
 	bool isopen;
 
@@ -221,6 +225,7 @@ void cyclistApp::draw()
 		savecycles(cycles,CYCLEFILENAME);
 		
 	}
+	ImGui::Checkbox("draw red text", &redText);
 	//ImGui::StyleColorsLight();
 
 	ImGui::End();
@@ -235,7 +240,7 @@ void cyclistApp::draw()
 		int h = getWindowHeight();
 		vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
 		if (!cycles.empty()) {
-			drawPoints(&g, projection, viewport);
+			drawPoints(&g, projection, viewport, redText);
 		}
 		
 
@@ -247,8 +252,11 @@ void cyclistApp::draw()
 
 			drawGraph(&g, projection, viewport,ColorA(255.0f / 255, 214.0f / 255, 235.0f / 255, 1.0f));
 			if (!cycles.empty()){
-				drawCycleEdges(&g, projection, viewport, cycles, cycleN,Color::hex(0xCC241D));
+				if (cycles[cycleN].size()) {
+					drawCycleEdges(&g, projection, viewport, cycles, cycleN, Color::hex(0xCC241D));
+				}
 			}
+
 			float u = mMousePos.x / (float)getWindowWidth();
 			float v = mMousePos.y / (float)getWindowHeight();
 			Ray ray = mCamera.generateRay(u, 1.0f - v, mCamera.getAspectRatio());
@@ -261,10 +269,20 @@ void cyclistApp::draw()
 			if (!cycles.empty()){
 				hovered_edge = getClosestEdgeFromRay(ray, &g);
 				
-				gl::color(ColorA(0.0f,1.0f,0.0f,0.4f));
-				gl::drawLine(position[boost::source(hovered_edge, g)], position[boost::target(hovered_edge, g)]);
-			}
+				if (hovered_edge != selected_edge) {
+					gl::color(ColorA(0.0f, 1.0f, 0.0f, 0.4f));
 
+					gl::drawLine(position[boost::source(hovered_edge, g)], position[boost::target(hovered_edge, g)]);
+
+				} 
+				else {
+					
+				}
+				gl::color(Color::hex(0x458588));
+
+				gl::drawLine(position[boost::source(selected_edge, g)], position[boost::target(selected_edge, g)]);
+
+			}
 
 
 

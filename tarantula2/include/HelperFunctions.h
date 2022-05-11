@@ -645,3 +645,8 @@ void addcyclesfromPc(float relaxc,Graph&g, std::vector<std::vector<size_t>>&cycl
 	addCyclesToVertices(&g, cycles);
 
 }
+
+void findAndAddCycles(Graph* g, std::vector<std::vector<size_t>>& cycs) {
+	cycs = udgcd::findCycles<Graph, vertex_t>(*g);
+	addCyclesToVertices(g, cycs);
+}

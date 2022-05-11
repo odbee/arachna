@@ -109,7 +109,15 @@ void InitialWebFromObj(Graph* g, float rc, string filename, std::vector<std::vec
 			if (vstrings[0] == "v") {
 				auto a = boost::add_vertex(*g);
 				position[a] = { stof(vstrings[1]),stof(vstrings[2]),stof(vstrings[3]) };
-				fixedBool[a] = true;
+				if (vstrings.size() >= 5) {
+					fixedBool[a]=stof(vstrings[4]); //
+				}
+				else {
+					fixedBool[a] = true;
+				}
+				
+				
+				
 			}
 			if (vstrings[0] == "l") {
 				edge_t e = connectAB(g, stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
@@ -121,75 +129,7 @@ void InitialWebFromObj(Graph* g, float rc, string filename, std::vector<std::vec
 
 	//boost::tiernan_all_cycles(g, vis);
 	
-	cycs = udgcd::findCycles<Graph, vertex_t>(*g);
-	////		REMOVE NON MINIMAL CYCLES:
-	//ci::app::console() << cycs.size() << endl;
-	//vector<size_t> removeinds;
-	//bool nss1 = false;
-	//bool nss2 = false;
-	//int N = cycs.size();
-	//#pragma omp parallel for collapse(3) schedule(dynamic)
-	//for (int i = 0; i < N; i++) {
-	//	for (int j = 0; j < N; j++) {
-	//		for (int k = 0; k < N; k++) {
 
-	//			if (i < j && k!=j&& k!=i && cycs[i].size() +cycs[j].size()>cycs[k].size()) {
-	//				//nss1 = false;
-	//				//nss2 = false;
-	//				//// REPLACE SORTS WITH FIND
-
-	//				//for (auto elem : cycs[i]) {
-	//				//	if (find(cycs[k].begin(), cycs[k].end(), elem) == cycs[k].end()) {
-	//				//		nss1 = true;
-	//				//		break;
-	//				//	}
-	//				//}
-	//				//for (auto elem : cycs[j]) {
-	//				//	if (find(cycs[k].begin(), cycs[k].end(), elem) == cycs[k].end()) {
-	//				//		nss2 = true;
-	//				//		break;
-	//				//	}
-	//				//}
-	//				//if (nss1&&nss2) {
-	//				//	//console() << "isssssss the sane" << endl;
-	//				//	removeinds.push_back(k);
-	//				//	
-	//				//}
-	//				
-	//				vector <size_t> c1 = cycs[i];
-	//				vector <size_t> c2 = cycs[j];
-	//				vector <size_t>  c(c1.begin(), c1.end());
-	//				c.insert(c.end(), c2.begin(), c2.end());
-	//				sort(c.begin(), c.end());
-	//				c.erase(std::unique(c.begin(), c.end()), c.end());
-
-	//				vector <size_t> c3 = cycs[k];
-	//				sort(c3.begin(), c3.end());
-	//				
-	//				
-	//				if (c == c3) {
-	//					#pragma omp critical
-	//					{
-	//						removeinds.push_back(k);
-	//					}
-	//					
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//sort(removeinds.begin(), removeinds.end());
-	//removeinds.erase(unique(removeinds.begin(), removeinds.end()), removeinds.end());
-
-	//ci::app::console() << stringfromVec(removeinds) << endl;
-	//cycs= erase_indices(cycs, removeinds);
-	//cycles[0];
-	//hasCycle = !cycles.size();
-	//console() << "has cycle? " << cycles.size() << endl;
-
-	//	//addCyclesToVertices(g, cycles);
-	//udgcd::printPaths(console(), cycles);
-	addCyclesToVertices(g, cycs);
 	ci::app::console() << stringfromCycles(cycs) << endl;
 
 }

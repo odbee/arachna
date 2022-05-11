@@ -109,6 +109,7 @@
     <ClCompile Include="..\src\tarantula2App.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\CycleImportFunctions.h" />
     <ClInclude Include="..\include\DrawFunctions.h" />
     <ClInclude Include="..\include\GraphFunctions.h" />
     <ClInclude Include="..\include\GraphSetup.h" />

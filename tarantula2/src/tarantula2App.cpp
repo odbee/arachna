@@ -23,6 +23,7 @@
 #include "InitialWebs.h"
 #include "PlotEdges.h"
 #include "Resetter.h"
+#include "CycleImportFunctions.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -31,7 +32,7 @@ using namespace std;
 
 
 class tarantula2App : public App {
-  public:
+public:
 	void setup() override;
 	void update() override;
 	void draw() override;
@@ -44,8 +45,8 @@ private:
 	gl::BatchRef		mWireCube;
 	CameraUi			mCamUi;
 	float relaxc = 0.4f;
-	bool hasCycle = false;	
-	bool mDrawVertices=false;
+	bool hasCycle = false;
+	bool mDrawVertices = false;
 	bool mDrawNumbers = false;
 	bool mDrawVertexInfo = false;
 	bool colorEdges = false;
@@ -54,11 +55,11 @@ private:
 
 	bool drawNCycle = false;
 
-	int x_iterations=1000;
+	int x_iterations = 1000;
 
 	std::pair<edge_t, bool> c, d;
 	vec3 camPos = { 30.0f, 10.0f, 40.0f };
-	string profilername="profiler.csv";
+	string profilername = "profiler.csv";
 	ofstream profile_out;
 	int cachediter;
 
@@ -120,7 +121,7 @@ void tarantula2App::setup()
 	ImGui::GetStyle().PopupRounding = 0.0f;
 	ImGui::GetStyle().ScrollbarRounding = 12.0f;
 	ImGui::GetStyle().WindowBorderSize = 2.0f;
-	
+
 
 	ImGui::GetStyle().FrameBorderSize = 0.0f;
 	ImGui::GetStyle().ChildBorderSize = 0.0f;
@@ -137,8 +138,8 @@ void tarantula2App::setup()
 	console() << voxelMap.size() << endl;
 	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
 	//InitialWebFromPc(&g,relaxc, "txtf.txt");
-	InitialWebFromObj(&g, relaxc, OBJFILENAME,cycles);
-	
+	InitialWebFromObj(&g, relaxc, OBJFILENAME, cycles);
+
 
 	std::ofstream ofs;
 
@@ -148,7 +149,7 @@ void tarantula2App::setup()
 
 	//addcyclesfromPc(relaxc, g, cycles);
 }
- 
+
 void tarantula2App::keyDown(KeyEvent event)
 {
 	if (event.getCode() == 99) { // "c"
@@ -156,7 +157,7 @@ void tarantula2App::keyDown(KeyEvent event)
 		auto start = std::chrono::high_resolution_clock::now();
 		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
 		auto end = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end- start);
+		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 		profile_out.open(profilername, std::ios_base::app);
 		profile_out << iterationcounter << "," << "addcyc" << "," << duration.count() << endl;
 		profile_out.close();
@@ -197,18 +198,18 @@ void tarantula2App::keyDown(KeyEvent event)
 vec3 rotateVec(float alpha, vec3 vector) {
 	return { vector.x * cos(alpha) - vector.z * sin(alpha)
 		,vector.y,
-		vector.x* sin(alpha) + vector.z * cos(alpha) };
+		vector.x * sin(alpha) + vector.z * cos(alpha) };
 }
 
 void tarantula2App::update()
 {
 	CURRENTFRAME++;
 	auto start = std::chrono::high_resolution_clock::now();
-	if (RUNRELAX&&!runAnimation)
+	if (RUNRELAX && !runAnimation)
 		relaxPhysics(&g);
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	
+
 	if (cachediter != iterationcounter) {
 		profile_out.open(profilername, std::ios_base::app);
 		profile_out << iterationcounter << "," << "physics" << "," << duration.count() << endl;
@@ -219,7 +220,7 @@ void tarantula2App::update()
 		camPos = rotateVec(0.01f, camPos);
 		mCamera.lookAt(camPos, vec3(0));
 	}
-	if (RUNCYCLES&& !(CURRENTFRAME % 30)) {
+	if (RUNCYCLES && !(CURRENTFRAME % 30)) {
 		displayCycle_i++;
 	}
 	cachediter = iterationcounter;
@@ -250,7 +251,7 @@ void tarantula2App::update()
 			CONNEDGES = N_connedges;
 		}
 
-		
+
 		if (runAnimation == 100) {
 			if (N_connedges.size()) {
 
@@ -262,7 +263,7 @@ void tarantula2App::update()
 				initEdge(N_ed_goalEdge, N_goaledge, g);
 				displayEdgeV_iii = N_goaledge.start.index;
 				displayEdgeV_iv = N_goaledge.end.index;
-				
+
 				vector<size_t> currCyc = cycles[cycleIndex];
 				updatetext(to_string(counter) + "c");
 				displayCycle_i = cycleIndex;
@@ -285,7 +286,7 @@ void tarantula2App::update()
 				position[N_startedge.divisionvert] = interpolate(N_startedge, getDivPoint(N_startedge.descriptor));
 				position[N_goaledge.divisionvert] = interpolate(N_goaledge, getDivPoint(N_startedge.descriptor));
 				//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
-				cycles[cycleIndex]= left;
+				cycles[cycleIndex] = left;
 				cycles.push_back(right);
 				size_t lastindex = cycles.size() - 1;
 				displayCycle_ii = lastindex;
@@ -296,8 +297,8 @@ void tarantula2App::update()
 				console() << " no cycles found, returning" << endl;
 				return;
 			}
-			
-			NEWEDGES=connectEdges(&g, N_startedge, N_goaledge, relaxc);
+
+			NEWEDGES = connectEdges(&g, N_startedge, N_goaledge, relaxc);
 			counter++;
 			updatetext("\n");
 		}
@@ -306,7 +307,7 @@ void tarantula2App::update()
 		{
 			runAnimation = 0;
 		}
-			
+
 	}
 
 
@@ -314,7 +315,7 @@ void tarantula2App::update()
 
 }
 
-using namespace ImGui;       
+using namespace ImGui;
 void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_t>>& cycles) {
 	for (size_t i = 0; i < x; i++)
 	{
@@ -325,58 +326,58 @@ void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<st
 		}
 		iterationcounter++;
 	}
-	
+
 }
 void tarantula2App::draw()
 {
 	bool isopen;
 	ImGui::Begin("STUFS", &isopen, /*ImGuiWindowFlags_NoTitleBar +*/ ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
 
-		//	static float xs[51], ys1[51], ys2[51];
-		//for (int i = 0; i < 51; ++i) {
-		//	xs[i] = i * 0.02;
-		//	ys1[i] = 1.0 + 0.5 * sin(25 * xs[i]) * cos(2 * xs[i]);
-		//	ys2[i] = 0.5 + 0.25 * sin(10 * xs[i]) * sin(xs[i]);
+	//	static float xs[51], ys1[51], ys2[51];
+	//for (int i = 0; i < 51; ++i) {
+	//	xs[i] = i * 0.02;
+	//	ys1[i] = 1.0 + 0.5 * sin(25 * xs[i]) * cos(2 * xs[i]);
+	//	ys2[i] = 0.5 + 0.25 * sin(10 * xs[i]) * sin(xs[i]);
+	//}
+	//ImGui::PlotLines("frames", xs, IM_ARRAYSIZE(xs));
+	//PlotEdges("", ys1, xs, IM_ARRAYSIZE(xs), 0, 0, 0, 1, { 600,300 });
+	//
+	tie(ei, eiend) = boost::edges(g);
+	auto num_edges = std::distance(ei, eiend);
+	vector<float> lengths(num_edges);
+	vector<float> tensions(num_edges);
+	int  indekx = 0;
+
+	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+
+		//console() << currentLengthPm[*ei] << endl;
+		lengths[indekx] = currentLengthPm[*ei];
+
+		tensions[indekx] = currentLengthPm[*ei] / restLengthPm[*ei];
+		//console() << tensions[indekx] << endl;
+		indekx++;
+
+		//console() << to_string(tensionCols[indekx]) << endl;
+
+		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
+		//if (!forbiddenPm[*ei]) {
+		//	myfile << "[" << "{" << to_string(position[boost::source(*ei, g)]) << "};{" << to_string(position[boost::target(*ei, g)]) << "}" << "]" << endl;
 		//}
-		//ImGui::PlotLines("frames", xs, IM_ARRAYSIZE(xs));
-		//PlotEdges("", ys1, xs, IM_ARRAYSIZE(xs), 0, 0, 0, 1, { 600,300 });
-		//
-		tie(ei, eiend) = boost::edges(g);
-		auto num_edges = std::distance(ei, eiend);
-		vector<float> lengths(num_edges);
-		vector<float> tensions(num_edges);
-		int  indekx = 0;
+	}
+	//console() << lengths[32] << endl;
 
-		for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+	//PlotEdges2("framess", lengths, tensions, 0, 0, FLT_MAX, { 600,300 });
+	PlotGraphEdges("framess", g, 0, 0, FLT_MAX, { 600,300 });
 
-			//console() << currentLengthPm[*ei] << endl;
-			lengths[indekx] = currentLengthPm[*ei];
-
-			tensions[indekx] = currentLengthPm[*ei] / restLengthPm[*ei];
-			//console() << tensions[indekx] << endl;
-			indekx++;
-			
-			//console() << to_string(tensionCols[indekx]) << endl;
-
-			//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
-			//if (!forbiddenPm[*ei]) {
-			//	myfile << "[" << "{" << to_string(position[boost::source(*ei, g)]) << "};{" << to_string(position[boost::target(*ei, g)]) << "}" << "]" << endl;
-			//}
-		}
-		//console() << lengths[32] << endl;
-
-		//PlotEdges2("framess", lengths, tensions, 0, 0, FLT_MAX, { 600,300 });
-		PlotGraphEdges("framess", g, 0, 0, FLT_MAX, { 600,300 });
-
-		ImGui::End();
-	ImGui::Begin("Params",&isopen, ImGuiWindowFlags_NoTitleBar+ImGuiWindowFlags_NoBackground+ImGuiWindowFlags_NoScrollbar+ImGuiWindowFlags_NoResize);
+	ImGui::End();
+	ImGui::Begin("Params", &isopen, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
 
 	//ImGui::StyleColorsLight();
-	
+
 
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Text("number of iterations = %i", iterationcounter);
-		
+
 
 
 		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
@@ -385,7 +386,7 @@ void tarantula2App::draw()
 
 		ImGui::InputInt("x iterations", &x_iterations, 50, 200);
 		if (ImGui::Button("run x iterations")) {
-			runxiterations(x_iterations,g,relaxc,cycles);
+			runxiterations(x_iterations, g, relaxc, cycles);
 
 		}
 
@@ -396,9 +397,9 @@ void tarantula2App::draw()
 			console() << "resetting web" << endl;
 			resetweb(g, relaxc, cycles);
 		}
-			
+
 	}
-	
+
 	ImGui::Dummy(ImVec2(0.0f, 20.0f));
 
 
@@ -408,16 +409,27 @@ void tarantula2App::draw()
 		ImGui::InputInt("cycle number", &displayCycle_i);
 		ImGui::InputInt("edge number", &EDGEINDEX);
 
-		ImGui::InputText("textfile points",&VERTEXFILENAME);
+		ImGui::InputText("start graph file", &OBJFILENAME);
+		ImGui::InputText("start cycles file", &CYCLESFILENAME);
+
 		ImGui::InputText("textfile density", &VOXELFILENAME);
 		ImGui::InputText("export filename: ", &EXPORTTITLE);
 		//if (displayCycle_i >= cycles.size()) {
 		//	displayCycle_i = displayCycle_i % cycles.size();
 		//}
+		if (ImGui::Button("Load Graph")) {
+			InitialWebFromObj(&g, relaxc, OBJFILENAME, cycles);
+
+		}
+		if (ImGui::Button("Load Cycles")) {
+			loadcycles(&g, cycles, CYCLESFILENAME);
+			addCyclesToVertices(&g, cycles);
+		}
+
 		ImGui::Checkbox("Draw Vertices", &mDrawVertices);
 
 		ImGui::SliderFloat("Alpha Value", &ALPHA, 0.0001f, .999f, "%.2f");
-		
+
 
 		ImGui::Checkbox("RELAX", &RUNRELAX);
 		ImGui::Checkbox("Carousel", &CAROUSEL);
@@ -425,7 +437,7 @@ void tarantula2App::draw()
 
 		ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
 		ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
-		
+
 		ImGui::Checkbox("highlight Nth Cycle", &drawNCycle);
 		ImGui::Checkbox("Color Edge Indices", &colorEdges);
 		ImGui::Checkbox("Color Edge Tensions", &colorTens);
@@ -433,10 +445,10 @@ void tarantula2App::draw()
 
 	}
 	ImGui::End();
-	
 
 
-	gl::clear( Color( 0, 0, 0 ) ); 
+
+	gl::clear(Color(0, 0, 0));
 	//gl::clear(Color::gray(0.5f));
 	gl::color(1.0f, 1.0f, 1.0f, 0.5f);
 
@@ -453,7 +465,7 @@ void tarantula2App::draw()
 		gl::ScopedMatrices push;
 		gl::setMatrices(mCamera);
 
-		
+
 		//drawClosestVoxel(EDGEINDEX,g);
 		//drawVoxelLine(EDGEINDEX, g);
 		{
@@ -474,8 +486,8 @@ void tarantula2App::draw()
 			//	gl::translate({ 0,1 });
 			//}
 			//gl::popModelMatrix();
-			drawVoxelsBatch(voxelMap,mWireCube,ALPHA);
-			drawGraph(&g, projection, viewport, colorEdges,colorTens,colorLength);
+			drawVoxelsBatch(voxelMap, mWireCube, ALPHA);
+			drawGraph(&g, projection, viewport, colorEdges, colorTens, colorLength);
 			if (drawNCycle) {
 				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
 				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
@@ -487,8 +499,8 @@ void tarantula2App::draw()
 				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
 			}
 			//drawDensityEdges(&g, projection, viewport);
-			if (runAnimation>0&&runAnimation<=100)
-				drawSelectedEdge(&g,WHICHEDGE, {0.5f,0.5f,0.82f,0.8f});
+			if (runAnimation > 0 && runAnimation <= 100)
+				drawSelectedEdge(&g, WHICHEDGE, { 0.5f,0.5f,0.82f,0.8f });
 
 			if (runAnimation > 50) {
 				drawEdges(&g, N_connedges, { 1.0f, 0.5f, 0.0f,0.7f });
@@ -498,7 +510,7 @@ void tarantula2App::draw()
 				drawSelectedEdge(&g, NEWEDGES[0], { 0.65f,0.45f,0.82f,0.8f });
 
 			}
-			if (HOVERED!=EMPTY) {
+			if (HOVERED != EMPTY) {
 				drawSelectedEdge(&g, HOVERED, { 1.0f,0.5f,0.2f,0.8f });
 
 			}
@@ -509,4 +521,4 @@ void tarantula2App::draw()
 }
 
 
-CINDER_APP( tarantula2App, RendererGl )
+CINDER_APP(tarantula2App, RendererGl)

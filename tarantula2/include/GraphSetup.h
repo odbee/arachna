@@ -45,6 +45,7 @@ int iterationcounter = 0;
 string VERTEXFILENAME = "";
 string VOXELFILENAME = "";
 string OBJFILENAME = "";
+string CYCLESFILENAME = "";
 vector<size_t> vertlist;
 
 float G_density = 0.0005f, G_length = .999f, G_tension = 0.0005f;

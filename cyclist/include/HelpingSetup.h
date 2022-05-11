@@ -236,7 +236,7 @@ float getDistLineLine(vec3 a1, vec3 a2, vec3 b1, vec3 b2) {
 	vec3 dP = w + (sc * u) - (tc * v);
 	return length(dP);
 }
-void drawPoints(Graph* g, mat4 proj, vec4 viewp) {
+void drawPoints(Graph* g, mat4 proj, vec4 viewp,bool drawRedtext=true) {
 	boost::graph_traits< Graph >::vertex_iterator vi, viend;
 
 	for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
@@ -245,10 +245,12 @@ void drawPoints(Graph* g, mat4 proj, vec4 viewp) {
 		vec2 anchorp1 = glm::project(position[*vi], mat4(), proj, viewp);
 
 		gl::drawString(to_string(*vi), anchorp1, Color::white(), Font("Arial", 20));
+		if (drawRedtext) {
+			vec2 offset = vec2(0.0f, 22.0f);
+			gl::drawString(stringfromCyclesShort(cyclesPm[*vi]), anchorp1 + offset, Color::hex(0xFB4934), Font("Arial", 20));
 
-		vec2 offset = vec2(0.0f, 22.0f);
-		gl::drawString(stringfromCyclesShort(cyclesPm[*vi]), anchorp1 + offset, Color::hex(0xFB4934), Font("Arial", 20));
-
+		}
+		
 
 		//console() << position[*vi].x << " , " << position[*vi].y << " , " << position[*vi].z << endl;
 	}
@@ -310,7 +312,7 @@ vector<int> split(const string& s, char delimiter) {
 }
 
 
-void removeActiveCycle(Graph* g, std::vector<std::vector<size_t>> cycs, int& currCycIndex, int& indinCyc, std::vector<size_t>& commoncyclelist) {
+void removeActiveCycle(Graph* g, std::vector<std::vector<size_t>>& cycs, int& currCycIndex, int& indinCyc, std::vector<size_t>& commoncyclelist) {
 	int cachedIndex = currCycIndex;
 	if (commoncyclelist.size() > 1) {
 		indinCyc = (indinCyc + 1) % commoncyclelist.size();
@@ -339,33 +341,42 @@ void savecycles(std::vector<std::vector<size_t>>& cycles, string filename) {
 
 	for each (std::vector<size_t> cycle in cycles)
 	{
-		stringstream buffer;
-		for each (size_t var in cycle) {
-			buffer << (int)var << ",";
+		if (!cycle.empty()) {
+			stringstream buffer;
+				for each (size_t var in cycle) {
+					buffer << (int)var << " ";
+				}
+			contents = buffer.str();
+				contents.pop_back();
+				myfile << contents << endl;
+				buffer.clear();
 		}
-		contents = buffer.str();
-		contents.pop_back();
-		myfile << contents << endl;
-		buffer.clear();
 	}
 	myfile.close();
 }
 
 void loadcycles(Graph*g, std::vector<std::vector<size_t>>& cycles, string filename) {
-	ofstream myfile;
-	myfile.open(filename, std::ofstream::trunc);
-	string contents;
+	cycles.clear();
 
-	for each (std::vector<size_t> cycle in cycles)
-	{
-		stringstream buffer;
-		for each (size_t var in cycle) {
-			buffer << (int)var << ",";
+	std::ifstream MyReadFile(filename);
+	std::string line;
+	while (std::getline(MyReadFile, line)) {
+		std::stringstream ss(line);
+		std::istream_iterator<std::string> begin(ss);
+		std::istream_iterator<std::string> end;
+		std::vector<std::string> vstrings(begin, end);
+		vector<size_t> cycle;
+
+		if (!vstrings.empty()) {
+			for (auto strin = vstrings.begin();
+				strin != vstrings.end();
+				strin++) {
+				//console() << *strin << endl;
+				cycle.push_back((size_t)stoi(*strin));
+			}
+			cycles.push_back(cycle);
+			console() << stringfromCyclesShort(cycle) << endl;
 		}
-		contents = buffer.str();
-		contents.pop_back();
-		myfile << contents << endl;
-		buffer.clear();
 	}
-	myfile.close();
+	addCyclesToVertices(g, cycles);
 }

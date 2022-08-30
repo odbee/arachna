@@ -42,5 +42,9 @@ CinderProject/
 .vs/
 *.ilk
 *.log
+*.tlog
+
 *.pdb
-reference material/Practical_Geometry_Algorithms_Code_2021/vector.c
+*profiler.csv
+
+*x64/

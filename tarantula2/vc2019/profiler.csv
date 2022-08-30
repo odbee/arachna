@@ -1,14 +1,2 @@
 counter,command,duration
-0,physics,48
-0,addcyc,74785
-1,physics,52
-1,addcyc,40566
-2,physics,42
-2,addcyc,36524
-3,physics,40
-3,addcyc,32880
-4,physics,42
-4,addcyc,38250
-5,physics,38
-5,addcyc,36907
-6,physics,39
+0,physics,28

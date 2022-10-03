@@ -5,6 +5,11 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+#define INITIALGRAPHDIRECTORYEXTENSION       "/initialgraph.txt"
+#define CYCLESDIRECTORYEXTENSION       "/cycles.txt"
+
+
+
 edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind = 0, bool isforbidden = false) {
 	float dd = distance(position[endPointA], position[endPointB]);
 
@@ -40,9 +45,25 @@ void addCycleToVertices(Graph * g, std::vector<size_t>cycle,int cycleInt) {
 	}
 }
 
-void InitialWebFromObj(Graph* g, float rc, std::string filename, std::vector<std::vector<size_t>>& cycs) {
+void InitialWebFromFile(Graph* g, float rc, std::string filename, std::vector<std::vector<size_t>>& cycs) {
 	bool hasCycle;
 	std::ifstream MyReadFile(filename);
+		//console() << "current file quality is : " << MyReadFile.good() << endl;
+	if (!g->m_vertices.empty()) {
+		my_log.AddLog("[warning] graph already exists! clearing graph and cycles before adding web.\n");
+		g->clear();
+		cycs.clear();
+	}
+
+
+	if (!MyReadFile.good()) {
+		my_log.AddLog("[warning] No Initial Web file found!\n Check if the folder name is correct and the initialgraph.txt file exists in there.\n");
+	}
+	else {
+		my_log.AddLog("[info] successfully loaded initial graph file.\n");
+	}
+
+
 	std::string line;
 	while (std::getline(MyReadFile, line)) {
 		std::stringstream ss(line);
@@ -359,6 +380,10 @@ void loadcycles(Graph*g, std::vector<std::vector<size_t>>& cycles, string filena
 	cycles.clear();
 
 	std::ifstream MyReadFile(filename);
+	if (!MyReadFile.good()) {
+		my_log.AddLog("[warning] No cycles file found!\n Check if the folder name is correct and the cycles.txt file exists in there.\n");
+	}
+
 	std::string line;
 	while (std::getline(MyReadFile, line)) {
 		std::stringstream ss(line);

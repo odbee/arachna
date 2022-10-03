@@ -24,7 +24,7 @@
 #include "PlotEdges.h"
 #include "Resetter.h"
 #include "CycleImportFunctions.h"
-
+#include "CachedData.h"
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -62,6 +62,7 @@ private:
 	string profilername = "profiler.csv";
 	ofstream profile_out;
 	int cachediter;
+	IniHandler iniHand;
 
 
 	//needed vars for animate function
@@ -78,12 +79,11 @@ private:
 
 void tarantula2App::setup()
 {
-	VERTEXFILENAME = "txtf.txt";
-	OBJFILENAME = "startmesh.obj";
-	VOXELFILENAME = "voxelvals.txt";
+
 	EXPORTTITLE = "positions.obj";
 
 	Color h;
+	iniHand.initImGui("cached_ui.ini");
 
 	//console() << ImGui::ColorConvertU32ToFloat4( ImGui::GetColorU32(41)).x 
 	//	<< "   "
@@ -179,8 +179,8 @@ void tarantula2App::keyDown(KeyEvent event)
 	}
 
 	if (event.getChar() == 'p') {
-		exportGraph(g);
-		exportGraphOBJ(g, EXPORTTITLE);
+		//exportGraph(g);
+		exportGraphOBJ(g, dirPath+EXPORTTITLE);
 	}
 	if (event.getChar() == 'x') {
 
@@ -408,11 +408,13 @@ void tarantula2App::draw()
 
 		ImGui::InputInt("cycle number", &displayCycle_i);
 		ImGui::InputInt("edge number", &EDGEINDEX);
-
-		ImGui::InputText("start graph file", &OBJFILENAME);
-		ImGui::InputText("start cycles file", &CYCLESFILENAME);
-
-		ImGui::InputText("textfile density", &VOXELFILENAME);
+		if (ImGui::InputText("import directory path ", &dirPath)) {
+			iniHand.overwriteTagImGui("graph directory", dirPath);
+		}
+		
+		OBJFILENAME = dirPath + INITIALGRAPHDIRECTORYEXTENSION;
+		CYCLESFILENAME = dirPath + CYCLESDIRECTORYEXTENSION;
+		VOXELFILENAME = dirPath + VOXELSDIRECTORYEXTENSION;
 		ImGui::InputText("export filename: ", &EXPORTTITLE);
 		//if (displayCycle_i >= cycles.size()) {
 		//	displayCycle_i = displayCycle_i % cycles.size();

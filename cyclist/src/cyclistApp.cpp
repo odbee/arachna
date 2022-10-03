@@ -18,6 +18,7 @@
 
 #include <GraphSetup.h>
 
+#include <CachedData.h>
 #include <HelpingSetup.h>
 #include "AdamsCameraUi.h"
 using namespace ci;
@@ -68,14 +69,14 @@ class HeyCameraUi : virtual public AdamsCameraUi {
 class cyclistApp : public App {
   public:
 	void setup() override;
-	void mouseDown( MouseEvent event ) override;
+
 	void mouseMove(MouseEvent event) override;
-	void mouseWheel(MouseEvent event) override;
 	void keyDown(KeyEvent event) override;
 
 	void update() override;
 	void draw() override;
 	CameraPersp		mCamera;
+
 
 private:
 	gl::BatchRef		mWirePlane;
@@ -83,6 +84,8 @@ private:
 	HeyCameraUi			mCamUi;
 	vec3 camPos = { 30.0f, 10.0f, 40.0f };
 	string FILEPATH="startmesh.obj";
+	
+	IniHandler iniHand;
 	vec2 mMousePos;
 	string CYCLEORDER = "";
 	string CYCLEFILENAME = "";
@@ -111,7 +114,10 @@ void cyclistApp::setup()
 	ImGui::Initialize();
 	ImGuiIO& io = ImGui::GetIO();
 	gl::lineWidth(2);
+	iniHand.initImGui("cached_ui.ini");
 
+
+	
 }
 void cyclistApp::mouseMove(MouseEvent event)
 {
@@ -120,23 +126,6 @@ void cyclistApp::mouseMove(MouseEvent event)
 	mMousePos = event.getPos();
 }
 
-void cyclistApp::mouseWheel(MouseEvent event) {
-	int wheelIncrement = event.getWheelIncrement();
-	//console() << "wheel inc" << wheelIncrement << endl;
-	if (!(commoncycles.empty())) {
-		console() << "commoncycles size " << commoncycles.size() << endl;
-		index_in_commoncyc = (index_in_commoncyc + wheelIncrement) % commoncycles.size();
-		console() << "index in cycles" << index_in_commoncyc << endl;
-	}
-}
-void cyclistApp::mouseDown( MouseEvent event )
-{
-	console() << "changed edge " << endl;
-
-
-	
-	
-}
 
 void cyclistApp::keyDown(KeyEvent event) {
 	if (selected_edge != empty_edge) {
@@ -164,7 +153,7 @@ void cyclistApp::update()
 		}
 	}
 	
-	if (!commoncycles.empty()) {
+	if (!commoncycles.empty()&&selected_edge!=empty_edge) {
 		cycleN = commoncycles[index_in_commoncyc];
 	}
 	justclicked = false;
@@ -177,59 +166,112 @@ void cyclistApp::draw()
 	gl::clear(Color::black());
 
 	bool isopen;
-
-	ImGui::Begin("Params", &isopen/*, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize*/);
-	ImGui::Text("hello9");
-	ImGui::InputText("import file path ", &FILEPATH);
-	ImGui::InputInt("cycle number", &cycleN);
-	if (!cycles.empty()) {
-		if (cycleN >= cycles.size() || cycleN < 0) {
-			cycleN = cycleN % cycles.size();
+	// IMGUI
+	{
+		ImGui::Begin("Params", &isopen/*, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize*/);
+		my_log.Draw("title");
+		ImGui::PushItemWidth(200);
+		
+		if (ImGui::InputText("import directory path ", &dirPath)) {
+			iniHand.overwriteTagImGui("graph directory", dirPath);
 		}
-	}
-	
-	if (ImGui::Button("load pointcloud")) {
-		g.clear();
-		cycles.clear();
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
 
-		InitialWebFromObj(&g, 0.8, FILEPATH, cycles);
-	}
+		ImGui::Separator();
+		ImGui::SameLine();
+		if (ImGui::Button("load pointcloud")) {
+			//g.clear();
+			//cycles.clear();
 
-	if (ImGui::Button("compute cycles")) {
+			InitialWebFromFile(&g, 0.8, dirPath + INITIALGRAPHDIRECTORYEXTENSION, cycles);
+
+		}
+		ImGui::SameLine();
+
+		if (ImGui::Button("compute cycles")) {
+			if (g.m_vertices.empty()) {
+				my_log.AddLog("[error] No graph found to compute cycles. try adding a graph first.\n");
+			}
+			else {
+
+				if (!cycles.empty())
+				{
+					my_log.AddLog("[error] cycles already exist! removing cycles before proceeding.\n");
+					boost::graph_traits< Graph >::vertex_iterator vi, viend;
+					cycles.clear();
+					for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+						cyclesPm[*vi].clear();
+					}
+				}
+				cycles = udgcd::findCycles<Graph, vertex_t>(g);
+				addCyclesToVertices(&g, cycles);
+				my_log.AddLog("[info]successfully computed cycles.\n");
+			}
+
+
+		}
+		ImGui::SameLine();
+
+		if (ImGui::Button("load cycles")) {
+			if (!cycles.empty())
+			{
+				my_log.AddLog("[error] cycles already exist! removing cycles before proceeding.\n");
+				boost::graph_traits< Graph >::vertex_iterator vi, viend;
+				cycles.clear();
+				for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+					cyclesPm[*vi].clear();
+				}
+			}
+			loadcycles(&g, cycles, dirPath + CYCLESDIRECTORYEXTENSION);
+			my_log.AddLog("[info]successfully loaded cycles.\n");
+		}
+
+		ImGui::Separator();
+
+		ImGui::PushItemWidth(100);
+		if (ImGui::InputInt("cycle number", &cycleN)) {
+			selected_edge = empty_edge;
+		}
 		
-		cycles = udgcd::findCycles<Graph, vertex_t>(g);
-		addCyclesToVertices(&g, cycles);
-	}
+		ImGui::PopItemWidth();
 
-	ImGui::InputText("cycle import file name ", &CYCLEIMPORTFILENAME);
-	if (ImGui::Button("load cycles")) {
+		if (!cycles.empty()) {
+			if (cycleN >= cycles.size() || cycleN < 0) {
+				cycleN = cycleN % cycles.size();
+			}
+		}
 
-		loadcycles(&g, cycles, CYCLEIMPORTFILENAME);
-
-	}
-
-
-	if (ImGui::Button("remove active cycle")) {
-
-		removeActiveCycle(&g, cycles, cycleN,index_in_commoncyc, commoncycles);
-	}
-	ImGui::InputText("new cycle input ", &CYCLEORDER);
-	if (ImGui::Button("add cycle")) {
-
-		addCycle(&g, cycles, CYCLEORDER, cycleN, index_in_commoncyc, commoncycles);
-		CYCLEORDER.clear();
-	}
-	ImGui::InputText("cycle export file name ", &CYCLEFILENAME);
-	if (ImGui::Button("save cycles")) {
-
-		savecycles(cycles,CYCLEFILENAME);
 		
+
+
+		if (ImGui::Button("remove active cycle")) {
+			if (!cycles.empty()) {
+				removeActiveCycle(&g, cycles, cycleN, index_in_commoncyc, commoncycles);
+			}
+			else {
+				my_log.AddLog("[error] cannot remove cycle! no cycles available.\n");
+			}
+
+		}
+		ImGui::InputText("new cycle input ", &CYCLEORDER);
+		if (ImGui::Button("add cycle")) {
+			
+			addCycle(&g, cycles, CYCLEORDER, cycleN, index_in_commoncyc, commoncycles);
+			CYCLEORDER.clear();
+		}
+		if (ImGui::Button("save cycles")) {
+
+			savecycles(cycles, dirPath + CYCLESDIRECTORYEXTENSION);
+			my_log.AddLog("[info]successfully saved cycles.\n");
+
+
+		}
+		ImGui::Checkbox("draw red text", &redText);
+		//ImGui::StyleColorsLight();
+
+		ImGui::End();
 	}
-	ImGui::Checkbox("draw red text", &redText);
-	//ImGui::StyleColorsLight();
-
-	ImGui::End();
-
 	//gl::clear(Color::gray(0.5f));
 	gl::color(1.0f, 1.0f, 1.0f, 0.5f);
 

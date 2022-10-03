@@ -122,6 +122,7 @@ namespace cinder {
 		if (!mEnabled)
 			return;
 
+		cinder::app::console() << " mouse down" << std::endl;
 		mouseDown(event.getPos());
 		event.setHandled();
 	}

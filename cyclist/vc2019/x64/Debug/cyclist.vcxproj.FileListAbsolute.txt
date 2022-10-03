@@ -1,1 +1,2 @@
 D:\Dokumente\Uni\programmieren\cindertesting\cyclist\vc2019\x64\Debug\cyclist.exe
+C:\Users\gerai\Documents\GitHub\arachna\cyclist\vc2019\x64\Debug\cyclist.exe

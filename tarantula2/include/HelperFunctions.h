@@ -129,7 +129,7 @@ struct coordcont {
 		if (compareendvoxels()) {
 			if (index < sign * direction) {
 				float param = (startvoxel + (index+0.5) * sign - start) / direction;
-				checkIfInVoxelMap((int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z);
+				//checkIfInVoxelMap((int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z);
 				float voxe = voxelMap[{(int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z}];
 				if (param != 0&& param <1) {
 
@@ -176,7 +176,7 @@ float integrateEdge(edge_t edge, Graph& g) {
 	vector < coordcont > vecofconts = { xcont, ycont, zcont};
 	std::sort(vecofconts.begin(), vecofconts.end(),sortbystartvoxeldist);
 
-	checkIfInVoxelMap((int)xcont.startvoxel, (int)ycont.startvoxel, (int)zcont.startvoxel);
+	//checkIfInVoxelMap((int)xcont.startvoxel, (int)ycont.startvoxel, (int)zcont.startvoxel);
 	float voxe = voxelMap[{(int)xcont.startvoxel , (int)ycont.startvoxel, (int)zcont.startvoxel}];
 	params.push_back({ 0.0f,voxe });
 
@@ -435,7 +435,7 @@ string to_string(vec3 vector) {
 	return to_string(vector.x) + "," + to_string(vector.y) + "," + to_string(vector.z);
 }
 
-void exportGraph(Graph g) {
+void exportGraph(Graph g, string dir) {
 	ofstream myfile;
 	myfile.open("positions.txt", std::ofstream::trunc);
 	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {

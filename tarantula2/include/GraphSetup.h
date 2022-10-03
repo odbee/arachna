@@ -21,6 +21,12 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+
+#define INITIALGRAPHDIRECTORYEXTENSION       "/initialgraph.txt"
+#define CYCLESDIRECTORYEXTENSION       "/cycles.txt"
+#define VOXELSDIRECTORYEXTENSION       "/voxels.txt"
+
+
 bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
 int EDGEINDEX=0;
@@ -131,3 +137,5 @@ bool otherbool = false;
 edge_t HOVERED;
 edge_t EMPTY;
 string EXPORTTITLE;
+
+std::string dirPath = "web";

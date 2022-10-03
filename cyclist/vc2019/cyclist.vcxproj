@@ -109,6 +109,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\AdamsCameraUi.h" />
     <ClInclude Include="..\include\Add.h" />
+    <ClInclude Include="..\include\CachedData.h" />
     <ClInclude Include="..\include\GraphSetup.h" />
     <ClInclude Include="..\include\HelpingSetup.h" />
     <ClInclude Include="..\include\Resources.h" />

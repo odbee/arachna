@@ -1,2 +1,5 @@
 counter,command,duration
-0,physics,28
+0,physics,12
+100,physics,637
+200,physics,1362
+600,physics,5036

@@ -243,7 +243,7 @@ void tarantula2App::update()
 			EDGEADDEDINT = 1;
 			WHICHEDGE = N_ed_startEdge;
 		}
-
+		 
 		if (runAnimation == 50) {
 			console() << "fiding second edge" << endl;
 			initEdge(N_ed_startEdge, N_startedge, g);

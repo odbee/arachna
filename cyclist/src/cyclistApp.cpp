@@ -171,7 +171,10 @@ void cyclistApp::draw()
 		ImGui::Begin("Params", &isopen/*, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize*/);
 		my_log.Draw("title");
 		ImGui::PushItemWidth(200);
-		
+
+
+
+
 		if (ImGui::InputText("import directory path ", &dirPath)) {
 			iniHand.overwriteTagImGui("graph directory", dirPath);
 		}
@@ -181,6 +184,18 @@ void cyclistApp::draw()
 		ImGui::Separator();
 		ImGui::SameLine();
 		if (ImGui::Button("load pointcloud")) {
+			//g.clear();
+			//cycles.clear();
+			InitialWebFromPc(&g, 0.9, dirPath +PCDIRECTORYEXTENSION);
+			
+			addcyclesfromPc(0.9, g, cycles);
+			//console() << stringfromCyclesShort(cycles) << endl;
+		}
+
+		ImGui::Separator();
+		ImGui::SameLine();
+
+		if (ImGui::Button("load starting graph")) {
 			//g.clear();
 			//cycles.clear();
 
@@ -267,6 +282,15 @@ void cyclistApp::draw()
 
 
 		}
+		if (ImGui::Button("save graph")) {
+
+			exportGraphTXT(g,dirPath+INITIALGRAPHDIRECTORYEXTENSION);
+			my_log.AddLog("[info]successfully saved  graph.\n");
+
+
+		}
+
+		
 		ImGui::Checkbox("draw red text", &redText);
 		//ImGui::StyleColorsLight();
 

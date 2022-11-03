@@ -135,6 +135,8 @@ void tarantula2App::setup()
 
 
 	initVoxelMap(VOXELFILENAME);
+	initAnchorPoints(ANCHORPOINTSFILENAME);
+
 	console() << voxelMap.size() << endl;
 	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
 	//InitialWebFromPc(&g,relaxc, "txtf.txt");
@@ -415,6 +417,7 @@ void tarantula2App::draw()
 		OBJFILENAME = dirPath + INITIALGRAPHDIRECTORYEXTENSION;
 		CYCLESFILENAME = dirPath + CYCLESDIRECTORYEXTENSION;
 		VOXELFILENAME = dirPath + VOXELSDIRECTORYEXTENSION;
+		ANCHORPOINTSFILENAME = dirPath + ANCHORPOINTSDIRECTORYEXTENSION;
 		ImGui::InputText("export filename: ", &EXPORTTITLE);
 		//if (displayCycle_i >= cycles.size()) {
 		//	displayCycle_i = displayCycle_i % cycles.size();

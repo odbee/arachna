@@ -1,12 +1,16 @@
 #pragma once
 #include <GraphSetup.h>
 
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
+
 #define INITIALGRAPHDIRECTORYEXTENSION       "/initialgraph.txt"
 #define CYCLESDIRECTORYEXTENSION       "/cycles.txt"
+#define PCDIRECTORYEXTENSION       "/pointcloud.txt"
+
 
 
 
@@ -404,4 +408,181 @@ void loadcycles(Graph*g, std::vector<std::vector<size_t>>& cycles, string filena
 		}
 	}
 	addCyclesToVertices(g, cycles);
+}
+
+void adjustothers(vector<float*>& values, vector<float*>& cachedvalues, size_t index) {
+	float factor = *cachedvalues[index] - *values[index];
+	float sum = 0.0f;
+	//factor /= values.size()-1;
+	float multfactor;
+	for (size_t i = 0; i < values.size(); i++)
+	{
+		if (i != index) {
+
+			sum += *values[i];
+		}
+	}
+
+
+	for (size_t i = 0; i < values.size(); i++)
+	{
+		if (i != index) {
+			multfactor = (*values[i]) / sum;
+
+			*values[i] += factor * multfactor;
+		}
+	}
+	for (size_t i = 0; i < values.size(); i++) {
+		const float uu = *values[i];
+		*cachedvalues[i] = uu;
+	}
+}
+
+void checkforchange(vector<float*>& values, vector<float*>& cachedvalues) {
+	float  val, cachedval;
+	//console() << "checking " << endl;
+	for (size_t i = 0; i < values.size(); i++)
+	{
+		//console() << "checking " << endl;
+
+		val = *values[i];
+		cachedval = *cachedvalues[i];
+
+		if (val != cachedval)
+		{
+			adjustothers(values, cachedvalues, i);
+
+		}
+	}
+
+}
+vector<vec3> getVertsFromFile(string filename) {
+	ifstream MyReadFile(filename);
+	string line;
+	vector<vec3> result;
+	vec3 cachevec = {};
+	size_t counter = 0;
+	while (getline(MyReadFile, line)) {
+		counter = 0;
+		std::string s = line;
+		std::string delimiter = ",";
+		size_t pos = 0;
+		std::string token;
+		while ((pos = s.find(delimiter)) != std::string::npos) {
+			token = s.substr(0, pos);
+			if (counter == 0) {
+				cachevec.x = stof(token);
+			}
+			else if (counter == 1) {
+				cachevec.y = stof(token);
+			}
+			s.erase(0, pos + delimiter.length());
+			counter++;
+		}
+		cachevec.z = stof(s);
+
+		result.push_back(cachevec);
+
+	}
+	return result;
+}
+
+
+void InitialWebFromPc(Graph* g, float rc, string filename) {
+
+	vector<vec3>verts = getVertsFromFile(filename);
+
+	auto cvert = boost::add_vertex(*g);
+	position[cvert] = { 0, 0, 0 };
+	fixedBool[cvert] = false;
+
+	for (const auto& vert : verts)
+	{
+		position[cvert] += vert;
+
+	}
+	position[cvert] /= verts.size();
+
+	for (const auto& vert : verts)
+	{
+		auto a = boost::add_vertex(*g);
+		position[a] = vert;
+		console() << "added vertex" << endl;
+		fixedBool[a] = true;
+		connectAB(g, a, cvert, rc);
+	}
+
+}
+
+void addcyclesfromPc(float relaxc, Graph& g, std::vector<std::vector<size_t>>& cycles) {
+	boost::graph_traits< Graph >::vertex_iterator vi, viend;
+
+	using FloatType = float;
+	using vex3 = quickhull::Vector3<FloatType>;
+	vector<vector<size_t>> convhull;
+	quickhull::QuickHull<FloatType> qh;
+	std::vector<vex3> pc;
+
+	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+
+		pc.emplace_back(float(position[*vi][0]), float(position[*vi][1]), float(position[*vi][2]));
+
+	}
+	auto hull = qh.getConvexHull(&pc[0].x, pc.size(), true, true);
+	auto indexbuffer = hull.getIndexBuffer();
+	for (size_t i = 0; i < indexbuffer.size() / 3; i++)
+	{
+		convhull.push_back({ indexbuffer.begin() + 3 * i,indexbuffer.begin() + 3 * i + 3 });
+	}
+
+	for (const auto& cycl : convhull) {
+		for (size_t i = 0; i < cycl.size(); i++)
+		{
+			auto v1 = cycl[i];
+			auto v2 = cycl[(i + 1) % cycl.size()];
+			//console() << v1 << "," << v2 << endl;
+			typename boost::graph_traits<Graph>::adjacency_iterator ai, ai2, ai_end, ai_end2;
+			boost::graph_traits< Graph >::vertex_iterator vi2, viend2;
+			for (boost::tie(ai, ai_end) = boost::adjacent_vertices(v1, g),
+				boost::tie(ai2, ai_end2) = boost::adjacent_vertices(v2, g);
+				ai != ai_end && ai2 != ai_end2; ai++, ai2++) {
+				if (*ai2 == *ai && v1 > v2) {
+					//console() << " adjacancyts" << *ai << ',' << *ai2 << " ";
+					cycles.push_back({ v1,v2,*ai });
+				}
+			}
+		}
+	}
+	for (const auto& cycl : convhull) {
+		for (size_t i = 0; i < cycl.size(); i++)
+		{
+			auto v1 = cycl[i];
+			auto v2 = cycl[(i + 1) % cycl.size()];
+			connectAB(&g, v1, v2, relaxc, 0, true);
+		}
+	}
+
+	addCyclesToVertices(&g, cycles);
+
+}
+
+void exportGraphTXT(Graph g, string title = "initialgraph.txt") {
+	ofstream myfile;
+	myfile.open(title, std::ofstream::trunc);
+	boost::graph_traits< Graph >::vertex_iterator vi, viend;
+
+	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+		//gl::drawStrokedCube(position[*vi], vec3(0.2f, 0.2f, 0.2f));
+		myfile << "v " << to_string(position[*vi].x) << " " << to_string(position[*vi].y) << " " << to_string(position[*vi].z) << endl;
+
+	}
+
+	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+
+		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
+		if (true) {
+			myfile << "l " << to_string(boost::source(*ei, g) + 1) << " " << to_string(boost::target(*ei, g) + 1) << " " << to_string(int(forbiddenPm[*ei])) << endl;
+		}
+	}
+	myfile.close();
 }

@@ -7,7 +7,9 @@ void resetweb(Graph& g,float relaxc, std::vector<std::vector<size_t>>& cycles) {
 	g.clear();
 	cycles.clear();
 	voxelMap.clear();
+	anchorPoints.clear();
 	initVoxelMap(VOXELFILENAME);
+	initAnchorPoints(ANCHORPOINTSFILENAME);
 	InitialWebFromObj(&g, relaxc, OBJFILENAME, cycles);
 	if (CYCLESFILENAME!="") {
 		loadcycles(&g, cycles, CYCLESFILENAME);

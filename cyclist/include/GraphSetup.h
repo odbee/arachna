@@ -1,6 +1,7 @@
 #pragma once
 #include "cinder/app/App.h"
 
+#include <quickhull/QuickHull.hpp>"
 
 
 #include <boost/graph/adjacency_list.hpp>

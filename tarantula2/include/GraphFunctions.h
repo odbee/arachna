@@ -232,7 +232,8 @@ void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size
 
 		updatetext(to_string(counter) + "t" + "[listlength" + to_string(connedges.size()) + "]");
 
-		ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(g, connedges.begin(),connedges.end());
+		ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(g, connedges.begin(),connedges.end()); // also accept forbidden edges
+
 		updatetext(to_string(counter) + "s");
 
 		size_t cycleIndex = *(edgeinds.begin() + std::distance(connedges.begin(), std::find(connedges.begin(), connedges.end(), ed_goalEdge)));
@@ -267,7 +268,16 @@ void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size
 		//created 2 points
 		//getDivPoint(startedge.descriptor);
 		position[startedge.divisionvert] = interpolate(startedge, getDivPoint(startedge.descriptor));
-		position[goaledge.divisionvert] = interpolate(goaledge, getDivPoint(startedge.descriptor));
+		position[goaledge.divisionvert] = interpolate(goaledge, getDivPoint(goaledge.descriptor));
+		if (forbiddenPm[ed_startEdge]) {
+			vec3 cp = getClosestPointFromList(position[goaledge.divisionvert], anchorPoints);
+			console() << "closest point distance" << distance(cp, position[goaledge.divisionvert]) << endl;
+			position[startedge.divisionvert] = cp;
+			
+
+
+		}
+
 		//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
 		cycs->at(cycleIndex) = left;
 		cycs->push_back(right);

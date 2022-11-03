@@ -25,7 +25,7 @@ using namespace std;
 #define INITIALGRAPHDIRECTORYEXTENSION       "/initialgraph.txt"
 #define CYCLESDIRECTORYEXTENSION       "/cycles.txt"
 #define VOXELSDIRECTORYEXTENSION       "/voxels.txt"
-
+#define ANCHORPOINTSDIRECTORYEXTENSION       "/anchorpoints.txt"
 
 bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
@@ -50,6 +50,7 @@ int displayEdgeV_iv = 0;
 int iterationcounter = 0;
 string VERTEXFILENAME = "";
 string VOXELFILENAME = "";
+string ANCHORPOINTSFILENAME = "";
 string OBJFILENAME = "";
 string CYCLESFILENAME = "";
 vector<size_t> vertlist;
@@ -124,7 +125,7 @@ boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>:
 
 
 std::map<std::array<signed int, 3>, float> voxelMap;
-
+vector<vec3> anchorPoints;
 
 bool EDGEADDED = false;
 edge_t WHICHEDGE;

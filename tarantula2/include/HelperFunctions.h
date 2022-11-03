@@ -548,6 +548,43 @@ void initVoxelMap(string filename) {
 	}
 }
 
+
+void initAnchorPoints(string filename) {
+	
+	ifstream MyReadFile(filename);
+	string line;
+	vector<vec3> result;
+	vec3 cachevec = {};
+	std::array<int, 3> key{ {0, 0, 0} };
+	size_t counter = 0;
+	while (getline(MyReadFile, line)) {
+		counter = 0;
+		std::string s = line;
+		std::string delimiter = ",";
+		size_t pos = 0;
+		std::string token;
+		while ((pos = s.find(delimiter)) != std::string::npos) {
+			token = s.substr(0, pos);
+			if (counter == 0) {
+				cachevec.x = (stof(token));
+			}
+			else if (counter == 1) {
+				cachevec.y = (stof(token));
+			}
+			s.erase(0, pos + delimiter.length());
+			counter++;
+		}
+
+		cachevec.z = stof(s);
+		anchorPoints.push_back(cachevec);
+		console() << "added point at" << cachevec.x << ", " << cachevec.y << ", " << cachevec.z << endl;
+	}
+}
+
+
+
+
+
 void adjustothers(vector<float*>& values, vector<float*>& cachedvalues,size_t index) {
 	float factor=*cachedvalues[index]- *values[index];
 	float sum = 0.0f;
@@ -649,4 +686,19 @@ void addcyclesfromPc(float relaxc,Graph&g, std::vector<std::vector<size_t>>&cycl
 void findAndAddCycles(Graph* g, std::vector<std::vector<size_t>>& cycs) {
 	cycs = udgcd::findCycles<Graph, vertex_t>(*g);
 	addCyclesToVertices(g, cycs);
+}
+
+vec3 getClosestPointFromList(vec3 startPoint, std::vector<vec3> listOfPoints) {
+	float mindist= std::numeric_limits<float>::max();
+	vec3 cpPt;
+	float compdist = 0;
+	for (vec3 compPt : listOfPoints) {
+		compdist =distance(startPoint, compPt);
+		console()  << "dist : " << compdist << endl;
+		if (compdist < mindist) {
+			compdist = mindist;
+			cpPt = compPt;
+		}
+	}
+	return cpPt;
 }

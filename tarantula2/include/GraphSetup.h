@@ -32,13 +32,13 @@ int GLOBALINT = 1;
 int EDGEINDEX=0;
 bool RUNRELAX = true;
 bool NOTTHESAME=false;
-bool CAROUSEL = true;
+bool CAROUSEL = false;
 bool RUNCYCLES = false;
 
 
 
 
-float ALPHA = 0.15f;
+float ALPHA = 0.05f;
 size_t CURRENTFRAME = 1;
 
 int	displayCycle_i = 0;

@@ -410,8 +410,8 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end, bool forb
 			//randn -= currentLengthPm[*ei] / fulllength / 2;
 			countr++;
 		}
-		isforbidden = forbiddenPm[ed_resultedge] && CHECKFORBIDDEN && forbcheck;
-
+		isforbidden = forbiddenPm[ed_resultedge] && forbcheck;
+		console() << "forbidden" << endl;
 	}
 	return ed_resultedge;
 }
@@ -696,7 +696,7 @@ vec3 getClosestPointFromList(vec3 startPoint, std::vector<vec3> listOfPoints) {
 		compdist =distance(startPoint, compPt);
 		console()  << "dist : " << compdist << endl;
 		if (compdist < mindist) {
-			compdist = mindist;
+			mindist = compdist;
 			cpPt = compPt;
 		}
 	}

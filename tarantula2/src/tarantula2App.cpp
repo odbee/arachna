@@ -158,6 +158,7 @@ void tarantula2App::keyDown(KeyEvent event)
 		//addRandomEdge(&g, relaxc);
 		auto start = std::chrono::high_resolution_clock::now();
 		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
+		//addRandomCyclicEdgeAnimated(&g, relaxc, &cycles);
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 		profile_out.open(profilername, std::ios_base::app);
@@ -182,6 +183,7 @@ void tarantula2App::keyDown(KeyEvent event)
 
 	if (event.getChar() == 'p') {
 		//exportGraph(g);
+
 		exportGraphOBJ(g, dirPath+EXPORTTITLE);
 	}
 	if (event.getChar() == 'x') {
@@ -249,7 +251,7 @@ void tarantula2App::update()
 		if (runAnimation == 50) {
 			console() << "fiding second edge" << endl;
 			initEdge(N_ed_startEdge, N_startedge, g);
-			N_connedges = getConnectedEdges(&g, N_startedge, &cycles, N_edgeinds);
+			N_connedges = getConnectedEdges(&g, N_startedge, &cycles, N_edgeinds, CHECKFORBIDDEN);
 			CONNEDGES = N_connedges;
 		}
 

@@ -37,9 +37,9 @@ void GuiHandler::adjustothers(std::vector<float*>&values, std::vector<float*>&ca
 	}
 }
 
-std::string GuiHandler::makePath(std::string directoryExtension) {
+std::string GuiHandler::makePath(std::string directory, std::string filename) {
 	//make path joining input text and the absolute directory of the folder where the object resides.
-	return fullPath + "/" + directoryExtension;
+	return directory  + filename;
 }
 
 void GuiHandler::checkforchange(std::vector<float*>& values, std::vector<float*>& cachedvalues) {
@@ -72,39 +72,36 @@ void GuiHandler::setupImGui() {
 	//io.Fonts->AddFontFromFileTTF("../resources/fonts/Karrik-Regular.ttf", 15);
 
 	//ImGui::GetStyle().WindowRounding = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().WindowPadding.x = 30.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().WindowPadding.y = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().FramePadding.y = 5.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().FramePadding.x = 8.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	//ImGui::GetStyle().WindowPadding.x = 30.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	//ImGui::GetStyle().WindowPadding.y = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	//ImGui::GetStyle().FramePadding.y = 5.0f;// <- Set this on init or use ImGui::PushStyleVar()
+	//ImGui::GetStyle().FramePadding.x = 8.0f;// <- Set this on init or use ImGui::PushStyleVar()
 
-	ImGui::GetStyle().ChildRounding = 0.0f;
-	ImGui::GetStyle().FrameRounding = 5.0f;
-	ImGui::GetStyle().GrabRounding = 20.0f;
-	ImGui::GetStyle().PopupRounding = 0.0f;
-	ImGui::GetStyle().ScrollbarRounding = 12.0f;
-	ImGui::GetStyle().WindowBorderSize = 2.0f;
+	//ImGui::GetStyle().ChildRounding = 0.0f;
+	//ImGui::GetStyle().FrameRounding = 5.0f;
+	//ImGui::GetStyle().GrabRounding = 20.0f;
+	//ImGui::GetStyle().PopupRounding = 0.0f;
+	//ImGui::GetStyle().ScrollbarRounding = 12.0f;
+	//ImGui::GetStyle().WindowBorderSize = 2.0f;
 
 
-	ImGui::GetStyle().FrameBorderSize = 0.0f;
-	ImGui::GetStyle().ChildBorderSize = 0.0f;
-	ImGui::GetStyle().GrabMinSize = 20.0f;
+	//ImGui::GetStyle().FrameBorderSize = 0.0f;
+	//ImGui::GetStyle().ChildBorderSize = 0.0f;
+	//ImGui::GetStyle().GrabMinSize = 20.0f;
 
-	ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-	ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+	//ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 void GuiHandler::drawParametersWindow() {
 	bool isopen;
-	ImGui::Begin("Parameters", &isopen, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
+	ImGui::Begin("Parameters");
+	data.my_log.Draw("Log");
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::Text("number of iterations = %i", 0);
-
-
-
-		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
-		ImGui::SliderFloat("length", &G_length, 0.0001f, .999f, "%.2f");
-		ImGui::SliderFloat("tension", &G_tension, 0.0001f, .999f, "%.2f");
+		if (ImGui::InputText("import directory path ", &data.fullPath)) {
+			iniHand.overwriteTagImGui("graph directory", data.fullPath);
+		}
 
 		//ImGui::InputInt("x iterations", &x_iterations, 50, 200);
 		//if (ImGui::Button("run x iterations")) {
@@ -119,7 +116,19 @@ void GuiHandler::drawParametersWindow() {
 		//	console() << "resetting web" << endl;
 		//	resetweb(g, relaxc, cycles);
 		//}
+		ImGui::Checkbox(" highlight Nth cycle",&data.highlightCycle);
+		ImGui::SameLine();
+		ImGui::PushItemWidth(80);
+		ImGui::InputInt("N", &data.nthCycle);
+		ImGui::PopItemWidth();
+		ImGui::Separator();
+		if (data.highlightEdge) {
+			ImGui::Text("highlighted edge:");
+			ImGui::Text("isforbidden?");
+			
 
+			ImGui::Text((data.graph[data.highlightedEdge].isforbidden) ? "true" : "false");
+		}
 	}
 	
 	ImGui::End();

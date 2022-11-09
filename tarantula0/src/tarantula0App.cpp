@@ -13,6 +13,7 @@
 
 
 #include "GraphSetup.h"
+#include "GraphHandler.h"
 #include "GuiSetup.h"
 #include "DrawHandler.h"
 #include "VoxelHandler.h"
@@ -34,38 +35,89 @@ class tarantula0App : public App {
 	void keyDown(KeyEvent event) override;
 	void update() override;
 	void draw() override;
+	
+
+	
 	Graph g;
-	VoxelHandler VHHH;
-	AnchorPointsHandler AH;
-	GraphHandler GH = GraphHandler(VHHH,AH);
-	DrawHandler dh = DrawHandler(GH);
-	GuiHandler GuiH;
+	
+
+
+
+	DataContainer data;
+	GraphHandler GH = GraphHandler(data);
+	VoxelHandler VHHH=VoxelHandler(data);
+	AnchorPointsHandler AH=AnchorPointsHandler(data);
+	DrawHandler dh = DrawHandler(data);
+	IniHandler ih = IniHandler(data);
+	GuiHandler GuiH=GuiHandler(data,ih);
+
 };
 
 void tarantula0App::setup()
 {
+	//			CAMERA SETUP
+	dh.setupCamera();
+	//			END CAMERA SETUP
+
 	GuiH.setupImGui();
+	
+	//data.my_log.AddLog("current directory is: ");
+	//data.my_log.AddLog(data.fullPath.c_str());
+	//data.my_log.AddLog("\n");
+	GH.InitialWebFromObj(0.9, data.fullPath + data.initialGraphDE);
+	VHHH.initVoxelMap(data.fullPath+data.voxelsDE);
+	data.loadCycles();
+	GH.addCyclesToVertices();
 
 	
 }
 
 void tarantula0App::mouseDown( MouseEvent event )
 {
+
 }
 
 void tarantula0App::keyDown(KeyEvent event)
 {
+	if (event.getCode() == 99) { // "c"
+//addRandomEdge(&g, relaxc);
+		GH.addRandomCyclicEdgeTesting(.9);
+
+
+	}
+
+	if (event.getChar() == 'k') {
+		edge_ti ei, eiend;
+		std::tie(ei, eiend) = boost::edges(data.graph);
+		data.highlightedEdge=GH.pickrandomEdge(ei, eiend);
+		data.highlightEdge = true;
+	}
 }
 
 
 void tarantula0App::update()
 {
+	GH.relaxPhysics();
 }
 
 void tarantula0App::draw()
 {
 	gl::clear( Color( 0, 0, 0 ) ); 
 	GuiH.drawParametersWindow();
+
+
+	//			CAMERA DRAW
+	{
+		dh.drawCamera();
+		ci::gl::setMatrices(dh.mCamera);
+
+		dh.drawGraph();
+		dh.drawNthCycle();
+		dh.drawNthEdge();
+
+
+	}
+	//			END CAMERA DRAW
 }
 
 CINDER_APP( tarantula0App, RendererGl )

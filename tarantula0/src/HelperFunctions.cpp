@@ -88,7 +88,7 @@ ci::vec3 interpolateBetweenPoints(ci::vec3 point1, ci::vec3 point2, float t) {
 	return point1 + (point2 - point1) * t;
 }
 
-std::string stringfromCycles(std::vector<std::vector<size_t>> cycles) {
+std::string stringfromCycles(cycleList cycles) {
 	std::string result = "[ \n";
 
 	for (const auto& cycle : cycles) {

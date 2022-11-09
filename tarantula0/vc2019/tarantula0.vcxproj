@@ -44,10 +44,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>Full</Optimization>
       <AdditionalIncludeDirectories>..\src;..\..\..\cdev\Cinder\include;C:\libs\boost_1_76_0;..\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WIN32_WINNT=0x0601;_WINDOWS;NOMINMAX;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
@@ -80,6 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>false</ShowIncludes>
+      <Optimization>Full</Optimization>
     </ClCompile>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
@@ -110,6 +111,7 @@
     <ClCompile Include="..\src\GraphSetup.cpp" />
     <ClCompile Include="..\src\GuiSetup.cpp" />
     <ClCompile Include="..\src\HelperFunctions.cpp" />
+    <ClCompile Include="..\src\IniHandler.cpp" />
     <ClCompile Include="..\src\tarantula0App.cpp" />
     <ClCompile Include="..\src\VoxelHandler.cpp" />
   </ItemGroup>
@@ -122,6 +124,7 @@
     <ClInclude Include="..\include\GraphSetup.h" />
     <ClInclude Include="..\include\GuiSetup.h" />
     <ClInclude Include="..\include\HelperFunctions.h" />
+    <ClInclude Include="..\include\IniHandler.h" />
     <ClInclude Include="..\include\Resources.h" />
     <ClInclude Include="..\include\VoxelHandler.h" />
   </ItemGroup>

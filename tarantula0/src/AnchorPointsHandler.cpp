@@ -12,7 +12,6 @@ void AnchorPointsHandler::initAnchorPoints(std::string filename) {
 
 	std::ifstream MyReadFile(filename);
 	std::string line;
-	std::vector<ci::vec3> result;
 	ci::vec3 cachevec = {};
 	std::array<int, 3> key{ {0, 0, 0} };
 	size_t counter = 0;
@@ -37,7 +36,7 @@ void AnchorPointsHandler::initAnchorPoints(std::string filename) {
 		cachevec.z = stof(s);
 		anchorPoints.push_back(cachevec);
 
-		ci::app::console() << "added point at" << cachevec.x << ", " << cachevec.y << ", " << cachevec.z << std::endl;
+		//ci::app::console() << "added point at" << cachevec.x << ", " << cachevec.y << ", " << cachevec.z << std::endl;
 	}
 }
 

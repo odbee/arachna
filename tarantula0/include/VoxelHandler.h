@@ -1,6 +1,7 @@
 #pragma once
 #include "cinder/app/App.h"
-
+#include "GraphSetup.h"
+#include "DataContainer.h"
 #include <vector>
 #include <string>
 #include <fstream>
@@ -11,8 +12,9 @@ class VoxelHandler
 	private:
 		void setup();
 	public:
-		VoxelHandler() { setup(); }
-		std::map<std::array<signed int, 3>, float> voxelMap;
+		VoxelHandler(DataContainer& DATA) : data(DATA) { setup(); }
+		DataContainer& data;
+		voxel_map& voxels=data.voxels;
 		bool hasVoxelMap = false;
 		ci::vec3 boundsMin;
 		ci::vec3 boundsMax;

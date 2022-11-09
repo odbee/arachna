@@ -111,9 +111,10 @@ std::optional<edge_t> GraphHandler::GetEdgeFromItsVerts(vertex_t v, vertex_t u, 
 
 template <typename T>
 
-edge_t GraphHandler::getRandomEdgeFromEdgeListIntegrated(T& begin, T& end, bool forbcheck) {
+edge_t GraphHandler::getRandomEdgeFromEdgeListIntegrated(T& begin, T& end, bool forbcheck, float density, float length,float tension) {
 	T cachebegin = begin;
 	T cacheend = end;
+	//ci::app::console() << "getting random edge:";
 
 	std::random_device rd;  // Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
@@ -127,16 +128,17 @@ edge_t GraphHandler::getRandomEdgeFromEdgeListIntegrated(T& begin, T& end, bool 
 	{
 		for (T iter = begin; iter != end; ++iter) {
 
-			integrateEdge(*iter);
+			integrateEdge(*iter,voxelMap);
 			g[*iter].probability;
 			g[*iter].currentlength;
 			g[*iter].restlength;
 			voxellength += g[*iter].probability;
 			fulllength += g[*iter].currentlength;
 			tensionlength += g[*iter].restlength / g[*iter].currentlength;
-
+			//ci::app::console() << g[*iter].isforbidden;
 		}
 	}
+	//ci::app::console() << std::endl;
 	std::uniform_real_distribution<> dis(0.0, 1.0);
 
 	while (isforbidden)
@@ -146,10 +148,10 @@ edge_t GraphHandler::getRandomEdgeFromEdgeListIntegrated(T& begin, T& end, bool 
 		size_t countr = 0;
 		for (auto iter = begin; iter != end; ++iter) {
 
-			auto voxelval = g[*iter].probability * G_density / voxellength;
+			auto voxelval = g[*iter].probability * density / voxellength;
 			//auto voxelval = 0;
-			auto lengthval = g[*iter].currentlength * G_length / fulllength;
-			auto tensionval = (g[*iter].restlength / g[*iter].currentlength) * G_tension / tensionlength;
+			auto lengthval = g[*iter].currentlength * length / fulllength;
+			auto tensionval = (g[*iter].restlength / g[*iter].currentlength) * tension / tensionlength;
 
 			auto val = voxelval + lengthval + tensionval;
 			if (randn < val) {
@@ -162,13 +164,13 @@ edge_t GraphHandler::getRandomEdgeFromEdgeListIntegrated(T& begin, T& end, bool 
 			countr++;
 		}
 		isforbidden = g[ed_resultedge].isforbidden && forbcheck;
-		ci::app::console() << "forbidden" << std::endl;
+		//ci::app::console() << "forbidden" << std::endl;
 	}
 	return ed_resultedge;
 }
 
 
-float GraphHandler::integrateEdge(edge_t edge) {
+float GraphHandler::integrateEdge(edge_t edge, voxel_map voxelMap) {
 	ci::vec3 p_start = g[boost::source(edge, g)].pos;
 	ci::vec3 p_end = g[boost::target(edge, g)].pos;
 	ci::vec3 dir = p_end - p_start;
@@ -187,13 +189,13 @@ float GraphHandler::integrateEdge(edge_t edge) {
 
 	//checkIfInVoxelMap((int)xcont.startvoxel, (int)ycont.startvoxel, (int)zcont.startvoxel);
 
-	float voxe = vh.voxelMap[{ (int)xcont.startvoxel, (int)ycont.startvoxel, (int)zcont.startvoxel }];
+	float voxe = voxelMap[{ (int)xcont.startvoxel, (int)ycont.startvoxel, (int)zcont.startvoxel }];
 	params.push_back({ 0.0f,voxe });
 
 	for (int i = 0; i < std::max({ xcont.sign * xcont.direction, ycont.sign * ycont.direction, zcont.sign * zcont.direction }); i++)
 	{
 		for (auto s_voxel : vecofconts) {
-			s_voxel.addparam(i, params, currvox, vh);
+			s_voxel.addparam(i, params, currvox, voxelMap);
 		}
 
 	}
@@ -212,47 +214,53 @@ float GraphHandler::integrateEdge(edge_t edge) {
 
 
 
-void GraphHandler::InitialWebFromObj(float rc, std::string filename, std::vector<std::vector<size_t>>& cycs) {
+void GraphHandler::InitialWebFromObj(float rc, std::string filename) {
 	bool hasCycle;
 	std::ifstream MyReadFile(filename);
 	std::string line;
-	while (getline(MyReadFile, line)) {
-		std::stringstream ss(line);
-		std::istream_iterator<std::string> begin(ss);
-		std::istream_iterator<std::string> end;
-		std::vector<std::string> vstrings(begin, end);
-		if (!vstrings.empty()) {
-			if (vstrings[0] == "v") {
-				auto a = boost::add_vertex(g);
-				g[a].pos = { stof(vstrings[1]),stof(vstrings[2]),stof(vstrings[3]) };
-				if (vstrings.size() >= 5) {
-					g[a].isfixed = stof(vstrings[4]); //
+	int numberOfVertices=0;
+	data.my_log.AddLog("[info] initializing starting graph.\n");
+	if (MyReadFile.good()) {
+		while (getline(MyReadFile, line)) {
+			std::stringstream ss(line);
+			std::istream_iterator<std::string> begin(ss);
+			std::istream_iterator<std::string> end;
+			std::vector<std::string> vstrings(begin, end);
+			if (!vstrings.empty()) {
+				if (vstrings[0] == "v") {
+					auto a = boost::add_vertex(g);
+
+					numberOfVertices++;
+					g[a].pos = { stof(vstrings[1]),stof(vstrings[2]),stof(vstrings[3]) };
+					if (vstrings.size() >= 5) {
+						g[a].isfixed = stof(vstrings[4]); //
+					}
+					else {
+						g[a].isfixed = true;
+					}
+
+
+
 				}
-				else {
-					g[a].isfixed = true;
+				if (vstrings[0] == "l") {
+					edge_t e = connectAB(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
+					g[e].isforbidden = stoi(vstrings[3]);
 				}
-
-
-
 			}
-			if (vstrings[0] == "l") {
-				edge_t e = connectAB(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
-				g[e].isforbidden = stoi(vstrings[3]);
-			}
+
 		}
 
+		data.my_log.AddLog("added %i vertices \n", numberOfVertices);
 	}
-
-	//boost::tiernan_all_cycles(g, vis);
-
-
-	ci::app::console() << stringfromCycles(cycs) << std::endl;
+	else {
+		data.my_log.AddLog("[warning] Initial Graph not found. check in your directory.\n");
+	}
 
 }
 
 
-void GraphHandler::addRandomCyclicEdgeTesting(float rc, std::vector<std::vector<size_t>>* cycs) {
-
+void GraphHandler::addRandomCyclicEdgeTesting(float rc) {
+	cycles;
 	// TODO FIX THE ISSUE WHEN THERE ARE NO AVAILABLE EDEGES
 	cyclicedge startedge, goaledge;	edge_ti graphstart, graphend; edge_ti ei_startEdge; edge_t ed_startEdge;
 	//getRandomEdgeWeightedByX(g);
@@ -260,7 +268,7 @@ void GraphHandler::addRandomCyclicEdgeTesting(float rc, std::vector<std::vector<
 	tie(ei, eiend) = boost::edges(g); //need this, will get error otherwise
 	tie(graphstart, graphend) = boost::edges(g);
 
-	ed_startEdge = getRandomEdgeFromEdgeListIntegrated(graphstart, graphend, true);
+	ed_startEdge = getRandomEdgeFromEdgeListIntegrated(graphstart, graphend, true, data.G_density, data.G_length, data.G_tension);
 	initEdge(ed_startEdge, startedge);
 
 	std::vector<size_t>edgeinds;
@@ -272,14 +280,14 @@ void GraphHandler::addRandomCyclicEdgeTesting(float rc, std::vector<std::vector<
 
 
 
-		ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(connedges.begin(), connedges.end(), forbiddenCheck); // also accept forbidden edges
+		ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(connedges.begin(), connedges.end(), forbiddenCheck,data.G_density,data.G_length,data.G_tension); // also accept forbidden edges
 
 
 		size_t cycleIndex = *(edgeinds.begin() + std::distance(connedges.begin(), std::find(connedges.begin(), connedges.end(), ed_goalEdge)));
 
 		initEdge(ed_goalEdge, goaledge);
 		/*size_t cycleIndex = goaledge.cycles[0];*/
-		std::vector<size_t> currCyc = cycs->at(cycleIndex);
+		std::vector<size_t> currCyc = cycles.at(cycleIndex);
 		shiftCycle(currCyc, startedge.start.index, startedge.end.index);
 
 		auto find1 = std::find(currCyc.begin(), currCyc.end(), goaledge.start.index);
@@ -298,22 +306,22 @@ void GraphHandler::addRandomCyclicEdgeTesting(float rc, std::vector<std::vector<
 		//getDivPoint(startedge.descriptor);
 		g[startedge.divisionvert].pos = interpolate(startedge, getDivPoint(startedge.descriptor));
 		g[goaledge.divisionvert].pos = interpolate(goaledge, getDivPoint(goaledge.descriptor));
-		if (ah.hasAnchorPoints) {
-			if (g[ed_startEdge].isforbidden) {
-				ci::vec3 cp = getClosestPointFromList(g[goaledge.divisionvert].pos, ah.anchorPoints);
-				ci::app::console() << "closest point distance" << distance(cp, g[goaledge.divisionvert].pos) << std::endl;
-				g[startedge.divisionvert].pos = cp;
-			}
-			if (g[ed_goalEdge].isforbidden) {
-				ci::vec3 cp = getClosestPointFromList(g[startedge.divisionvert].pos, ah.anchorPoints);
-				ci::app::console() << "closest point distance" << distance(cp, g[startedge.divisionvert].pos) << std::endl;
-				g[goaledge.divisionvert].pos = cp;
-			}
-		}
+		//if (ah.hasAnchorPoints) {
+		//	if (g[ed_startEdge].isforbidden) {
+		//		ci::vec3 cp = getClosestPointFromList(g[goaledge.divisionvert].pos, ah.anchorPoints);
+		//		ci::app::console() << "closest point distance" << distance(cp, g[goaledge.divisionvert].pos) << std::endl;
+		//		g[startedge.divisionvert].pos = cp;
+		//	}
+		//	if (g[ed_goalEdge].isforbidden) {
+		//		ci::vec3 cp = getClosestPointFromList(g[startedge.divisionvert].pos, ah.anchorPoints);
+		//		ci::app::console() << "closest point distance" << distance(cp, g[startedge.divisionvert].pos) << std::endl;
+		//		g[goaledge.divisionvert].pos = cp;
+		//	}
+		//}
 		//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
-		cycs->at(cycleIndex) = left;
-		cycs->push_back(right);
-		size_t lastindex = cycs->size() - 1;
+		cycles.at(cycleIndex) = left;
+		cycles.push_back(right);
+		size_t lastindex = cycles.size() - 1;
 
 		resolveIntersections(startedge, goaledge, cycleIndex, lastindex);
 
@@ -424,8 +432,8 @@ void GraphHandler::resolveIntersections(cyclicedge start, cyclicedge goal, size_
 	right.insert(right.begin(), { start.divisionvert, goal.divisionvert });
 	for (const auto& elem : right)
 		std::replace(g[elem].cycles.begin(), g[elem].cycles.end(), cycle1index, cycle2index);
-	addIntersectionVertexToCycles(goal, cycle1index, &cycles);
-	addIntersectionVertexToCycles(start, cycle1index, &cycles);
+	addIntersectionVertexToCycles(goal, cycle1index);
+	addIntersectionVertexToCycles(start, cycle1index);
 	auto commoncycles = compareVectorsReturnIntersection(goal.cycles, start.cycles);
 	auto cright = vectorcycles(right);
 	auto cleft = vectorcycles(left);
@@ -532,14 +540,14 @@ bool GraphHandler::coordcont::sortbystartvoxeldist(const coordcont& x, const coo
 }
 
 
-void GraphHandler::coordcont::addparam(int index, std::vector<std::array<float, 2>>& paramlist, ci::vec3& currentvoxel, VoxelHandler vh) {
+void GraphHandler::coordcont::addparam(int index, std::vector<std::array<float, 2>>& paramlist, ci::vec3& currentvoxel, voxel_map voxelMap) {
 	if (compareendvoxels()) {
 		if (index < sign * direction) {
 			float param = (startvoxel + (index + 0.5) * sign - start) / direction;
 			//checkIfInVoxelMap((int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z);
 			//*vh->at({ (int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z });
 			//*vh->voxelMap->at({ (int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z });
-			float voxe = vh.voxelMap[{(int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z}];
+			float voxe = voxelMap[{(int)currentvoxel.x, (int)currentvoxel.y, (int)currentvoxel.z}];
 			if (param != 0 && param < 1) {
 
 				if (!paramlist.empty()) {
@@ -564,19 +572,108 @@ void GraphHandler::coordcont::addparam(int index, std::vector<std::array<float, 
 
 
 
-void GraphHandler::addIntersectionVertexToCycles(cyclicedge& edge, int cycleIndex, std::vector<std::vector<size_t>>* cycs) {
+void GraphHandler::addIntersectionVertexToCycles(cyclicedge& edge, int cycleIndex) {
 	for (const auto& cycle : edge.cycles) {
 		if (cycle != cycleIndex)
 		{
-			auto cyc = cycs->at(cycle);
+			auto cyc = cycles.at(cycle);
 			auto edge1indInCycle_i = std::find(cyc.begin(), cyc.end(), edge.start.index);
 			auto edge2indInCycle_i = std::find(cyc.begin(), cyc.end(), edge.end.index);
 			if ((std::distance(cyc.begin(), edge1indInCycle_i) + 1) % cyc.size() == std::distance(cyc.begin(), edge2indInCycle_i))       // if clockwise shift second vertex to first index
 				cyc.insert(edge1indInCycle_i + 1, edge.divisionvert);
 			else if ((std::distance(cyc.begin(), edge2indInCycle_i) + 1) % cyc.size() == std::distance(cyc.begin(), edge1indInCycle_i))       // if clockwise shift second vertex to first  // if counterclockwise shift first vertex to first index
 				cyc.insert(edge2indInCycle_i + 1, edge.divisionvert);
-			cycs->at(cycle) = cyc;
+			cycles.at(cycle) = cyc;
 			g[edge.divisionvert].cycles.push_back(cycle);
 		}
 	}
+}
+
+
+void GraphHandler::relaxPhysics() {
+	float k = 1.1f;
+	float eps = 0.1f;
+	Graph::vertex_descriptor v1, v2;
+	for (std::tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, g);
+		v2 = boost::target(*ei, g);
+		
+		if (length(g[v2].pos - g[v1].pos) > 0.01) {
+			if (!g[v1].isfixed) {
+				g[v1].movevec += 1 * k * (g[*ei].currentlength - g[*ei].restlength) *
+					normalize(g[v2].pos - g[v1].pos);
+			}
+			if (!g[v2].isfixed) {
+				g[v2].movevec += 1 * k * (g[*ei].currentlength - g[*ei].restlength) *
+					normalize(g[v1].pos - g[v2].pos);
+			}
+		}
+	}
+
+	for (std::tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+
+		//position[*vi] += moveVecPm[*vi];
+		g[*vi].pos += eps * g[*vi].movevec;
+		g[*vi].movevec = ci::vec3(0, 0, 0);
+	}
+	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, g);
+		v2 = boost::target(*ei, g);
+		g[*ei].currentlength = distance(g[v1].pos, g[v2].pos);
+	}
+}
+
+edge_t GraphHandler::pickrandomEdge(edge_ti& begin, edge_ti& end) {
+	edge_ti cachebegin = begin;
+	edge_ti cacheend = end;
+	ci::app::console() << "getting random edge:";
+
+	std::random_device rd;  // Will be used to obtain a seed for the random number engine
+	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+
+	int iteratorLength = 0;	int randiter;
+	float fulllength = 0, tensionlength = 0, voxellength = 0;
+	bool isforbidden = true;
+
+	edge_t ed_resultedge = *begin; // ADD FIRST EDGE TO RESULTEDGE SO IF AN ERROR OCCURS FALL BACK TO FIRST EDGE
+
+	// calculate max values:
+	{
+		for (edge_ti iter = begin; iter != end; ++iter) {
+
+			integrateEdge(*iter, voxelMap);
+			g[*iter].probability;
+			g[*iter].currentlength;
+			g[*iter].restlength;
+			voxellength += g[*iter].probability;
+			fulllength += g[*iter].currentlength;
+			tensionlength += g[*iter].restlength / g[*iter].currentlength;
+			ci::app::console() << g[*iter].isforbidden;
+		}
+	}
+	std::uniform_real_distribution<> dis(0.0, 1.0);
+
+	begin = cachebegin;
+	auto randn = dis(gen);
+	ci::app::console() << randn << std::endl;
+	size_t countr = 0;
+	for (auto iter = begin; iter != end; ++iter) {
+
+		auto voxelval = g[*iter].probability  / voxellength/3;
+		//auto voxelval = 0;
+		auto lengthval =( g[*iter].currentlength / fulllength)/3;
+		auto tensionval = ((g[*iter].restlength / g[*iter].currentlength) / tensionlength)/3;
+
+		auto val = voxelval + lengthval + tensionval;
+		if (randn < val) {
+			ed_resultedge = *iter;
+
+			break;
+		}
+		randn -= val;
+		//randn -= currentLengthPm[*ei] / fulllength / 2;
+		countr++;
+	}
+	
+	return ed_resultedge;
 }

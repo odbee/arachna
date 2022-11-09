@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cinder/app/App.h"
+#include "GraphSetup.h"
 #include <vector>
 #include <string>
 
@@ -39,7 +40,7 @@ namespace std {
 
 ci::vec3 interpolateBetweenPoints(ci::vec3 point1, ci::vec3 point2, float t);
 
-std::string stringfromCycles(std::vector<std::vector<size_t>> cycles);
+std::string stringfromCycles(cycleList cycles);
 
 std::string stringfromCyclesShort(std::vector<size_t> cycleslist);
 

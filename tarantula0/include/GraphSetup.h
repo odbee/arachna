@@ -36,6 +36,10 @@ typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<Graph>::vertex_iterator vertex_ti;
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 typedef boost::graph_traits<Graph>::edge_iterator edge_ti;
+typedef std::map<std::array<signed int, 3>, float> voxel_map;
+typedef std::vector<ci::vec3> anchor_points;
+
+typedef std::vector<std::vector<size_t>> cycleList;
 //typedef boost::graph_traits<Graph>::null_vertex() null();
 
 

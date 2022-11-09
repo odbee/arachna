@@ -122,13 +122,13 @@ void GuiHandler::drawParametersWindow() {
 		ImGui::InputInt("N", &data.nthCycle);
 		ImGui::PopItemWidth();
 		ImGui::Separator();
-		if (data.highlightEdge) {
-			ImGui::Text("highlighted edge:");
-			ImGui::Text("isforbidden?");
-			
+		//if (data.highlightEdge) {
+		//	ImGui::Text("highlighted edge:");
+		//	ImGui::Text("isforbidden?");
+		//	
 
-			ImGui::Text((data.graph[data.highlightedEdge].isforbidden) ? "true" : "false");
-		}
+		//	ImGui::Text((data.graph[data.highlightedEdge].isforbidden) ? "true" : "false");
+		//}
 	}
 	
 	ImGui::End();

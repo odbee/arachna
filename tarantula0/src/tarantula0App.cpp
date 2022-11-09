@@ -44,10 +44,10 @@ class tarantula0App : public App {
 
 
 	DataContainer data;
-	GraphHandler GH = GraphHandler(data);
+	//GraphHandler GH = GraphHandler(data);
 	VoxelHandler VHHH=VoxelHandler(data);
 	AnchorPointsHandler AH=AnchorPointsHandler(data);
-	DrawHandler dh = DrawHandler(data);
+	//DrawHandler dh = DrawHandler(data);
 	IniHandler ih = IniHandler(data);
 	GuiHandler GuiH=GuiHandler(data,ih);
 
@@ -56,7 +56,7 @@ class tarantula0App : public App {
 void tarantula0App::setup()
 {
 	//			CAMERA SETUP
-	dh.setupCamera();
+	data.setupCamera();
 	//			END CAMERA SETUP
 
 	GuiH.setupImGui();
@@ -64,10 +64,10 @@ void tarantula0App::setup()
 	//data.my_log.AddLog("current directory is: ");
 	//data.my_log.AddLog(data.fullPath.c_str());
 	//data.my_log.AddLog("\n");
-	GH.InitialWebFromObj(0.9, data.fullPath + data.initialGraphDE);
+	data.InitialWebFromObj(0.9, data.fullPath + data.initialGraphDE);
 	VHHH.initVoxelMap(data.fullPath+data.voxelsDE);
 	data.loadCycles();
-	GH.addCyclesToVertices();
+	data.addCyclesToVertices();
 
 	
 }
@@ -81,15 +81,15 @@ void tarantula0App::keyDown(KeyEvent event)
 {
 	if (event.getCode() == 99) { // "c"
 //addRandomEdge(&g, relaxc);
-		GH.addRandomCyclicEdgeTesting(.9);
+		data.addRandomCyclicEdgeTesting(.9);
 
 
 	}
 
 	if (event.getChar() == 'k') {
 		edge_ti ei, eiend;
-		std::tie(ei, eiend) = boost::edges(data.graph);
-		data.highlightedEdge=GH.pickrandomEdge(ei, eiend);
+		std::tie(ei, eiend) = boost::edges(data.g);
+		data.highlightedEdge=data.pickrandomEdge(ei, eiend);
 		data.highlightEdge = true;
 	}
 }
@@ -97,7 +97,7 @@ void tarantula0App::keyDown(KeyEvent event)
 
 void tarantula0App::update()
 {
-	GH.relaxPhysics();
+	data.relaxPhysics();
 }
 
 void tarantula0App::draw()
@@ -108,12 +108,12 @@ void tarantula0App::draw()
 
 	//			CAMERA DRAW
 	{
-		dh.drawCamera();
-		ci::gl::setMatrices(dh.mCamera);
+		data.drawCamera();
+		ci::gl::setMatrices(data.mCamera);
 
-		dh.drawGraph();
-		dh.drawNthCycle();
-		dh.drawNthEdge();
+		data.drawGraph();
+		data.drawNthCycle();
+		data.drawNthEdge();
 
 
 	}

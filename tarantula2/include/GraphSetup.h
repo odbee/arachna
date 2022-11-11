@@ -140,3 +140,20 @@ edge_t EMPTY;
 string EXPORTTITLE;
 
 std::string dirPath = "web";
+
+
+float relaxc = 0.4f;
+bool hasCycle = false;
+bool mDrawVertices = false;
+bool mDrawNumbers = false;
+bool mDrawVertexInfo = false;
+bool colorEdges = false;
+bool colorTens = false;
+bool colorLength = false;
+
+bool drawNCycle = false;
+
+int x_iterations = 1000;
+
+edge_t highlightedEdge;
+bool highlightEdge = false;

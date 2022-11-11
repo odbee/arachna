@@ -28,38 +28,73 @@ vec3 interpolate(cyclicedge edge, float t) {
 	return edge.start.pos + (edge.end.pos - edge.start.pos) * t;
 }
 
+
+void relaxPhysics(Graph* g) {
+	float k = 1.1f;
+	float eps = 0.1f;
+	Graph::vertex_descriptor v1, v2;
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, *g);
+		v2 = boost::target(*ei, *g);
+		if (length(position[v2] - position[v1]) > 0.01) {
+			if (!fixedBool[v1]) {
+				moveVecPm[v1] += 1 * k * (currentLengthPm[*ei] - restLengthPm[*ei]) *
+					normalize(position[v2] - position[v1]);
+			}
+			if (!fixedBool[v2]) {
+				moveVecPm[v2] += 1 * k * (currentLengthPm[*ei] - restLengthPm[*ei]) *
+					normalize(position[v1] - position[v2]);
+			}
+		}
+	}
+
+	for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
+
+		//position[*vi] += moveVecPm[*vi];
+		position[*vi] += eps * moveVecPm[*vi];
+		moveVecPm[*vi] = vec3(0, 0, 0);
+	}
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, *g);
+		v2 = boost::target(*ei, *g);
+		currentLengthPm[*ei] = distance(position[v1], position[v2]);
+	}
+}
+
+
+
+/**
+ * removes item from vector by its index.
+ *
+ * @param reference to vector, index
+ * @return nothing
+ */
 void removebyindex(vector<size_t>& vec, size_t ind) {
 	vec.erase(std::remove(vec.begin(), vec.end(), ind), vec.end());
 }
-
+/**
+ * connects goal- and startpoins, splits goal- and startedge;
+ *
+ * @param start and goal edge
+ * @return vector containing all newly created edges
+ */
 vector<edge_t> connectEdges(Graph* g, cyclicedge startedge, cyclicedge goaledge, float rc) {
 	vector<edge_t> returnedges(5);
-
-	returnedges[0]=connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc);
-	
-	if (forbiddenPm[goaledge.descriptor]) {
-		returnedges[1] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], true);
-		returnedges[2] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], true);
-		fixedBool[goaledge.divisionvert] = true;
-	}
-	else {
-		returnedges[1] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor]);
-		returnedges[2] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor]);
-	}
-
-	if (forbiddenPm[startedge.descriptor]) {
-		returnedges[3] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], true);
-		returnedges[4] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], true);
-		fixedBool[startedge.divisionvert] = true;
-	}
-	else {
-		returnedges[3] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor]);
-		returnedges[4] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor]);
-	}
+	bool startforbidden=forbiddenPm[startedge.descriptor];
+	bool goalforbidden= forbiddenPm[goaledge.descriptor];
+	returnedges[0]=connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc, startforbidden&&goalforbidden);
+	returnedges[1] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+	returnedges[2] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+	returnedges[3] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
+	returnedges[4] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden);
+	fixedBool[goaledge.divisionvert] = goalforbidden;
+	fixedBool[startedge.divisionvert] = startforbidden;
 	boost::remove_edge(startedge.descriptor, *g);
 	boost::remove_edge(goaledge.descriptor, *g);
 	return returnedges;
 }
+
+
 void addIntersectionVertexToCycles(cyclicedge& edge, int cycleIndex, std::vector<std::vector<size_t>>* cycs) {
 	for (const auto& cycle : edge.cycles) {
 		if (cycle != cycleIndex)
@@ -71,6 +106,9 @@ void addIntersectionVertexToCycles(cyclicedge& edge, int cycleIndex, std::vector
 				cyc.insert(edge1indInCycle_i + 1, edge.divisionvert);
 			else if ((std::distance(cyc.begin(), edge2indInCycle_i) + 1) % cyc.size() == std::distance(cyc.begin(), edge1indInCycle_i))       // if clockwise shift second vertex to first  // if counterclockwise shift first vertex to first index
 				cyc.insert(edge2indInCycle_i + 1, edge.divisionvert);
+			else
+				console() << "[error] vertex 1 and 2 are not adjacent" << endl;
+
 			cycs->at(cycle) = cyc;
 			cyclesPm[edge.divisionvert].push_back(cycle);
 		}
@@ -166,10 +204,8 @@ void resolveIntersections(cyclicedge start,cyclicedge goal,size_t cycle1index, s
 
 
 
-std::vector<edge_t> getConnectedEdges(Graph* g, cyclicedge edge, std::vector<std::vector<size_t>>* cycs, std::vector<size_t>& edgeindices, bool forbCheck) {
-	edge_t hs;
+std::vector<edge_t> getConnectableEdges(Graph* g, cyclicedge edge, std::vector<std::vector<size_t>>* cycs, std::vector<size_t>& edgeindices, bool forbCheck) {
 	std::vector<size_t> availverts;
-	
 	std::vector<edge_t> availedges;
 	
 	edge_t cachedge;
@@ -207,98 +243,112 @@ std::vector<edge_t> getConnectedEdges(Graph* g, cyclicedge edge, std::vector<std
 
 	return availedges;
 }
+
+tuple<vector<size_t>, vector<size_t>> divideCycleAtEdge(vector<size_t> cycle, cyclicedge edge) {
+	auto find1 = std::find(cycle.begin(), cycle.end(), edge.start.index);
+	auto find2 = std::find(cycle.begin(), cycle.end(), edge.end.index);
+	auto gei1 = std::distance(cycle.begin(), find1);
+	auto gei2 = std::distance(cycle.begin(), find2);
+	auto gei = (gei1 < gei2) ? find2 : find1;
+	// get vetex indices
+
+	vector<size_t> left(cycle.begin(), gei);
+	vector<size_t> right(gei, cycle.end());
+	return std::make_tuple(left, right);
+}
+
+cyclicedge getStartEdge(Graph *g, bool b_excludeForbiddenEdges) {
+	edge_ti graphstart, graphend;
+	cyclicedge startedge;
+	tie(graphstart, graphend) = boost::edges(*g);
+
+	edge_t ed_startEdge = getRandomEdgeFromEdgeListIntegrated(g, graphstart, graphend, b_excludeForbiddenEdges);
+	initEdge(ed_startEdge, startedge, *g);
+	return startedge;
+}
+cyclicedge getGoalEdge(Graph *g, vector<edge_t> connectableEdges , bool b_excludeForbiddenEdges) {
+	cyclicedge goaledge;
+	edge_t ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(g, connectableEdges.begin(), connectableEdges.end(), b_excludeForbiddenEdges); // also accept forbidden edges
+	initEdge(ed_goalEdge, goaledge, *g);
+
+	return goaledge;
+}
+
+void adjustGraphToNewEdges(Graph * g, std::vector<std::vector<size_t>>* cycs, cyclicedge& startedge,cyclicedge &goaledge,std::vector<edge_t> connectableEdges, std::vector<size_t>edgeinds) {
+
+	size_t cycleIndex = *(edgeinds.begin() + std::distance(connectableEdges.begin(), std::find(connectableEdges.begin(), connectableEdges.end(), goaledge.descriptor)));
+	vector<size_t> currCyc = cycs->at(cycleIndex);
+
+	shiftCycle(currCyc, startedge.start.index, startedge.end.index);
+
+
+	vector<size_t> left, right;
+	tie(left, right) = divideCycleAtEdge(currCyc, goaledge);
+	startedge.divisionvert = boost::add_vertex(*g); fixedBool[startedge.divisionvert] = false;
+	goaledge.divisionvert = boost::add_vertex(*g); fixedBool[goaledge.divisionvert] = false;
+	/*size_t cycleIndex = goaledge.cycles[0];*/
+
+//created 2 points
+//getDivPoint(startedge.descriptor);
+	position[startedge.divisionvert] = interpolate(startedge, getDivPoint(startedge.descriptor));
+	position[goaledge.divisionvert] = interpolate(goaledge, getDivPoint(goaledge.descriptor));
+	if (forbiddenPm[startedge.descriptor]) {
+		vec3 cp = getClosestPointFromList(position[goaledge.divisionvert], anchorPoints);
+		console() << "closest point distance" << distance(cp, position[goaledge.divisionvert]) << endl;
+		position[startedge.divisionvert] = cp;
+	}
+	if (forbiddenPm[goaledge.descriptor]) {
+		vec3 cp = getClosestPointFromList(position[startedge.divisionvert], anchorPoints);
+		console() << "closest point distance" << distance(cp, position[startedge.divisionvert]) << endl;
+		position[goaledge.divisionvert] = cp;
+	}
+	//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
+	cycs->at(cycleIndex) = left;
+	cycs->push_back(right);
+	size_t lastindex = cycs->size() - 1;
+
+	resolveIntersections(startedge, goaledge, cycleIndex, lastindex, *g, *cycs);
+}
+
+
+
 void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
-	updatetext(to_string(counter) + "z");
 
 	// TODO FIX THE ISSUE WHEN THERE ARE NO AVAILABLE EDEGES
-	cyclicedge startedge, goaledge;	edge_ti graphstart, graphend; edge_ti ei_startEdge; edge_t ed_startEdge;
-	//getRandomEdgeWeightedByX(g);
-	updatetext(to_string(counter) + "y");
-	tie(ei, eiend) = boost::edges(*g); //need this, will get error otherwise
-	tie(graphstart, graphend) = boost::edges(*g);
-	updatetext(to_string(counter) + "x");
-	ed_startEdge = getRandomEdgeFromEdgeListIntegrated(g, graphstart, graphend, true);
-	updatetext(to_string(counter) + "w");
-	initEdge(ed_startEdge, startedge, *g);
-	{
-		displayEdgeV_i = startedge.start.index;
-		displayEdgeV_ii = startedge.end.index;
-	}
-	updatetext(to_string(counter) + "v");
 	std::vector<size_t>edgeinds;
-	updatetext(to_string(counter) + "u");
-
-	auto connedges = getConnectedEdges(g, startedge, cycs, edgeinds, CHECKFORBIDDEN);
-	auto cc= connedges.begin();
-	int seconditer;	edge_t ed_goalEdge; edge_ti ei_goalEdge;
-	if (connedges.size()) {
-		
-
-		updatetext(to_string(counter) + "t" + "[listlength" + to_string(connedges.size()) + "]");
-
-		ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(g, connedges.begin(),connedges.end(), CHECKFORBIDDEN); // also accept forbidden edges
-
-		updatetext(to_string(counter) + "s");
-
-		size_t cycleIndex = *(edgeinds.begin() + std::distance(connedges.begin(), std::find(connedges.begin(), connedges.end(), ed_goalEdge)));
-		updatetext(to_string(counter) + "r");
-
-		initEdge(ed_goalEdge, goaledge, *g);
-		updatetext(to_string(counter) + "a");
-		displayEdgeV_iii = goaledge.start.index;
-		displayEdgeV_iv = goaledge.end.index;
-		updatetext(to_string(counter) + "b");
-		/*size_t cycleIndex = goaledge.cycles[0];*/
-		vector<size_t> currCyc = cycs->at(cycleIndex);
-		updatetext(to_string(counter) + "c");
-		displayCycle_i = cycleIndex;
-		shiftCycle(currCyc, startedge.start.index, startedge.end.index);
-
-		auto find1 = std::find(currCyc.begin(), currCyc.end(), goaledge.start.index);
-		auto find2 = std::find(currCyc.begin(), currCyc.end(), goaledge.end.index);
-		auto gei1= std::distance(currCyc.begin(),find1);
-		auto gei2= std::distance(currCyc.begin(), find2);
-		auto gei = (gei1 < gei2) ? find2 : find1;
-		// get vetex indices
-		updatetext(to_string(counter) + "d" + " ("+ "values:" + to_string(goaledge.start.index) + ", " + to_string(goaledge.end.index) + ", " "indices"  + to_string(gei1) + "," + to_string(gei2) + +";" + stringfromCyclesShort(currCyc) + ") ");
-
-
-		vector<size_t> left(currCyc.begin(), gei);
-		vector<size_t> right(gei, currCyc.end());
-		updatetext(to_string(counter) + " (" + "left:" + stringfromCyclesShort(left) + ", right:" + stringfromCyclesShort(right) + ") ");
-		updatetext(to_string(counter) + "e");
-		startedge.divisionvert = boost::add_vertex(*g); fixedBool[startedge.divisionvert] = false;
-		goaledge.divisionvert = boost::add_vertex(*g); fixedBool[goaledge.divisionvert] = false;
-		//created 2 points
-		//getDivPoint(startedge.descriptor);
-		position[startedge.divisionvert] = interpolate(startedge, getDivPoint(startedge.descriptor));
-		position[goaledge.divisionvert] = interpolate(goaledge, getDivPoint(goaledge.descriptor));
-		if (forbiddenPm[ed_startEdge]) {
-			vec3 cp = getClosestPointFromList(position[goaledge.divisionvert], anchorPoints);
-			console() << "closest point distance" << distance(cp, position[goaledge.divisionvert]) << endl;
-			position[startedge.divisionvert] = cp;
-		}
-		if (forbiddenPm[ed_goalEdge]) {
-			vec3 cp = getClosestPointFromList(position[startedge.divisionvert], anchorPoints);
-			console() << "closest point distance" << distance(cp, position[startedge.divisionvert]) << endl;
-			position[goaledge.divisionvert] = cp;
-		}
-		//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
-		cycs->at(cycleIndex) = left;
-		cycs->push_back(right);
-		size_t lastindex = cycs->size() - 1;
-		displayCycle_ii = lastindex;
-		resolveIntersections(startedge, goaledge, cycleIndex, lastindex, *g, *cycs);
-
+	cyclicedge startedge= getStartEdge(g, CHECKFORBIDDEN);
+	auto connectableEdges = getConnectableEdges(g, startedge, cycs, edgeinds, true);
+	if (connectableEdges.size()) {
+		cyclicedge goaledge = getGoalEdge(g, connectableEdges, false);
+		adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
+		connectEdges(g, startedge, goaledge, rc);
 	}
 	else {
 		console() << " no cycles found, returning" << endl;
 		return;
 	}
-	updatetext(to_string(counter) + "i");
-	connectEdges(g, startedge, goaledge, rc);
-	updatetext(to_string(counter) + "j");
+
 	counter++;
 	console() << GLOBALINT << endl;
-	updatetext("\n");
+}
+
+edge_t findRandomEdge() {
+	edge_ti graphstart, graphend;
+	tie(graphstart, graphend) = boost::edges(g);
+	return getRandomEdgeFromEdgeListIntegrated(&g, graphstart,graphend, false);
+
+}
+
+
+void runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_t>>& cycles) {
+	for (size_t i = 0; i < x; i++)
+	{
+		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
+		for (size_t j = 0; j < 7; j++)
+		{
+			relaxPhysics(&g);
+		}
+		iterationcounter++;
+	}
+
 }

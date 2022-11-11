@@ -25,6 +25,7 @@
 #include "Resetter.h"
 #include "CycleImportFunctions.h"
 #include "CachedData.h"
+#include "ImGuiHandler.h"
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -38,24 +39,8 @@ public:
 	void draw() override;
 	void keyDown(KeyEvent event) override;
 
-	void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_t>>& cycles);
-	CameraPersp		mCamera;
-private:
-	gl::BatchRef		mWirePlane;
-	gl::BatchRef		mWireCube;
-	CameraUi			mCamUi;
-	float relaxc = 0.4f;
-	bool hasCycle = false;
-	bool mDrawVertices = false;
-	bool mDrawNumbers = false;
-	bool mDrawVertexInfo = false;
-	bool colorEdges = false;
-	bool colorTens = false;
-	bool colorLength = false;
 
-	bool drawNCycle = false;
 
-	int x_iterations = 1000;
 
 	std::pair<edge_t, bool> c, d;
 	vec3 camPos = { 30.0f, 10.0f, 40.0f };
@@ -72,7 +57,8 @@ private:
 	int N_seconditer;	edge_t N_ed_goalEdge; edge_ti N_ei_goalEdge;
 	vector<size_t> N_currCyc;
 	vector<edge_t> N_connedges;
-
+	DrawHandler drawHandler;
+	ImGuiHandler imGuiHandler;
 
 
 };
@@ -91,57 +77,14 @@ void tarantula2App::setup()
 	//	<< "   "
 	//	<< ImGui::ColorConvertU32ToFloat4(ImGui::GetColorU32(41)).z << endl;
 	//			CAMERA SETUP
-	{
-		mCamera.lookAt(vec3(30.0f, 20.0f, 40.0f), vec3(0));
-		mCamera.setPerspective(40.0f, getWindowAspectRatio(), 0.01f, 1000.0f);
-		mCamUi = CameraUi(&mCamera, getWindow());
-		auto lambertShader = gl::getStockShader(gl::ShaderDef().color().lambert());
-		auto colorShader = gl::getStockShader(gl::ShaderDef().color());
-		mWirePlane = gl::Batch::create(geom::WirePlane().size(vec2(11)).subdivisions(ivec2(10)), colorShader);
-		mWireCube = gl::Batch::create(geom::WireCube(), colorShader);
-	}
+	drawHandler.setupCamera();
 	//			END CAMERA SETUP
 
-
-	ImGui::Initialize();
-	ImGuiIO& io = ImGui::GetIO();
-	ImGui::StyleColorsDark();
-	//io.Fonts->AddFontFromFileTTF("../resources/fonts/Abordage-Regular.ttf", 14);
-	io.Fonts->AddFontFromFileTTF("../resources/fonts/Karrik-Regular.ttf", 15);
-
-	//ImGui::GetStyle().WindowRounding = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().WindowPadding.x = 30.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().WindowPadding.y = 20.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().FramePadding.y = 5.0f;// <- Set this on init or use ImGui::PushStyleVar()
-	ImGui::GetStyle().FramePadding.x = 8.0f;// <- Set this on init or use ImGui::PushStyleVar()
-
-	ImGui::GetStyle().ChildRounding = 0.0f;
-	ImGui::GetStyle().FrameRounding = 5.0f;
-	ImGui::GetStyle().GrabRounding = 20.0f;
-	ImGui::GetStyle().PopupRounding = 0.0f;
-	ImGui::GetStyle().ScrollbarRounding = 12.0f;
-	ImGui::GetStyle().WindowBorderSize = 2.0f;
-
-
-	ImGui::GetStyle().FrameBorderSize = 0.0f;
-	ImGui::GetStyle().ChildBorderSize = 0.0f;
-	ImGui::GetStyle().GrabMinSize = 20.0f;
-
-	ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-	ImGui::GetStyle().Colors[ImGuiCol_Border] = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	ImGui::GetStyle().Colors[ImGuiCol_WindowBg] = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+	imGuiHandler.setupImGui();
 
 
 
-	initVoxelMap(VOXELFILENAME);
-	initAnchorPoints(ANCHORPOINTSFILENAME);
-
-	console() << voxelMap.size() << endl;
-	console() << "voxel map initiated successfully, value of {0,0,0} is:" << voxelMap[{0, 0, 0}] << endl;
-	//InitialWebFromPc(&g,relaxc, "txtf.txt");
-	InitialWebFromObj(&g, relaxc, OBJFILENAME, cycles);
-
+	initWeb(g, relaxc, cycles);
 
 	std::ofstream ofs;
 
@@ -177,9 +120,6 @@ void tarantula2App::keyDown(KeyEvent event)
 	}
 
 
-	if (event.getCode() == 107) {
-		console() << stringfromCycles(cycles) << endl;
-	}
 
 	if (event.getChar() == 'p') {
 		//exportGraph(g);
@@ -197,6 +137,11 @@ void tarantula2App::keyDown(KeyEvent event)
 
 	}
 
+	if (event.getChar() == 'k') {
+		highlightedEdge = findRandomEdge();
+		highlightEdge = true;
+
+	}
 	//console() << event.getCode() << endl;
 }
 vec3 rotateVec(float alpha, vec3 vector) {
@@ -222,7 +167,7 @@ void tarantula2App::update()
 	}
 	if (CAROUSEL) {
 		camPos = rotateVec(0.01f, camPos);
-		mCamera.lookAt(camPos, vec3(0));
+		drawHandler.mCamera.lookAt(camPos, vec3(0));
 	}
 	if (RUNCYCLES && !(CURRENTFRAME % 30)) {
 		displayCycle_i++;
@@ -251,7 +196,7 @@ void tarantula2App::update()
 		if (runAnimation == 50) {
 			console() << "fiding second edge" << endl;
 			initEdge(N_ed_startEdge, N_startedge, g);
-			N_connedges = getConnectedEdges(&g, N_startedge, &cycles, N_edgeinds, CHECKFORBIDDEN);
+			N_connedges = getConnectableEdges(&g, N_startedge, &cycles, N_edgeinds, CHECKFORBIDDEN);
 			CONNEDGES = N_connedges;
 		}
 
@@ -320,139 +265,16 @@ void tarantula2App::update()
 }
 
 using namespace ImGui;
-void tarantula2App::runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_t>>& cycles) {
-	for (size_t i = 0; i < x; i++)
-	{
-		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
-		for (size_t j = 0; j < 7; j++)
-		{
-			relaxPhysics(&g);
-		}
-		iterationcounter++;
-	}
 
-}
 void tarantula2App::draw()
 {
-	bool isopen;
-	ImGui::Begin("STUFS", &isopen, /*ImGuiWindowFlags_NoTitleBar +*/ ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
+	//imGuiHandler.drawEdgesDiagram();
+	mat4 projection = drawHandler.mCamera.getProjectionMatrix() * drawHandler.mCamera.getViewMatrix();
+	int w = getWindowWidth();
+	int h = getWindowHeight();
+	vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
 
-	//	static float xs[51], ys1[51], ys2[51];
-	//for (int i = 0; i < 51; ++i) {
-	//	xs[i] = i * 0.02;
-	//	ys1[i] = 1.0 + 0.5 * sin(25 * xs[i]) * cos(2 * xs[i]);
-	//	ys2[i] = 0.5 + 0.25 * sin(10 * xs[i]) * sin(xs[i]);
-	//}
-	//ImGui::PlotLines("frames", xs, IM_ARRAYSIZE(xs));
-	//PlotEdges("", ys1, xs, IM_ARRAYSIZE(xs), 0, 0, 0, 1, { 600,300 });
-	//
-	tie(ei, eiend) = boost::edges(g);
-	auto num_edges = std::distance(ei, eiend);
-	vector<float> lengths(num_edges);
-	vector<float> tensions(num_edges);
-	int  indekx = 0;
-
-	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
-
-		//console() << currentLengthPm[*ei] << endl;
-		lengths[indekx] = currentLengthPm[*ei];
-
-		tensions[indekx] = currentLengthPm[*ei] / restLengthPm[*ei];
-		//console() << tensions[indekx] << endl;
-		indekx++;
-
-		//console() << to_string(tensionCols[indekx]) << endl;
-
-		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
-		//if (!forbiddenPm[*ei]) {
-		//	myfile << "[" << "{" << to_string(position[boost::source(*ei, g)]) << "};{" << to_string(position[boost::target(*ei, g)]) << "}" << "]" << endl;
-		//}
-	}
-	//console() << lengths[32] << endl;
-
-	//PlotEdges2("framess", lengths, tensions, 0, 0, FLT_MAX, { 600,300 });
-	PlotGraphEdges("framess", g, 0, 0, FLT_MAX, { 600,300 });
-
-	ImGui::End();
-	ImGui::Begin("Params", &isopen, ImGuiWindowFlags_NoTitleBar + ImGuiWindowFlags_NoBackground + ImGuiWindowFlags_NoScrollbar + ImGuiWindowFlags_NoResize);
-
-	//ImGui::StyleColorsLight();
-
-
-	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::Text("number of iterations = %i", iterationcounter);
-
-
-
-		ImGui::SliderFloat("density", &G_density, 0.0001f, .999f, "%.2f");
-		ImGui::SliderFloat("length", &G_length, 0.0001f, .999f, "%.2f");
-		ImGui::SliderFloat("tension", &G_tension, 0.0001f, .999f, "%.2f");
-
-		ImGui::InputInt("x iterations", &x_iterations, 50, 200);
-		if (ImGui::Button("run x iterations")) {
-			runxiterations(x_iterations, g, relaxc, cycles);
-
-		}
-
-
-		checkforchange(vallist, cachelist);
-		ImGui::Checkbox("check for forbidden edges", &CHECKFORBIDDEN);
-		if (ImGui::Button("Reset web")) {
-			console() << "resetting web" << endl;
-			resetweb(g, relaxc, cycles);
-		}
-
-	}
-
-	ImGui::Dummy(ImVec2(0.0f, 20.0f));
-
-
-
-	if (ImGui::CollapsingHeader(" Debug Settings")) {
-
-		ImGui::InputInt("cycle number", &displayCycle_i);
-		ImGui::InputInt("edge number", &EDGEINDEX);
-		if (ImGui::InputText("import directory path ", &dirPath)) {
-			iniHand.overwriteTagImGui("graph directory", dirPath);
-		}
-		
-		OBJFILENAME = dirPath + INITIALGRAPHDIRECTORYEXTENSION;
-		CYCLESFILENAME = dirPath + CYCLESDIRECTORYEXTENSION;
-		VOXELFILENAME = dirPath + VOXELSDIRECTORYEXTENSION;
-		ANCHORPOINTSFILENAME = dirPath + ANCHORPOINTSDIRECTORYEXTENSION;
-		ImGui::InputText("export filename: ", &EXPORTTITLE);
-		//if (displayCycle_i >= cycles.size()) {
-		//	displayCycle_i = displayCycle_i % cycles.size();
-		//}
-		if (ImGui::Button("Load Graph")) {
-			InitialWebFromObj(&g, relaxc, OBJFILENAME, cycles);
-
-		}
-		if (ImGui::Button("Load Cycles")) {
-			loadcycles(&g, cycles, CYCLESFILENAME);
-			addCyclesToVertices(&g, cycles);
-		}
-
-		ImGui::Checkbox("Draw Vertices", &mDrawVertices);
-
-		ImGui::SliderFloat("Alpha Value", &ALPHA, 0.0001f, .999f, "%.2f");
-
-
-		ImGui::Checkbox("RELAX", &RUNRELAX);
-		ImGui::Checkbox("Carousel", &CAROUSEL);
-		ImGui::Checkbox("Run Through Cycles", &RUNCYCLES);
-
-		ImGui::Checkbox("Draw Edge Numbers", &mDrawNumbers);
-		ImGui::Checkbox("Draw Vertex Info", &mDrawVertexInfo);
-
-		ImGui::Checkbox("highlight Nth Cycle", &drawNCycle);
-		ImGui::Checkbox("Color Edge Indices", &colorEdges);
-		ImGui::Checkbox("Color Edge Tensions", &colorTens);
-		ImGui::Checkbox("Color Edge Lengths", &colorLength);
-
-	}
-	ImGui::End();
-
+	imGuiHandler.drawParametersWindow(iniHand);
 
 
 	gl::clear(Color(0, 0, 0));
@@ -461,18 +283,13 @@ void tarantula2App::draw()
 
 	//			CAMERA DRAW
 	{
-		mat4 projection = mCamera.getProjectionMatrix() * mCamera.getViewMatrix();
-		int w = getWindowWidth();
-		int h = getWindowHeight();
-		vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
-
-		drawPoints(&g, projection, viewport, mDrawNumbers, mDrawVertices, mDrawVertexInfo);
+		drawHandler.setProjectionViewport();
+		drawHandler.drawPoints(&g, drawHandler.getProjection(), drawHandler.getViewport(), mDrawNumbers, mDrawVertices, mDrawVertexInfo);
 		if (drawNCycle)
-			drawCycle(&g, projection, viewport, cycles, displayCycle_i);
+			drawHandler.drawCycle(&g, projection, viewport, cycles, displayCycle_i);
+		drawHandler.drawCamera();
 		gl::ScopedMatrices push;
-		gl::setMatrices(mCamera);
-
-
+		gl::setMatrices(drawHandler.mCamera);
 		//drawClosestVoxel(EDGEINDEX,g);
 		//drawVoxelLine(EDGEINDEX, g);
 		{
@@ -493,32 +310,32 @@ void tarantula2App::draw()
 			//	gl::translate({ 0,1 });
 			//}
 			//gl::popModelMatrix();
-			drawVoxelsBatch(voxelMap, mWireCube, ALPHA);
-			drawGraph(&g, projection, viewport, colorEdges, colorTens, colorLength);
+			drawHandler.drawVoxelsBatch(voxelMap, ALPHA);
+			drawHandler.drawGraph(&g, drawHandler.getProjection(), drawHandler.getViewport(), colorEdges, colorTens, colorLength);
 			if (drawNCycle) {
-				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
+				drawHandler.drawCycleEdges(&g, drawHandler.getProjection(), drawHandler.getViewport(), cycles, displayCycle_i);
 				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
 			}
 			//drawDensityEdges(&g, projection, viewport);
 
-			if (drawNCycle) {
-				drawCycleEdges(&g, projection, viewport, cycles, displayCycle_i);
-				//drawCycleEdges(&g, projection, viewport, cycles, displayCycle_ii, Color(1.0f,0.6f,0.0f));
-			}
-			//drawDensityEdges(&g, projection, viewport);
+			//drawHandler.drawDensityEdges(&g, projection, viewport);
 			if (runAnimation > 0 && runAnimation <= 100)
-				drawSelectedEdge(&g, WHICHEDGE, { 0.5f,0.5f,0.82f,0.8f });
+				drawHandler.drawSelectedEdge(&g, WHICHEDGE, { 0.5f,0.5f,0.82f,0.8f });
 
 			if (runAnimation > 50) {
-				drawEdges(&g, N_connedges, { 1.0f, 0.5f, 0.0f,0.7f });
+				drawHandler.drawEdges(&g, N_connedges, { 1.0f, 0.5f, 0.0f,0.7f });
 			}
 			if (runAnimation > 100) {
-				drawEdges(&g, NEWEDGES, { 0.5f,0.5f,0.82f,0.8f });
-				drawSelectedEdge(&g, NEWEDGES[0], { 0.65f,0.45f,0.82f,0.8f });
+				drawHandler.drawEdges(&g, NEWEDGES, { 0.5f,0.5f,0.82f,0.8f });
+				drawHandler.drawSelectedEdge(&g, NEWEDGES[0], { 0.65f,0.45f,0.82f,0.8f });
 
 			}
 			if (HOVERED != EMPTY) {
-				drawSelectedEdge(&g, HOVERED, { 1.0f,0.5f,0.2f,0.8f });
+				drawHandler.drawSelectedEdge(&g, HOVERED, { 1.0f,0.5f,0.2f,0.8f });
+
+			}
+			if (highlightEdge) {
+				drawHandler.drawSelectedEdge(&g, highlightedEdge, { 1.0f,0.0f,0.0f,1.0f });
 
 			}
 		}

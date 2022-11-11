@@ -379,12 +379,15 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end, bool forb
 	// calculate max values:
 	{
 		for (auto iter = begin; iter != end; ++iter) {
+			if (fixedBool[*iter]) {
 
-			integrateEdge(*iter, *g);
-			voxellength += probabilityPm[*iter];
-			fulllength += currentLengthPm[*iter];
-			tensionlength += restLengthPm[*iter] / currentLengthPm[*iter];
-
+			}	
+			else {
+				integrateEdge(*iter, *g);
+				voxellength += probabilityPm[*iter];
+				fulllength += currentLengthPm[*iter];
+				tensionlength += restLengthPm[*iter] / currentLengthPm[*iter];
+			}
 		}
 	}
 	std::uniform_real_distribution<> dis(0.0, 1.0);

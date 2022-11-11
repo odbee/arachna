@@ -351,3 +351,491 @@
 7z7y7x7w7v7u7t[listlength18]7s7r7a7b7c7d (values:2, 15, indices1,2;3  2  15  0  14  9  ) 7 (left:3  2  , right:15  0  14  9  ) 7e7i7j
 8z8y8x8w8v8u8t[listlength8]8s8r8a8b8c8d (values:5, 11, indices1,0;11  5  1  16  18  17  ) 8 (left:11  , right:5  1  16  18  17  ) 8e8i8j
 9z9y9x9w9v9u9t[listlength7]9s9r9a9b9c9d (values:18, 17, indices1,2;12  18  17  ) 9 (left:12  18  , right:17  ) 9e9i9j
+0z0y0x0w0v0u0t[listlength6]0s0r0a0b0c0d (values:0, 4, indices0,1;0  4  3  ) 0 (left:0  , right:4  3  ) 0e0i0j
+1z1y1x1w1v1u1t[listlength4]1s1r1a1b1c1d (values:5, 0, indices1,0;0  5  6  ) 1 (left:0  , right:5  6  ) 1e1i1j
+2z2y2x2w2v2u2t[listlength4]2s2r2a2b2c2d (values:12, 5, indices0,1;12  5  6  11  ) 2 (left:12  , right:5  6  11  ) 2e2i2j
+3z3y3x3w3v3u3t[listlength10]3s3r3a3b3c3d (values:0, 8, indices1,2;12  0  8  5  14  ) 3 (left:12  0  , right:8  5  14  ) 3e3i3j
+4z4y4x4w4v4u4t[listlength12]4s4r4a4b4c4d (values:16, 15, indices3,2;0  12  15  16  ) 4 (left:0  12  15  , right:16  ) 4e4i4j
+5z5y5x5w5v5u5t[listlength7]5s5r5a5b5c5d (values:1, 0, indices1,2;4  1  0  10  ) 5 (left:4  1  , right:0  10  ) 5e5i5j
+6z6y6x6w6v6u6t[listlength6]6s6r6a6b6c6d (values:5, 14, indices2,3;16  8  5  14  15  18  ) 6 (left:16  8  5  , right:14  15  18  ) 6e6i6j
+7z7y7x7w7v7u7t[listlength9]7s7r7a7b7c7d (values:22, 5, indices4,5;0  12  15  14  22  5  2  ) 7 (left:0  12  15  14  22  , right:5  2  ) 7e7i7j
+8z8y8x8w8v8u8t[listlength18]8s8r8a8b8c8d (values:3, 9, indices2,1;0  9  3  5  24  22  14  15  12  ) 8 (left:0  9  , right:3  5  24  22  14  15  12  ) 8e8i8j
+9z9y9x9w9v9u9t[listlength12]9s9r9a9b9c9d (values:11, 13, indices6,5;6  5  24  22  14  13  11  ) 9 (left:6  5  24  22  14  13  , right:11  ) 9e9i9j
+10z10y10x10w10v10u10t[listlength18]10s10r10a10b10c10d (values:14, 13, indices0,1;14  13  12  15  ) 10 (left:14  , right:13  12  15  ) 10e10i10j
+11z11y11x11w11v11u11t[listlength23]11s11r11a11b11c11d (values:5, 24, indices1,2;3  5  24  22  14  29  15  12  25  26  ) 11 (left:3  5  , right:24  22  14  29  15  12  25  26  ) 11e11i11j
+12z12y12x12w12v12u12t[listlength17]12s12r12a12b12c12d (values:23, 0, indices1,0;0  23  2  3  31  26  9  ) 12 (left:0  , right:23  2  3  31  26  9  ) 12e12i12j
+13z13y13x13w13v13u13t[listlength22]13s13r13a13b13c13d (values:23, 34, indices3,4;14  22  24  23  34  0  25  12  15  29  ) 13 (left:14  22  24  23  , right:34  0  25  12  15  29  ) 13e13i13j
+14z14y14x14w14v14u14t[listlength8]14s14r14a14b14c14d (values:5, 32, indices2,3;16  8  5  32  24  22  21  ) 14 (left:16  8  5  , right:32  24  22  21  ) 14e14i14j
+15z15y15x15w15v15u15t[listlength16]15s15r15a15b15c15d (values:17, 16, indices1,2;0  17  16  8  7  ) 15 (left:0  17  , right:16  8  7  ) 15e15i15j
+16z16y16x16w16v16u16t[listlength8]16s16r16a16b16c16d (values:24, 22, indices2,3;38  32  24  22  21  37  ) 16 (left:38  32  24  , right:22  21  37  ) 16e16i16j
+17z17y17x17w17v17u17t[listlength9]17s17r17a17b17c17d (values:5, 38, indices2,3;16  8  5  38  41  37  ) 17 (left:16  8  5  , right:38  41  37  ) 17e17i17j
+18z18y18x18w18v18u18t[listlength7]18s18r18a18b18c18d (values:43, 16, indices4,3;44  5  8  16  43  ) 18 (left:44  5  8  16  , right:43  ) 18e18i18j
+19z19y19x19w19v19u19t[listlength11]19s19r19a19b19c19d (values:0, 25, indices3,2;15  12  25  0  17  18  ) 19 (left:15  12  25  , right:0  17  18  ) 19e19i19j
+20z20y20x20w20v20u20t[listlength33]20s20r20a20b20c20d (values:42, 24, indices9,10;0  48  25  12  15  29  35  14  22  42  24  32  38  44  5  1  20  ) 20 (left:0  48  25  12  15  29  35  14  22  42  , right:24  32  38  44  5  1  20  ) 20e20i20j
+21z21y21x21w21v21u21t[listlength18]21s21r21a21b21c21d (values:44, 5, indices4,5;50  24  32  38  44  5  1  20  49  ) 21 (left:50  24  32  38  44  , right:5  1  20  49  ) 21e21i21j
+22z22y22x22w22v22u22t[listlength15]22s22r22a22b22c22d (values:34, 36, indices7,6;0  49  20  1  2  23  36  34  ) 22 (left:0  49  20  1  2  23  36  , right:34  ) 22e22i22j
+23z23y23x23w23v23u23t[listlength19]23s23r23a23b23c23d (values:3, 31, indices1,2;2  3  31  26  9  33  34  54  36  23  ) 23 (left:2  3  , right:31  26  9  33  34  54  36  23  ) 23e23i23j
+24z24y24x24w24v24u24t[listlength25]24s24r24a24b24c24d (values:16, 8, indices2,1;6  8  16  40  17  0  11  27  ) 24 (left:6  8  , right:16  40  17  0  11  27  ) 24e24i24j
+25z25y25x25w25v25u25t[listlength24]25s25r25a25b25c25d (values:16, 58, indices3,2;7  8  58  16  40  39  ) 25 (left:7  8  58  , right:16  40  39  ) 25e25i25j
+26z26y26x26w26v26u26t[listlength37]26s26r26a26b26c26d (values:0, 39, indices0,1;0  39  59  7  5  52  44  38  32  24  50  42  22  14  35  29  15  12  25  48  ) 26 (left:0  , right:39  59  7  5  52  44  38  32  24  50  42  22  14  35  29  15  12  25  48  ) 26e26i26j
+27z27y27x27w27v27u27t[listlength9]27s27r27a27b27c27d (values:38, 41, indices4,5;37  43  45  44  38  41  ) 27 (left:37  43  45  44  38  , right:41  ) 27e27i27j
+28z28y28x28w28v28u28t[listlength18]28s28r28a28b28c28d (values:25, 12, indices6,5;54  36  35  29  15  12  25  48  61  0  53  ) 28 (left:54  36  35  29  15  12  , right:25  48  61  0  53  ) 28e28i28j
+29z29y29x29w29v29u29t[listlength13]29s29r29a29b29c29d (values:8, 58, indices3,4;44  52  5  8  58  60  16  46  45  ) 29 (left:44  52  5  8  , right:58  60  16  46  45  ) 29e29i29j
+30z30y30x30w30v30u30t[listlength11]30s30r30a30b30c30d (values:40, 17, indices3,4;58  60  16  40  17  0  11  27  57  ) 30 (left:58  60  16  40  , right:17  0  11  27  57  ) 30e30i30j
+31z31y31x31w31v31u31t[listlength19]31s31r31a31b31c31d (values:31, 32, indices1,2;26  31  32  24  50  42  22  14  35  29  15  12  66  25  ) 31 (left:26  31  , right:32  24  50  42  22  14  35  29  15  12  66  25  ) 31e31i31j
+32z32y32x32w32v32u32t[listlength28]32s32r32a32b32c32d (values:39, 59, indices0,1;39  59  7  1  20  49  0  62  ) 32 (left:39  , right:59  7  1  20  49  0  62  ) 32e32i32j
+33z33y33x33w33v33u33t[listlength9]33s33r33a33b33c33d (values:9, 33, indices3,2;10  0  33  9  ) 33 (left:10  0  33  , right:9  ) 33e33i33j
+34z34y34x34w34v34u34t[listlength28]34s34r34a34b34c34d (values:60, 59, indices5,4;58  68  8  7  59  60  ) 34 (left:58  68  8  7  59  , right:60  ) 34e34i34j
+35z35y35x35w35v35u35t[listlength10]35s35r35a35b35c35d (values:58, 77, indices0,1;58  77  60  16  40  70  69  ) 35 (left:58  , right:77  60  16  40  70  69  ) 35e35i35j
+36z36y36x36w36v36u36t[listlength22]36s36r36a36b36c36d (values:33, 0, indices1,0;0  33  76  9  26  31  56  3  6  57  27  11  ) 36 (left:0  , right:33  76  9  26  31  56  3  6  57  27  11  ) 36e36i36j
+37z37y37x37w37v37u37t[listlength11]37s37r37a37b37c37d (values:52, 5, indices1,2;44  52  5  8  68  67  ) 37 (left:44  52  , right:5  8  68  67  ) 37e37i37j
+38z38y38x38w38v38u38t[listlength12]38s38r38a38b38c38d (values:8, 68, indices1,0;68  8  5  84  83  67  ) 38 (left:68  , right:8  5  84  83  67  ) 38e38i38j
+39z39y39x39w39v39u39t[listlength39]39s39r39a39b39c39d (values:2, 55, indices1,2;1  2  55  23  36  54  65  53  0  49  20  ) 39 (left:1  2  , right:55  23  36  54  65  53  0  49  20  ) 39e39i39j
+40z40y40x40w40v40u40t[listlength42]40s40r40a40b40c40d (values:81, 82, indices4,3;9  76  33  82  81  11  27  57  6  3  56  31  26  ) 40 (left:9  76  33  82  , right:81  11  27  57  6  3  56  31  26  ) 40e40i40j
+41z41y41x41w41v41u41t[listlength17]41s41r41a41b41c41d (values:32, 24, indices8,7;28  13  30  14  22  42  50  24  32  38  44  52  84  5  6  57  27  ) 41 (left:28  13  30  14  22  42  50  24  , right:32  38  44  52  84  5  6  57  27  ) 41e41i41j
+42z42y42x42w42v42u42t[listlength23]42s42r42a42b42c42d (values:16, 60, indices8,7;4  8  86  68  58  80  77  60  16  40  70  17  0  10  19  ) 42 (left:4  8  86  68  58  80  77  60  , right:16  40  70  17  0  10  19  ) 42e42i42j
+43z43y43x43w43v43u43t[listlength12]43s43r43a43b43c43d (values:28, 11, indices2,1;27  11  28  91  ) 43 (left:27  11  , right:28  91  ) 43e43i43j
+44z44y44x44w44v44u44t[listlength17]44s44r44a44b44c44d (values:2, 88, indices8,9;24  92  32  38  44  52  84  5  2  88  55  23  ) 44 (left:24  92  32  38  44  52  84  5  2  , right:88  55  23  ) 44e44i44j
+45z45y45x45w45v45u45t[listlength13]45s45r45a45b45c45d (values:24, 92, indices9,8;98  2  5  84  52  44  38  32  92  24  97  ) 45 (left:98  2  5  84  52  44  38  32  92  , right:24  97  ) 45e45i45j
+46z46y46x46w46v46u46t[listlength11]46s46r46a46b46c46d (values:52, 44, indices5,6;31  56  3  5  84  52  44  38  32  72  ) 46 (left:31  56  3  5  84  52  , right:44  38  32  72  ) 46e46i46j
+47z47y47x47w47v47u47t[listlength39]47s47r47a47b47c47d (values:59, 7, indices2,1;1  7  59  74  73  62  0  49  20  87  ) 47 (left:1  7  , right:59  74  73  62  0  49  20  87  ) 47e47i47j
+48z48y48x48w48v48u48t[listlength40]48s48r48a48b48c48d (values:25, 48, indices4,5;9  89  26  71  25  48  61  0  82  33  76  ) 48 (left:9  89  26  71  25  , right:48  61  0  82  33  76  ) 48e48i48j
+49z49y49x49w49v49u49t[listlength14]49s49r49a49b49c49d (values:96, 28, indices2,1;91  28  96  95  ) 49 (left:91  28  , right:96  95  ) 49e49i49j
+50z50y50x50w50v50u50t[listlength21]50s50r50a50b50c50d (values:26, 89, indices4,5;4  3  56  31  26  89  9  75  10  19  93  ) 50 (left:4  3  56  31  26  , right:89  9  75  10  19  93  ) 50e50i50j
+51z51y51x51w51v51u51t[listlength41]51s51r51a51b51c51d (values:46, 45, indices5,4;58  68  85  67  45  46  16  94  60  77  80  ) 51 (left:58  68  85  67  45  , right:46  16  94  60  77  80  ) 51e51i51j
+52z52y52x52w52v52u52t[listlength13]52s52r52a52b52c52d (values:67, 45, indices2,1;112  45  67  85  68  58  111  ) 52 (left:112  45  , right:67  85  68  58  111  ) 52e52i52j
+53z53y53x53w53v53u53t[listlength45]53s53r53a53b53c53d (values:31, 26, indices23,22;3  8  86  68  58  111  80  77  60  94  16  40  70  17  0  82  33  76  105  9  89  110  26  31  56  ) 53 (left:3  8  86  68  58  111  80  77  60  94  16  40  70  17  0  82  33  76  105  9  89  110  26  , right:31  56  ) 53e53i53j
+54z54y54x54w54v54u54t[listlength12]54s54r54a54b54c54d (values:55, 88, indices1,0;88  55  56  115  3  2  98  ) 54 (left:88  , right:55  56  115  3  2  98  ) 54e54i54j
+55z55y55x55w55v55u55t[listlength15]55s55r55a55b55c55d (values:100, 99, indices10,11;98  2  5  84  52  102  44  38  32  92  100  99  ) 55 (left:98  2  5  84  52  102  44  38  32  92  100  , right:99  ) 55e55i55j
+56z56y56x56w56v56u56t[listlength39]56s56r56a56b56c56d (values:33, 76, indices7,6;116  26  110  89  9  105  76  33  82  0  17  70  40  16  94  60  77  80  111  58  68  86  8  3  115  ) 56 (left:116  26  110  89  9  105  76  , right:33  82  0  17  70  40  16  94  60  77  80  111  58  68  86  8  3  115  ) 56e56i56j
+57z57y57x57w57v57u57t[listlength39]57s57r57a57b57c57d (values:60, 77, indices4,3;58  111  80  77  60  94  16  40  70  17  0  49  20  87  103  1  8  86  68  ) 57 (left:58  111  80  77  , right:60  94  16  40  70  17  0  49  20  87  103  1  8  86  68  ) 57e57i57j
+0i0j
+1i1j
+2i2j
+3i3j
+4i4j
+5i5j
+6i6j
+7i7j
+8i8j
+9i9j
+10i10j
+11i11j
+12i12j
+13i13j
+14i14j
+15i15j
+16i16j
+17i17j
+18i18j
+19i19j
+20i20j
+21i21j
+22i22j
+0i0j
+1i1j
+2i2j
+3i3j
+4i4j
+5i5j
+6i6j
+7i7j
+8i8j
+9i9j
+10i10j
+11i11j
+12i12j
+13i13j
+14i14j
+15i15j
+16i16j
+17i17j
+18i18j
+19i19j
+20i20j
+21i21j
+22i22j
+23i23j
+24i24j
+25i25j
+26i26j
+27i27j
+28i28j
+29i29j
+30i30j
+31i31j
+32i32j
+33i33j
+34i34j
+35i35j
+36i36j
+37i37j
+38i38j
+39i39j
+40i40j
+41i41j
+42i42j
+43i43j
+44i44j
+45i45j
+46i46j
+47i47j
+48i48j
+49i49j
+50i50j
+51i51j
+52i52j
+53i53j
+54i54j
+55i55j
+56i56j
+57i57j
+58i58j
+59i59j
+60i60j
+61i61j
+62i62j
+63i63j
+64i64j
+65i65j
+66i66j
+67i67j
+68i68j
+69i69j
+70i70j
+71i71j
+72i72j
+73i73j
+74i74j
+75i75j
+76i76j
+77i77j
+78i78j
+0i0j
+1i1j
+2i2j
+3i3j
+4i4j
+5i5j
+6i6j
+7i7j
+8i8j
+9i9j
+10i10j
+11i11j
+12i12j
+13i13j
+14i14j
+15i15j
+16i16j
+17i17j
+18i18j
+19i19j
+20i20j
+21i21j
+22i22j
+23i23j
+24i24j
+25i25j
+26i26j
+0i0j
+1i1j
+2i2j
+3i3j
+4i4j
+5i5j
+6i6j
+7i7j
+8i8j
+9i9j
+10i10j
+11i11j
+12i12j
+13i13j
+14i14j
+15i15j
+16i16j
+17i17j
+18i18j
+19i19j
+20i20j
+21i21j
+22i22j
+23i23j
+24i24j
+25i25j
+26i26j
+27i27j
+28i28j
+29i29j
+30i30j
+31i31j
+32i32j
+33i33j
+34i34j
+35i35j
+36i36j
+37i37j
+38i38j
+39i39j
+40i40j
+41i41j
+42i42j
+43i43j
+44i44j
+45i45j
+46i46j
+47i47j
+48i48j
+49i49j
+50i50j
+51i51j
+52i52j
+53i53j
+54i54j
+55i55j
+56i56j
+57i57j
+58i58j
+59i59j
+60i60j
+61i61j
+62i62j
+63i63j
+64i64j
+65i65j
+66i66j
+67i67j
+68i68j
+69i69j
+70i70j
+71i71j
+72i72j
+73i73j
+74i74j
+75i75j
+76i76j
+77i77j
+78i78j
+79i79j
+80i80j
+81i81j
+82i82j
+83i83j
+84i84j
+85i85j
+86i86j
+87i87j
+88i88j
+89i89j
+90i90j
+91i91j
+92i92j
+93i93j
+94i94j
+95i95j
+96i96j
+97i97j
+98i98j
+99i99j
+100i100j
+101i101j
+102i102j
+103i103j
+104i104j
+105i105j
+106i106j
+107i107j
+108i108j
+109i109j
+110i110j
+111i111j
+112i112j
+113i113j
+114i114j
+115i115j
+116i116j
+117i117j
+118i118j
+119i119j
+120i120j
+121i121j
+122i122j
+123i123j
+124i124j
+125i125j
+126i126j
+127i127j
+128i128j
+129i129j
+130i130j
+131i131j
+132i132j
+133i133j
+134i134j
+135i135j
+136i136j
+137i137j
+138i138j
+139i139j
+140i140j
+141i141j
+142i142j
+143i143j
+144i144j
+145i145j
+146i146j
+147i147j
+148i148j
+149i149j
+150i150j
+151i151j
+152i152j
+153i153j
+154i154j
+155i155j
+156i156j
+157i157j
+158i158j
+159i159j
+160i160j
+161i161j
+162i162j
+163i163j
+164i164j
+165i165j
+166i166j
+167i167j
+168i168j
+169i169j
+170i170j
+171i171j
+172i172j
+173i173j
+174i174j
+175i175j
+176i176j
+177i177j
+178i178j
+179i179j
+180i180j
+181i181j
+182i182j
+183i183j
+184i184j
+185i185j
+186i186j
+187i187j
+188i188j
+189i189j
+190i190j
+191i191j
+192i192j
+193i193j
+194i194j
+195i195j
+196i196j
+197i197j
+198i198j
+199i199j
+200i200j
+0i0j
+1i1j
+2i2j
+3i3j
+4i4j
+5i5j
+6i6j
+7i7j
+8i8j
+9i9j
+10i10j
+11i11j
+12i12j
+13i13j
+14i14j
+15i15j
+16i16j
+17i17j
+18i18j
+19i19j
+20i20j
+21i21j
+22i22j
+23i23j
+24i24j
+25i25j
+26i26j
+27i27j
+28i28j
+29i29j
+30i30j
+31i31j
+32i32j
+33i33j
+34i34j
+35i35j
+36i36j
+37i37j
+38i38j
+39i39j
+40i40j
+41i41j
+42i42j
+43i43j
+44i44j
+45i45j
+46i46j
+47i47j
+48i48j
+49i49j
+50i50j
+51i51j
+52i52j
+53i53j
+54i54j
+55i55j
+56i56j
+57i57j
+58i58j
+59i59j
+60i60j
+61i61j
+62i62j
+63i63j
+64i64j
+65i65j
+66i66j
+67i67j
+68i68j
+69i69j
+70i70j
+71i71j
+72i72j
+73i73j
+74i74j
+75i75j
+76i76j
+77i77j
+78i78j
+79i79j
+80i80j
+81i81j
+82i82j
+0i0j
+1i1j
+2i2j
+3i3j
+4i4j
+5i5j
+6i6j
+7i7j
+8i8j
+9i9j
+10i10j
+11i11j
+12i12j
+13i13j
+14i14j
+15i15j
+16i16j

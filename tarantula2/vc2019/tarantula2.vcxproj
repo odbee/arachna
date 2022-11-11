@@ -115,6 +115,7 @@
     <ClInclude Include="..\include\GraphFunctions.h" />
     <ClInclude Include="..\include\GraphSetup.h" />
     <ClInclude Include="..\include\HelperFunctions.h" />
+    <ClInclude Include="..\include\ImGuiHandler.h" />
     <ClInclude Include="..\include\InitialWebs.h" />
     <ClInclude Include="..\include\PhysicsFunctions.h" />
     <ClInclude Include="..\include\PlotEdges.h" />

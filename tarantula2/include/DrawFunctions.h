@@ -255,16 +255,32 @@ class DrawHandler {
 			}
 		}
 
-		
-		struct drawInstance {
-			edge_t edge;
-			size_t length;
-			Color color;
-		};
 
-		void drawEdgeManager() {
 
+		void drawEdgeManagerUpdate() {
+			vector< vector<drawInstance>::iterator> removableEdges;
+			for (vector<drawInstance>::iterator inst = Instances.begin(); inst != Instances.end(); ++inst) {
+				if (inst->time > 0) {
+					inst->time--;
+
+				} if (inst->time == 0) {
+					removableEdges.push_back(inst);
+				}
+			}
+			
+			for (int i = removableEdges.size(); i != 0; i--) {
+				Instances.erase(removableEdges[i-1]);
+			}
+			//for (auto index : removableEdges)
+				
 		}
+		void drawEdgeManagerDraw() {
+			
+			for (vector<drawInstance>::iterator inst = Instances.begin(); inst != Instances.end(); ++inst) {
+				drawSelectedEdge(&g, inst->edge, inst->color);
+			}
+		}
+
 
 
 		void drawSelectedEdge

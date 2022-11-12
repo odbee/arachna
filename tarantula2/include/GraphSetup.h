@@ -88,6 +88,7 @@ struct GraphProperties {
 };
 
 
+
 typedef boost::adjacency_list<boost::vecS,
 	boost::vecS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
 Graph g;
@@ -123,6 +124,21 @@ boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>:
 
 
 
+struct cyclicvert {
+	size_t index;
+	vec3 pos;
+
+};
+
+struct cyclicedge {
+	edge_ti ei_iterator;
+	edge_t descriptor;
+	cyclicvert start;
+	cyclicvert end;
+	vector<size_t> cycles;
+	vertex_t divisionvert;
+};
+
 
 std::map<std::array<signed int, 3>, float> voxelMap;
 vector<vec3> anchorPoints;
@@ -157,3 +173,17 @@ int x_iterations = 1000;
 
 edge_t highlightedEdge;
 bool highlightEdge = false;
+
+
+struct drawInstance {
+	edge_t edge;
+	ColorA color;
+	size_t time;
+};
+vector<drawInstance> Instances;
+
+void addDrawInstance(edge_t edge, ColorA color, size_t time) {
+	Instances.push_back({ edge,color,time });
+}
+
+

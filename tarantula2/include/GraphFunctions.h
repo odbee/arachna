@@ -8,20 +8,6 @@
 
 
 
-struct cyclicvert {
-	size_t index;
-	vec3 pos;
-
-};
-
-struct cyclicedge {
-	edge_ti ei_iterator;
-	edge_t descriptor;
-	cyclicvert start;
-	cyclicvert end;
-	vector<size_t> cycles;
-	vertex_t divisionvert;
-};
 
 int counter = 0;
 vec3 interpolate(cyclicedge edge, float t) {
@@ -260,15 +246,17 @@ tuple<vector<size_t>, vector<size_t>> divideCycleAtEdge(vector<size_t> cycle, cy
 cyclicedge getStartEdge(Graph *g, bool b_excludeForbiddenEdges) {
 	edge_ti graphstart, graphend;
 	cyclicedge startedge;
+	tie(ei, eiend) = boost::edges(*g);
 	tie(graphstart, graphend) = boost::edges(*g);
 
-	edge_t ed_startEdge = getRandomEdgeFromEdgeListIntegrated(g, graphstart, graphend, b_excludeForbiddenEdges);
+	edge_t ed_startEdge = getRandomEdge(g, graphstart, graphend, b_excludeForbiddenEdges);
 	initEdge(ed_startEdge, startedge, *g);
 	return startedge;
 }
 cyclicedge getGoalEdge(Graph *g, vector<edge_t> connectableEdges , bool b_excludeForbiddenEdges) {
 	cyclicedge goaledge;
-	edge_t ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(g, connectableEdges.begin(), connectableEdges.end(), b_excludeForbiddenEdges); // also accept forbidden edges
+	tie(ei, eiend) = boost::edges(*g);
+	edge_t ed_goalEdge = getRandomEdge(g, connectableEdges.begin(), connectableEdges.end(), b_excludeForbiddenEdges); // also accept forbidden edges
 	initEdge(ed_goalEdge, goaledge, *g);
 
 	return goaledge;
@@ -292,6 +280,8 @@ void adjustGraphToNewEdges(Graph * g, std::vector<std::vector<size_t>>* cycs, cy
 //getDivPoint(startedge.descriptor);
 	position[startedge.divisionvert] = interpolate(startedge, getDivPoint(startedge.descriptor));
 	position[goaledge.divisionvert] = interpolate(goaledge, getDivPoint(goaledge.descriptor));
+	
+	//TODO once a certain side is picked, will always prefer this side
 	if (forbiddenPm[startedge.descriptor]) {
 		vec3 cp = getClosestPointFromList(position[goaledge.divisionvert], anchorPoints);
 		console() << "closest point distance" << distance(cp, position[goaledge.divisionvert]) << endl;
@@ -332,8 +322,74 @@ void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size
 	console() << GLOBALINT << endl;
 }
 
+
+
+void addRandomCyclicEdgeAnimated(Graph* g,
+	float rc,
+	std::vector<std::vector<size_t>>* cycs,
+	int& animationCounter, 
+	cyclicedge& startedge,
+	cyclicedge &goaledge,
+	std::vector<edge_t> &connectableEdges,
+	std::vector<size_t>&edgeinds) {
+	int timestamp1 = 50;
+	int timestamp2 = 100;
+	int timestamp3 = 200;
+	int timestamp4 = 300;
+	int timestamp5 = 400;
+
+	if (animationCounter) {
+
+		if (animationCounter == timestamp1) {
+			startedge = getStartEdge(g, false);
+			if (forbiddenPm[startedge.descriptor]) {
+				animationCounter = 1;
+				addDrawInstance(startedge.descriptor, { 0.94f, 0.25f, 0.07f,1.0f }, 50);
+			} else
+				addDrawInstance(startedge.descriptor, { 0.00f, 0.64f, 0.45f,1.0f }, 250);
+		}
+		
+		if (animationCounter == timestamp2) {
+			connectableEdges = getConnectableEdges(g, startedge, cycs, edgeinds, false);
+			for (const auto edge : connectableEdges) {
+				addDrawInstance(edge, { 1.0f,1.0f,0.2f,0.8f }, 150);
+			}
+		}
+		if (animationCounter == timestamp3) {
+			if (connectableEdges.size()) {
+				goaledge = getGoalEdge(g, connectableEdges, false);
+				addDrawInstance(goaledge.descriptor, { 0.07f, 0.94f, 0.68f,1.0f }, 100);
+			}
+			else {
+				console() << " no cycles found, returning" << endl;
+				animationCounter = 0;
+
+			}
+		}
+		
+		if (animationCounter == timestamp4) {
+			adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
+			vector<edge_t> newEdges= connectEdges(g, startedge, goaledge, rc);
+			//edge_t newEdge= 
+			addDrawInstance(newEdges[0], { 0.0f,1.0f,1.0f,0.8f }, 200);
+			addDrawInstance(newEdges[1], { 0.07f, 0.94f, 0.68f,1.0f }, 200);
+			addDrawInstance(newEdges[2], { 0.07f, 0.94f, 0.68f,1.0f }, 200);
+			addDrawInstance(newEdges[3], { 0.00f, 0.64f, 0.45f,1.0f }, 200);
+			addDrawInstance(newEdges[4], { 0.00f, 0.64f, 0.45f,1.0f }, 200);
+
+
+		}
+		if (animationCounter == timestamp5) {
+			animationCounter = 0;
+		}
+		
+	}
+	
+}
+
 edge_t findRandomEdge() {
 	edge_ti graphstart, graphend;
+	tie(ei,eiend) = boost::edges(g);
 	tie(graphstart, graphend) = boost::edges(g);
 	return getRandomEdgeFromEdgeListIntegrated(&g, graphstart,graphend, false);
 

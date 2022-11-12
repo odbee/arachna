@@ -361,8 +361,41 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T& begin, T& end, bool forbcheck = f
 	return ed_resultedge;
 }
 
+template <typename T>
+
+edge_t getRandomEdge(Graph* g, T& begin, T& end, bool forbcheck = false) {
+	T cachebegin = begin;
+	T cacheend = end;
+	//tie(ei, eiend) = boost::edges(*g);
+	int iteratorLength = 0;
+	int randiter;
+	bool isforbidden = true;
+	for (auto iter = begin; iter != end; ++iter)
+		iteratorLength++;
+
+	T ei_startEdge = cachebegin;
+	auto ed = *ei_startEdge;
+	while (isforbidden)
+	{
+		ei_startEdge = cachebegin;
+		randiter = rand() % iteratorLength;
+
+		for (size_t i = 0; i < randiter; i++)
+		{
+			ei_startEdge++;
+		}
+
+		isforbidden = forbiddenPm[*ei_startEdge] && forbcheck;
+		//isforbidden = false;
+	}
+	
+
+	return *ei_startEdge;
+}
+
 
 template <typename T>
+
 
 edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end, bool forbcheck = false) {
 	T cachebegin = begin;
@@ -379,10 +412,11 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end, bool forb
 	// calculate max values:
 	{
 		for (auto iter = begin; iter != end; ++iter) {
-			if (fixedBool[*iter]) {
-
-			}	
-			else {
+			////if (fixedBool[*iter]) {
+			////	
+			////}	
+			//else {
+			{
 				integrateEdge(*iter, *g);
 				voxellength += probabilityPm[*iter];
 				fulllength += currentLengthPm[*iter];

@@ -60,6 +60,9 @@ public:
 	DrawHandler drawHandler;
 	ImGuiHandler imGuiHandler;
 
+	cyclicedge A_goaledge, A_startedge;
+	std::vector<edge_t> A_connectableEdges;
+	std::vector<size_t>A_edgeinds;
 
 };
 
@@ -139,6 +142,7 @@ void tarantula2App::keyDown(KeyEvent event)
 
 	if (event.getChar() == 'k') {
 		highlightedEdge = findRandomEdge();
+		addDrawInstance(highlightedEdge, { 1.0f,0.0f,0.0f,1.0f }, 30);
 		highlightEdge = true;
 
 	}
@@ -158,7 +162,7 @@ void tarantula2App::update()
 		relaxPhysics(&g);
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-
+	 
 	if (cachediter != iterationcounter) {
 		profile_out.open(profilername, std::ios_base::app);
 		profile_out << iterationcounter << "," << "physics" << "," << duration.count() << endl;
@@ -178,89 +182,19 @@ void tarantula2App::update()
 	}
 
 
-	if (runAnimation) {
-		// TODO FIX THE ISSUE WHEN THERE ARE NO AVAILABLE EDEGES
-		if (runAnimation == 1) {
-			console() << "fiding first edge" << endl;
-
-
-			tie(ei, eiend) = boost::edges(g); //need this, will get error otherwise
-
-			tie(N_graphstart, N_graphend) = boost::edges(g);
-
-			N_ed_startEdge = getRandomEdgeFromEdgeListIntegrated(&g, N_graphstart, N_graphend, true);
-			EDGEADDEDINT = 1;
-			WHICHEDGE = N_ed_startEdge;
-		}
-		 
-		if (runAnimation == 50) {
-			console() << "fiding second edge" << endl;
-			initEdge(N_ed_startEdge, N_startedge, g);
-			N_connedges = getConnectableEdges(&g, N_startedge, &cycles, N_edgeinds, CHECKFORBIDDEN);
-			CONNEDGES = N_connedges;
-		}
-
-
-		if (runAnimation == 100) {
-			if (N_connedges.size()) {
-
-
-				N_ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(&g, N_connedges.begin(), N_connedges.end());
-				size_t cycleIndex = *(N_edgeinds.begin() + std::distance(N_connedges.begin(), std::find(N_connedges.begin(), N_connedges.end(), N_ed_goalEdge)));
-
-
-				initEdge(N_ed_goalEdge, N_goaledge, g);
-				displayEdgeV_iii = N_goaledge.start.index;
-				displayEdgeV_iv = N_goaledge.end.index;
-
-				vector<size_t> currCyc = cycles[cycleIndex];
-				updatetext(to_string(counter) + "c");
-				displayCycle_i = cycleIndex;
-				shiftCycle(currCyc, N_startedge.start.index, N_startedge.end.index);
-
-				auto find1 = std::find(currCyc.begin(), currCyc.end(), N_goaledge.start.index);
-				auto find2 = std::find(currCyc.begin(), currCyc.end(), N_goaledge.end.index);
-				auto gei1 = std::distance(currCyc.begin(), find1);
-				auto gei2 = std::distance(currCyc.begin(), find2);
-				auto gei = (gei1 < gei2) ? find2 : find1;
-				// get vetex indices
-
-				vector<size_t> left(currCyc.begin(), gei);
-				vector<size_t> right(gei, currCyc.end());
-
-				N_startedge.divisionvert = boost::add_vertex(g); fixedBool[N_startedge.divisionvert] = false;
-				N_goaledge.divisionvert = boost::add_vertex(g); fixedBool[N_goaledge.divisionvert] = false;
-				//created 2 points
-				//getDivPoint(startedge.descriptor);
-				position[N_startedge.divisionvert] = interpolate(N_startedge, getDivPoint(N_startedge.descriptor));
-				position[N_goaledge.divisionvert] = interpolate(N_goaledge, getDivPoint(N_startedge.descriptor));
-				//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
-				cycles[cycleIndex] = left;
-				cycles.push_back(right);
-				size_t lastindex = cycles.size() - 1;
-				displayCycle_ii = lastindex;
-				resolveIntersections(N_startedge, N_goaledge, cycleIndex, lastindex, g, cycles);
-
-			}
-			else {
-				console() << " no cycles found, returning" << endl;
-				return;
-			}
-
-			NEWEDGES = connectEdges(&g, N_startedge, N_goaledge, relaxc);
-			counter++;
-			updatetext("\n");
-		}
-		runAnimation++;
-		if (runAnimation == 150)
-		{
-			runAnimation = 0;
-		}
-
+	addRandomCyclicEdgeAnimated(&g, relaxc, &cycles, runAnimation,A_startedge,A_goaledge,A_connectableEdges,A_edgeinds);
+	if (runAnimation == 90) {
+		getConnectableEdges(&g, A_startedge, &cycles, A_edgeinds, false);
+		//console() << g[A_startedge.descriptor].isforbidden << endl;
 	}
 
-
-
+	drawHandler.drawEdgeManagerUpdate();
+	if (runAnimation) {
+		console() << runAnimation << endl;
+		
+		runAnimation++;
+	}
+	
 
 }
 
@@ -268,7 +202,7 @@ using namespace ImGui;
 
 void tarantula2App::draw()
 {
-	//imGuiHandler.drawEdgesDiagram();
+	imGuiHandler.drawEdgesDiagram();
 	mat4 projection = drawHandler.mCamera.getProjectionMatrix() * drawHandler.mCamera.getViewMatrix();
 	int w = getWindowWidth();
 	int h = getWindowHeight();
@@ -319,25 +253,27 @@ void tarantula2App::draw()
 			//drawDensityEdges(&g, projection, viewport);
 
 			//drawHandler.drawDensityEdges(&g, projection, viewport);
-			if (runAnimation > 0 && runAnimation <= 100)
-				drawHandler.drawSelectedEdge(&g, WHICHEDGE, { 0.5f,0.5f,0.82f,0.8f });
+			//if (runAnimation > 0 && runAnimation <= 100)
+			//	drawHandler.drawSelectedEdge(&g, WHICHEDGE, { 0.5f,0.5f,0.82f,0.8f });
 
-			if (runAnimation > 50) {
-				drawHandler.drawEdges(&g, N_connedges, { 1.0f, 0.5f, 0.0f,0.7f });
-			}
-			if (runAnimation > 100) {
-				drawHandler.drawEdges(&g, NEWEDGES, { 0.5f,0.5f,0.82f,0.8f });
-				drawHandler.drawSelectedEdge(&g, NEWEDGES[0], { 0.65f,0.45f,0.82f,0.8f });
+			//if (runAnimation > 50) {
+			//	drawHandler.drawEdges(&g, N_connedges, { 1.0f, 0.5f, 0.0f,0.7f });
+			//}
+			//if (runAnimation > 100) {
+			//	drawHandler.drawEdges(&g, NEWEDGES, { 0.5f,0.5f,0.82f,0.8f });
+			//	drawHandler.drawSelectedEdge(&g, NEWEDGES[0], { 0.65f,0.45f,0.82f,0.8f });
 
-			}
+			//}
 			if (HOVERED != EMPTY) {
 				drawHandler.drawSelectedEdge(&g, HOVERED, { 1.0f,0.5f,0.2f,0.8f });
 
 			}
-			if (highlightEdge) {
-				drawHandler.drawSelectedEdge(&g, highlightedEdge, { 1.0f,0.0f,0.0f,1.0f });
+			//if (highlightEdge) {
+			//	//drawHandler.addDrawInstance(highlightedEdge, { 1.0f,0.0f,0.0f,1.0f },30);
+			//	/*drawHandler.drawSelectedEdge(&g, highlightedEdge, { 1.0f,0.0f,0.0f,1.0f });*/
 
-			}
+			//}
+			drawHandler.drawEdgeManagerDraw();
 		}
 
 	}

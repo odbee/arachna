@@ -131,21 +131,16 @@ class ImGuiHandler
 				if (ImGui::InputText("import directory path ", &dirPath)) {
 					iniHand.overwriteTagImGui("graph directory", dirPath);
 				}
-
-				OBJFILENAME = dirPath + INITIALGRAPHDIRECTORYEXTENSION;
-				CYCLESFILENAME = dirPath + CYCLESDIRECTORYEXTENSION;
-				VOXELFILENAME = dirPath + VOXELSDIRECTORYEXTENSION;
-				ANCHORPOINTSFILENAME = dirPath + ANCHORPOINTSDIRECTORYEXTENSION;
 				ImGui::InputText("export filename: ", &EXPORTTITLE);
 				//if (displayCycle_i >= cycles.size()) {
 				//	displayCycle_i = displayCycle_i % cycles.size();
 				//}
 				if (ImGui::Button("Load Graph")) {
-					InitialWebFromObj(&g, relaxc, OBJFILENAME, cycles);
+					InitialWebFromObj(&g, relaxc, dirPath + INITIALGRAPHDIRECTORYEXTENSION, cycles);
 
 				}
 				if (ImGui::Button("Load Cycles")) {
-					loadcycles(&g, cycles, CYCLESFILENAME);
+					loadcycles(&g, cycles, dirPath + CYCLESDIRECTORYEXTENSION);
 					addCyclesToVertices(&g, cycles);
 				}
 

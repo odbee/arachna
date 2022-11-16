@@ -5,7 +5,37 @@
 #include <chrono>
 #include <thread>
 
+struct LogInfo {
+	int vertexA1, vertexA2,vertexB1,vertexB2;
+	float posA1, posA2;
+};
 
+class WebLogger {
+	private:
+		string filelocation;
+		ofstream myfileof;
+		std::ifstream myfileif;
+
+	public:
+		void initializelocation() {
+			filelocation = dirPath + LOGDIRECTORYEXTENSION;
+
+			myfileif.open(filelocation, std::ifstream::out | std::ifstream::trunc);
+			myfileif.close();
+
+		}
+		
+		void addStep(LogInfo log) {
+			string in;
+
+			myfileof.open(filelocation, std::ios_base::app);
+			
+			myfileof << log.vertexA1 << " " << log.vertexA2 << " " << log.vertexB1 << " " << log.vertexB2 << " " << log.posA1<< " " << log.posA2<< endl;
+			myfileof.close();
+		}
+
+;
+};
 
 
 
@@ -243,27 +273,27 @@ tuple<vector<size_t>, vector<size_t>> divideCycleAtEdge(vector<size_t> cycle, cy
 	return std::make_tuple(left, right);
 }
 
-cyclicedge getStartEdge(Graph *g, bool b_excludeForbiddenEdges) {
+cyclicedge getStartEdge(Graph *g,float ratioInteriorExterior) {
 	edge_ti graphstart, graphend;
 	cyclicedge startedge;
 	tie(ei, eiend) = boost::edges(*g);
 	tie(graphstart, graphend) = boost::edges(*g);
 
-	edge_t ed_startEdge = getRandomEdge(g, graphstart, graphend, b_excludeForbiddenEdges);
+	edge_t ed_startEdge = getRandomEdgeFromEdgeListIntegrated(g, graphstart, graphend, ratioInteriorExterior);
 	initEdge(ed_startEdge, startedge, *g);
 	return startedge;
 }
-cyclicedge getGoalEdge(Graph *g, vector<edge_t> connectableEdges , bool b_excludeForbiddenEdges) {
+cyclicedge getGoalEdge(Graph *g, vector<edge_t> connectableEdges , float ratioInteriorExterior) {
 	cyclicedge goaledge;
 	tie(ei, eiend) = boost::edges(*g);
-	edge_t ed_goalEdge = getRandomEdge(g, connectableEdges.begin(), connectableEdges.end(), b_excludeForbiddenEdges); // also accept forbidden edges
+	edge_t ed_goalEdge = getRandomEdgeFromEdgeListIntegrated(g, connectableEdges.begin(), connectableEdges.end(), ratioInteriorExterior); // also accept forbidden edges
 	initEdge(ed_goalEdge, goaledge, *g);
 
 	return goaledge;
 }
 
-void adjustGraphToNewEdges(Graph * g, std::vector<std::vector<size_t>>* cycs, cyclicedge& startedge,cyclicedge &goaledge,std::vector<edge_t> connectableEdges, std::vector<size_t>edgeinds) {
-
+std::tuple<float, float> adjustGraphToNewEdges(Graph * g, std::vector<std::vector<size_t>>* cycs, cyclicedge& startedge,cyclicedge &goaledge,std::vector<edge_t> connectableEdges, std::vector<size_t>edgeinds) {
+	float val1, val2;
 	size_t cycleIndex = *(edgeinds.begin() + std::distance(connectableEdges.begin(), std::find(connectableEdges.begin(), connectableEdges.end(), goaledge.descriptor)));
 	vector<size_t> currCyc = cycs->at(cycleIndex);
 
@@ -278,8 +308,10 @@ void adjustGraphToNewEdges(Graph * g, std::vector<std::vector<size_t>>* cycs, cy
 
 //created 2 points
 //getDivPoint(startedge.descriptor);
-	position[startedge.divisionvert] = interpolate(startedge, getDivPoint(startedge.descriptor));
-	position[goaledge.divisionvert] = interpolate(goaledge, getDivPoint(goaledge.descriptor));
+	val1 = getDivPoint(startedge.descriptor);
+	position[startedge.divisionvert] = interpolate(startedge, val1);
+	val2 = getDivPoint(goaledge.descriptor);
+	position[goaledge.divisionvert] = interpolate(goaledge, val2);
 	
 	//TODO once a certain side is picked, will always prefer this side
 	if (forbiddenPm[startedge.descriptor]) {
@@ -298,29 +330,40 @@ void adjustGraphToNewEdges(Graph * g, std::vector<std::vector<size_t>>* cycs, cy
 	size_t lastindex = cycs->size() - 1;
 
 	resolveIntersections(startedge, goaledge, cycleIndex, lastindex, *g, *cycs);
+	return make_tuple(val1,val2);
 }
 
 
 
-void addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
-
+LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
+	LogInfo result;
 	// TODO FIX THE ISSUE WHEN THERE ARE NO AVAILABLE EDEGES
 	std::vector<size_t>edgeinds;
-	cyclicedge startedge= getStartEdge(g, CHECKFORBIDDEN);
-	auto connectableEdges = getConnectableEdges(g, startedge, cycs, edgeinds, true);
+	cyclicedge startedge= getStartEdge(g, 1);
+	auto connectableEdges = getConnectableEdges(g, startedge, cycs, edgeinds, false);
 	if (connectableEdges.size()) {
-		cyclicedge goaledge = getGoalEdge(g, connectableEdges, false);
-		adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
+		cyclicedge goaledge = getGoalEdge(g, connectableEdges, 0.7);
+		std::tie(result.posA1,result.posA2)= adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
 		connectEdges(g, startedge, goaledge, rc);
+		result.vertexA1 = boost::source(startedge.descriptor, *g);
+		result.vertexA2 = boost::target(startedge.descriptor, *g);
+		result.vertexB1 = boost::source(goaledge.descriptor, *g);
+		result.vertexB2 = boost::target(goaledge.descriptor, *g);
 	}
 	else {
 		console() << " no cycles found, returning" << endl;
-		return;
+		return result;
 	}
 
 	counter++;
 	console() << GLOBALINT << endl;
+
+
+
+	return result;
 }
+int vertexA1, vertexA2, vertexB1, vertexB2;
+float posA1, posA2;
 
 
 
@@ -341,7 +384,7 @@ void addRandomCyclicEdgeAnimated(Graph* g,
 	if (animationCounter) {
 
 		if (animationCounter == timestamp1) {
-			startedge = getStartEdge(g, false);
+			startedge = getStartEdge(g, 1);
 			if (forbiddenPm[startedge.descriptor]) {
 				animationCounter = 1;
 				addDrawInstance(startedge.descriptor, { 0.94f, 0.25f, 0.07f,1.0f }, 50);
@@ -391,7 +434,7 @@ edge_t findRandomEdge() {
 	edge_ti graphstart, graphend;
 	tie(ei,eiend) = boost::edges(g);
 	tie(graphstart, graphend) = boost::edges(g);
-	return getRandomEdgeFromEdgeListIntegrated(&g, graphstart,graphend, false);
+	return getRandomEdge(&g, graphstart,graphend, false);
 
 }
 
@@ -408,3 +451,5 @@ void runxiterations(int x, Graph& g, float relaxc, std::vector<std::vector<size_
 	}
 
 }
+
+

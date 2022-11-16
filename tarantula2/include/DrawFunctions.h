@@ -36,7 +36,7 @@ class DrawHandler {
 
 
 					//gl::drawString(to_string(cLamp(currentLengthPm[*ei] / restLengthPm[*ei])), anchorp1);
-					gl::drawString(to_string(probabilityPm[*ei]), anchorp1);
+					gl::drawString(to_string(densityvalPm[*ei]), anchorp1);
 				}
 			}
 

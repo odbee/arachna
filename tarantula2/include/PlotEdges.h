@@ -442,32 +442,7 @@ int PlotGraphEdges(const char* label, Graph &graph, const char* overlay_text, fl
         const ImU32 col_hovered = ImGui::GetColorU32(ImGuiCol_PlotHistogramHovered);
         
 
-        // HIGHLIGHT WHEN EDGE ADDED
-        if (runAnimation == 1) {
-            for (auto ptr = edgelist.begin(); ptr < edgelist.end(); ptr++) {
-                //(*ptr).isConnected = false;
-            }
 
-        }
-        if (runAnimation == 52) {
-
-        }
-        if (runAnimation>0&& runAnimation<=100) {
-            tie(ei, eiend) = boost::edges(graph);
-            /*std::find(ei, eiend, WHICHEDGE);*/
-            idx_selected=(*findInStruct(edgelist.begin(), edgelist.end(), WHICHEDGE)).index;
-        }
-        if (runAnimation > 50 && runAnimation <= 100) {
-            for (const auto& edg : CONNEDGES) {
-                (*findInStruct(edgelist.begin(), edgelist.end(), edg)).isConnected += true;
-            }
-        }
-        if (runAnimation > 100) {
-            for (const auto& edg : NEWEDGES) {
-                (*findInStruct(edgelist.begin(), edgelist.end(), edg)).isNew+= true;
-            }
-            idx_connector=(*findInStruct(edgelist.begin(), edgelist.end(), NEWEDGES[0])).index;
-        }
 
         // CALCULATE BAR WIDTH
         float barwidth = ImLerp(0.0f, inner_bb.Max.x - inner_bb.Min.x, t_step);

@@ -189,9 +189,9 @@ float integrateEdge(edge_t edge, Graph& g) {
 	}
 	//console() << stringfromVec(params) <<endl;
 	densityPm[edge] = params;
-	probabilityPm[edge] = getProbablityFromParams(params, distance(p_start, p_end));
-	//console() << probabilityPm[edge] << endl;
-	return probabilityPm[edge];
+	densityvalPm[edge] = getProbablityFromParams(params, distance(p_start, p_end));
+	//console() << densityvalPm[edge] << endl;
+	return densityvalPm[edge];
 
 }
 
@@ -355,7 +355,7 @@ edge_t getRandomEdgeFromEdgeListT(Graph* g, T& begin, T& end, bool forbcheck = f
 			//randn -= currentLengthPm[*ei] / fulllength / 2;
 			countr++;
 		}
-		isforbidden = forbiddenPm[ed_resultedge] && CHECKFORBIDDEN && forbcheck;
+		isforbidden = forbiddenPm[ed_resultedge] && forbcheck;
 
 	}
 	return ed_resultedge;
@@ -397,59 +397,58 @@ edge_t getRandomEdge(Graph* g, T& begin, T& end, bool forbcheck = false) {
 template <typename T>
 
 
-edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end, bool forbcheck = false) {
-	T cachebegin = begin;
-	T cacheend = end;
-
+edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end,float ratioInteriorExterior) {
 	std::random_device rd;  // Will be used to obtain a seed for the random number engine
 	std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
 	int iteratorLength = 0;	int randiter;
 	float fulllength = 0, tensionlength = 0, voxellength = 0;
+	float forbiddensum = 0;
+	
 	bool isforbidden = true;
+
 
 	edge_t ed_resultedge = *begin; // ADD FIRST EDGE TO RESULTEDGE SO IF AN ERROR OCCURS FALL BACK TO FIRST EDGE
 
 	// calculate max values:
-	{
-		for (auto iter = begin; iter != end; ++iter) {
-			////if (fixedBool[*iter]) {
-			////	
-			////}	
-			//else {
-			{
+		for (T iter = begin; iter != end; ++iter) {
+
+			if (forbiddenPm[*iter]) {
+				forbiddensum++;
+			}	
+			else {
 				integrateEdge(*iter, *g);
-				voxellength += probabilityPm[*iter];
+				voxellength += densityvalPm[*iter];
 				fulllength += currentLengthPm[*iter];
 				tensionlength += restLengthPm[*iter] / currentLengthPm[*iter];
 			}
 		}
-	}
-	std::uniform_real_distribution<> dis(0.0, 1.0);
 
-	while (isforbidden)
-	{
-		begin = cachebegin;
-		auto randn = dis(gen);
-		size_t countr = 0;
 		for (auto iter = begin; iter != end; ++iter) {
-			auto voxelval = probabilityPm[*iter] * G_density / voxellength;
-			//auto voxelval = 0;
-			auto lengthval = currentLengthPm[*iter] * G_length / fulllength;
-			auto tensionval = (restLengthPm[*iter] / currentLengthPm[*iter]) * G_tension / tensionlength;
 
-			auto val = voxelval + lengthval + tensionval;
-			if (randn < val) {
-				ed_resultedge = *iter;
-
-				break;
+			if (forbiddenPm[*iter]) {
+				probabilityPm[*iter] = (1 - ratioInteriorExterior) * 1 / forbiddensum;
 			}
-			randn -= val;
-			//randn -= currentLengthPm[*ei] / fulllength / 2;
-			countr++;
+			else {
+				probabilityPm[*iter]= ratioInteriorExterior*(
+					(G_density* densityvalPm[*iter]/voxellength)+
+					(G_length * currentLengthPm[*iter] / fulllength)+
+					(G_tension*(restLengthPm[*iter] / currentLengthPm[*iter]) * G_tension));
+			}
 		}
-		isforbidden = forbiddenPm[ed_resultedge] && forbcheck;
-		console() << "forbidden" << endl;
+	std::uniform_real_distribution<> dis(0.0, 1.0);
+	auto randn = dis(gen);
+	for (auto iter = begin; iter != end; ++iter) {
+
+		if (randn < probabilityPm[*iter]) {
+			ed_resultedge = *iter;
+
+			break;
+		}
+		randn -= probabilityPm[*iter];
+		//randn -= currentLengthPm[*ei] / fulllength / 2;
+
 	}
+
 	return ed_resultedge;
 }
 

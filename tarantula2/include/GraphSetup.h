@@ -26,6 +26,8 @@ using namespace std;
 #define CYCLESDIRECTORYEXTENSION       "/cycles.txt"
 #define VOXELSDIRECTORYEXTENSION       "/voxels.txt"
 #define ANCHORPOINTSDIRECTORYEXTENSION       "/anchorpoints.txt"
+#define LOGDIRECTORYEXTENSION       "/log.txt"
+
 
 bool CHECKFORBIDDEN= true;
 int GLOBALINT = 1;
@@ -42,18 +44,7 @@ float ALPHA = 0.05f;
 size_t CURRENTFRAME = 1;
 
 int	displayCycle_i = 0;
-int	displayCycle_ii = 0;
-int displayEdgeV_i=0;
-int displayEdgeV_ii=0;
-int displayEdgeV_iii = 0;
-int displayEdgeV_iv = 0;
 int iterationcounter = 0;
-string VERTEXFILENAME = "";
-string VOXELFILENAME = "";
-string ANCHORPOINTSFILENAME = "";
-string OBJFILENAME = "";
-string CYCLESFILENAME = "";
-vector<size_t> vertlist;
 
 float G_density = 0.0005f, G_length = .999f, G_tension = 0.0005f;
 vector<float*> vallist{ &G_density,&G_length,&G_tension };
@@ -72,6 +63,7 @@ struct EdgeProperties
 	bool isforbidden;
 	vector<array<float,2>> densityparams;
 	float probability;
+	float densityval;
 };
 
 struct VertexProperties
@@ -101,6 +93,8 @@ boost::property_map< Graph, std::vector<size_t> VertexProperties::* >::type cycl
 
 
 boost::property_map< Graph, float EdgeProperties::* >::type currentLengthPm = boost::get(&EdgeProperties::currentlength, g);
+boost::property_map< Graph, float EdgeProperties::* >::type densityvalPm = boost::get(&EdgeProperties::densityval, g);
+
 boost::property_map< Graph, float EdgeProperties::* >::type probabilityPm = boost::get(&EdgeProperties::probability, g);
 
 boost::property_map< Graph, float EdgeProperties::* >::type restLengthPm = boost::get(&EdgeProperties::restlength, g);
@@ -110,16 +104,19 @@ boost::property_map< Graph, bool EdgeProperties::* >::type forbiddenPm = boost::
 boost::property_map< Graph, vector<array<float, 2>> EdgeProperties::* >::type densityPm = boost::get(&EdgeProperties::densityparams, g);
 
 
-boost::graph_traits<Graph>::edge_iterator ei, eiend;
-boost::graph_traits< Graph >::vertex_iterator vi, viend;
-typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 
-typedef Graph::edge_descriptor edge_t;
+typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+typedef boost::graph_traits<Graph>::vertex_iterator vertex_ti;
+typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 typedef boost::graph_traits<Graph>::edge_iterator edge_ti;
+
+edge_ti ei, eiend;
+vertex_ti vi, viend;
+
 
 std::vector<std::vector<size_t>> cycles;
 edge_t cache_edge;
-boost::graph_traits<Graph>::vertex_descriptor null = boost::graph_traits<Graph>::null_vertex();
+vertex_t null = boost::graph_traits<Graph>::null_vertex();
 // null edge
 
 
@@ -143,13 +140,8 @@ struct cyclicedge {
 std::map<std::array<signed int, 3>, float> voxelMap;
 vector<vec3> anchorPoints;
 
-bool EDGEADDED = false;
-edge_t WHICHEDGE;
-int EDGEADDEDINT = 0;
 int runAnimation = 0;
-vector<edge_t> CONNEDGES;
-vector<edge_t> NEWEDGES;
-vector<int> CONNEDGESGRAPH;
+
 bool otherbool = false;
 edge_t HOVERED;
 edge_t EMPTY;
@@ -157,7 +149,7 @@ string EXPORTTITLE;
 
 std::string dirPath = "web";
 
-
+// GUI PARAMS
 float relaxc = 0.4f;
 bool hasCycle = false;
 bool mDrawVertices = false;
@@ -166,9 +158,7 @@ bool mDrawVertexInfo = false;
 bool colorEdges = false;
 bool colorTens = false;
 bool colorLength = false;
-
 bool drawNCycle = false;
-
 int x_iterations = 1000;
 
 edge_t highlightedEdge;

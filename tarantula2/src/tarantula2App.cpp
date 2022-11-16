@@ -51,18 +51,13 @@ public:
 
 
 	//needed vars for animate function
-
-	cyclicedge N_startedge, N_goaledge;	edge_ti N_graphstart, N_graphend; edge_ti N_ei_startEdge; edge_t N_ed_startEdge;
-	std::vector<size_t> N_edgeinds;
-	int N_seconditer;	edge_t N_ed_goalEdge; edge_ti N_ei_goalEdge;
-	vector<size_t> N_currCyc;
-	vector<edge_t> N_connedges;
 	DrawHandler drawHandler;
 	ImGuiHandler imGuiHandler;
 
 	cyclicedge A_goaledge, A_startedge;
 	std::vector<edge_t> A_connectableEdges;
 	std::vector<size_t>A_edgeinds;
+	WebLogger webLogger;
 
 };
 
@@ -88,7 +83,7 @@ void tarantula2App::setup()
 
 
 	initWeb(g, relaxc, cycles);
-
+	webLogger.initializelocation();
 	std::ofstream ofs;
 
 	profile_out.open(profilername, std::ios_base::trunc);
@@ -103,7 +98,9 @@ void tarantula2App::keyDown(KeyEvent event)
 	if (event.getCode() == 99) { // "c"
 		//addRandomEdge(&g, relaxc);
 		auto start = std::chrono::high_resolution_clock::now();
-		addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
+		
+		LogInfo log= addRandomCyclicEdgeTesting(&g, relaxc, &cycles);
+		webLogger.addStep(log);
 		//addRandomCyclicEdgeAnimated(&g, relaxc, &cycles);
 		auto end = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -253,17 +250,6 @@ void tarantula2App::draw()
 			//drawDensityEdges(&g, projection, viewport);
 
 			//drawHandler.drawDensityEdges(&g, projection, viewport);
-			//if (runAnimation > 0 && runAnimation <= 100)
-			//	drawHandler.drawSelectedEdge(&g, WHICHEDGE, { 0.5f,0.5f,0.82f,0.8f });
-
-			//if (runAnimation > 50) {
-			//	drawHandler.drawEdges(&g, N_connedges, { 1.0f, 0.5f, 0.0f,0.7f });
-			//}
-			//if (runAnimation > 100) {
-			//	drawHandler.drawEdges(&g, NEWEDGES, { 0.5f,0.5f,0.82f,0.8f });
-			//	drawHandler.drawSelectedEdge(&g, NEWEDGES[0], { 0.65f,0.45f,0.82f,0.8f });
-
-			//}
 			if (HOVERED != EMPTY) {
 				drawHandler.drawSelectedEdge(&g, HOVERED, { 1.0f,0.5f,0.2f,0.8f });
 

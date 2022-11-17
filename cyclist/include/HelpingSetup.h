@@ -534,7 +534,7 @@ void addcyclesfromPc(float relaxc, Graph& g, std::vector<std::vector<size_t>>& c
 	{
 		convhull.push_back({ indexbuffer.begin() + 3 * i,indexbuffer.begin() + 3 * i + 3 });
 	}
-
+	int counter = 0;
 	for (const auto& cycl : convhull) {
 		for (size_t i = 0; i < cycl.size(); i++)
 		{
@@ -553,15 +553,25 @@ void addcyclesfromPc(float relaxc, Graph& g, std::vector<std::vector<size_t>>& c
 			}
 		}
 	}
+	vector <vector<size_t>> edges;
 	for (const auto& cycl : convhull) {
 		for (size_t i = 0; i < cycl.size(); i++)
 		{
 			auto v1 = cycl[i];
+			
 			auto v2 = cycl[(i + 1) % cycl.size()];
-			connectAB(&g, v1, v2, relaxc, 0, true);
+			
+
+			if (!(std::find(edges.begin(), edges.end(), vector{ v1,v2 }) != edges.end()) && !(std::find(edges.begin(), edges.end(), vector{ v2,v1 }) != edges.end())) {
+				connectAB(&g, v1, v2, relaxc, 0, true);
+				edges.push_back({ v1,v2 });
+				counter++;
+			}
+
+			
 		}
 	}
-
+	console() << "num edges " << counter << endl;
 	addCyclesToVertices(&g, cycles);
 
 }
@@ -580,9 +590,9 @@ void exportGraphTXT(Graph g, string title = "initialgraph.txt") {
 	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
 
 		//myfile << "[" << "(" << to_string(position[boost::source(*ei, g)]) << ");(" << to_string(position[boost::target(*ei, g)]) << ")" << "]" << endl;
-		if (true) {
-			myfile << "l " << to_string(boost::source(*ei, g) + 1) << " " << to_string(boost::target(*ei, g) + 1) << " " << to_string(int(forbiddenPm[*ei])) << endl;
-		}
+		myfile << "l " << to_string(boost::source(*ei, g) + 1) << " " << to_string(boost::target(*ei, g) + 1) << " " << to_string(int(forbiddenPm[*ei])) << endl;
+
+
 	}
 	myfile.close();
 }

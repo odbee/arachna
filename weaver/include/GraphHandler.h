@@ -2,7 +2,8 @@
 #include "GraphSetup.h"
 #include "DataContainer.h"
 #include "cinder/app/App.h"
-
+#include <fstream>
+#include <string>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
@@ -15,15 +16,22 @@ private:
 	vertex_ti vi, viend;
 	edge_t cache_edge;
 	vertex_t nullVert;
-
-
+	std::vector<EdgeContainer> edgeInfo;
+	std::vector<RecipeContainer> recipeInfo;
+	std::string edgesFilename;
+	std::string recipeFilename;
+	
 public:
 	GraphHandler(DataContainer& DATA) : data(DATA) { setup(); } //https://www.mygreatlearning.com/blog/constructor-in-cpp/#:~:text=What%20is%20Constructor%20in%20C%2B%2B%3F,of%20a%20class%20is%20created. , https://stackoverflow.com/questions/33260261/can-i-automatically-call-a-method-of-a-class-on-object-declaration-in-c
 	edge_t connectAB(vertex_t endPointA, vertex_t endPointB, float rc, int ind = 0, bool isforbidden = false);
 	Graph g;
 	DataContainer& data;
 	std::optional<edge_t> GetEdgeFromItsVerts(vertex_t v, vertex_t u, Graph const& g);
+	std::vector<EdgeContainer> loadEdges(std::string fname);
+	std::vector<RecipeContainer> loadRecipe(std::string fname);
+	void addEdgeFromRecipe(int index);
 	void InitialWebFromObj(float rc, std::string filename);
 	//ci::vec3 interpolate(cyclicedge edge, float t);
 	void relaxPhysics();
+	void updateEdge( edge_t edge_desc, EdgeContainer edge_cont);
 };

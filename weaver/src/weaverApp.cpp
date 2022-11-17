@@ -16,6 +16,7 @@ class weaverApp : public App {
   public:
 	void setup() override;
 	void mouseDown( MouseEvent event ) override;
+	void keyDown(KeyEvent event) override;
 	void update() override;
 	void draw() override;
 	Graph g;
@@ -24,14 +25,22 @@ class weaverApp : public App {
 	DrawHandler dh = DrawHandler(GH.g ,data);
 	IniHandler ih = IniHandler(data);
 	GuiHandler GuiH = GuiHandler(data, ih);
-
+	int INDEX=0;
 };
 
+void weaverApp::keyDown(KeyEvent event) {
+	if (event.getCode() == 99) { // "c"
+		GH.addEdgeFromRecipe(INDEX++);
+	}
+}
 void weaverApp::setup()
 {
 	dh.setupCamera();
 	GuiH.setupImGui();
 	GH.InitialWebFromObj(0.9, data.fullPath + data.initialGraphDE);
+	GH.loadEdges(data.fullPath + "edges.csv");
+	GH.loadRecipe(data.fullPath + "log.csv");
+
 
 }
 
@@ -41,6 +50,7 @@ void weaverApp::mouseDown( MouseEvent event )
 
 void weaverApp::update()
 {
+	GH.relaxPhysics();
 }
 
 void weaverApp::draw()

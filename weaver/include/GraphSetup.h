@@ -9,14 +9,30 @@
 
 struct EdgeProperties
 {
+	int uniqueIndex;
 	float restlength;
 	float currentlength;
 	int index;
 	bool isforbidden;
-	std::vector<std::array<float, 2>> densityparams;
-	float probability;
-	float densityval;
 };
+
+struct EdgeContainer
+{
+	int uniqueIndex;
+	int index;
+	float restlength;
+	int sourceV;
+	int targetV;
+	
+};
+
+struct RecipeContainer {
+	int OldEdgeA, OldEdgeB;
+	int NewEdgeA1, NewEdgeA2, NewEdgeB1, NewEdgeB2;
+	int NewEdgeC;
+	float posA1, posA2;
+};
+
 
 struct VertexProperties
 {
@@ -24,7 +40,6 @@ struct VertexProperties
 	bool isfixed;
 	ci::vec3 pos;
 	ci::vec3 movevec;
-	std::vector<size_t> cycles;
 };
 
 typedef boost::adjacency_list<boost::vecS,

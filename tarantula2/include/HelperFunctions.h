@@ -228,33 +228,19 @@ edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_des
 	currentLengthPm[edge] = dd;
 	restLengthPm[edge] = dd * rc;
 	forbiddenPm[edge] = isforbidden;
+	uniqueIndexPm[edge] = UNIQUEINDEX++;
 	if (ind == 0) {
 		indexPm[edge] = ++GLOBALINT;
 	}
 	else {
 		indexPm[edge] = ind;
 	}
+	//console() << UNIQUEINDEX  << " " << boost::source(edge, *g) << " " << boost::target(edge, *g) << endl;
+	webLogger.addEdgeLog(&edge);
 	return edge;
 }
 
-pair<edge_t, bool> connectAB2(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind = 0, bool isforbidden = false) {
-	float dd = distance(position[endPointA], position[endPointB]);
-	edge_t edge;
-	bool result;
-	auto res= boost::add_edge(endPointA, endPointB, *g);
-	edge = res.first;
 
-	currentLengthPm[edge] = dd;
-	restLengthPm[edge] = dd * rc;
-	forbiddenPm[edge] = isforbidden;
-	if (ind == 0) {
-		indexPm[edge] = ++GLOBALINT;
-	}
-	else {
-		indexPm[edge] = ind;
-	}
-	return res;
-}
 
 
 
@@ -613,7 +599,7 @@ void initAnchorPoints(string filename) {
 
 		cachevec.z = stof(s);
 		anchorPoints.push_back(cachevec);
-		console() << "added point at" << cachevec.x << ", " << cachevec.y << ", " << cachevec.z << endl;
+		//console() << "added point at" << cachevec.x << ", " << cachevec.y << ", " << cachevec.z << endl;
 	}
 }
 
@@ -668,56 +654,6 @@ void checkforchange(vector<float*>& values, vector<float*>& cachedvalues) {
 
 }
 
-void addcyclesfromPc(float relaxc,Graph&g, std::vector<std::vector<size_t>>&cycles){
-	
-	using FloatType = float;
-	using vex3 = quickhull::Vector3<FloatType>;
-	vector<vector<size_t>> convhull;
-	quickhull::QuickHull<FloatType> qh;
-	std::vector<vex3> pc;
-
-	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
-
-		pc.emplace_back(float(position[*vi][0]), float(position[*vi][1]), float(position[*vi][2]));
-
-	}
-	auto hull = qh.getConvexHull(&pc[0].x, pc.size(), true, true);
-	auto indexbuffer = hull.getIndexBuffer();
-	for (size_t i = 0; i < indexbuffer.size() / 3; i++)
-	{
-		convhull.push_back({ indexbuffer.begin() + 3 * i,indexbuffer.begin() + 3 * i + 3 });
-	}
-
-	for (const auto& cycl : convhull) {
-		for (size_t i = 0; i < cycl.size(); i++)
-		{
-			auto v1 = cycl[i];
-			auto v2 = cycl[(i + 1) % cycl.size()];
-			//console() << v1 << "," << v2 << endl;
-			typename boost::graph_traits<Graph>::adjacency_iterator ai, ai2, ai_end, ai_end2;
-			boost::graph_traits< Graph >::vertex_iterator vi2, viend2;
-			for (boost::tie(ai, ai_end) = boost::adjacent_vertices(v1, g),
-				boost::tie(ai2, ai_end2) = boost::adjacent_vertices(v2, g);
-				ai != ai_end && ai2 != ai_end2; ai++, ai2++) {
-				if (*ai2 == *ai && v1 > v2) {
-					//console() << " adjacancyts" << *ai << ',' << *ai2 << " ";
-					cycles.push_back({ v1,v2,*ai });
-				}
-			}
-		}
-	}
-	for (const auto& cycl : convhull) {
-		for (size_t i = 0; i < cycl.size(); i++)
-		{
-			auto v1 = cycl[i];
-			auto v2 = cycl[(i + 1) % cycl.size()];
-			connectAB(&g, v1, v2, relaxc, 0, true);
-		}
-	}
-
-	addCyclesToVertices(&g, cycles);
-
-}
 
 void findAndAddCycles(Graph* g, std::vector<std::vector<size_t>>& cycs) {
 	cycs = udgcd::findCycles<Graph, vertex_t>(*g);
@@ -730,7 +666,7 @@ vec3 getClosestPointFromList(vec3 startPoint, std::vector<vec3> listOfPoints) {
 	float compdist = 0;
 	for (vec3 compPt : listOfPoints) {
 		compdist =distance(startPoint, compPt);
-		console()  << "dist : " << compdist << endl;
+		//console()  << "dist : " << compdist << endl;
 		if (compdist < mindist) {
 			mindist = compdist;
 			cpPt = compPt;

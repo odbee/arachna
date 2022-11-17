@@ -5,37 +5,7 @@
 #include <chrono>
 #include <thread>
 
-struct LogInfo {
-	int vertexA1, vertexA2,vertexB1,vertexB2;
-	float posA1, posA2;
-};
 
-class WebLogger {
-	private:
-		string filelocation;
-		ofstream myfileof;
-		std::ifstream myfileif;
-
-	public:
-		void initializelocation() {
-			filelocation = dirPath + LOGDIRECTORYEXTENSION;
-
-			myfileif.open(filelocation, std::ifstream::out | std::ifstream::trunc);
-			myfileif.close();
-
-		}
-		
-		void addStep(LogInfo log) {
-			string in;
-
-			myfileof.open(filelocation, std::ios_base::app);
-			
-			myfileof << log.vertexA1 << " " << log.vertexA2 << " " << log.vertexB1 << " " << log.vertexB2 << " " << log.posA1<< " " << log.posA2<< endl;
-			myfileof.close();
-		}
-
-;
-};
 
 
 
@@ -316,12 +286,12 @@ std::tuple<float, float> adjustGraphToNewEdges(Graph * g, std::vector<std::vecto
 	//TODO once a certain side is picked, will always prefer this side
 	if (forbiddenPm[startedge.descriptor]) {
 		vec3 cp = getClosestPointFromList(position[goaledge.divisionvert], anchorPoints);
-		console() << "closest point distance" << distance(cp, position[goaledge.divisionvert]) << endl;
+		//console() << "closest point distance" << distance(cp, position[goaledge.divisionvert]) << endl;
 		position[startedge.divisionvert] = cp;
 	}
 	if (forbiddenPm[goaledge.descriptor]) {
 		vec3 cp = getClosestPointFromList(position[startedge.divisionvert], anchorPoints);
-		console() << "closest point distance" << distance(cp, position[startedge.divisionvert]) << endl;
+		//console() << "closest point distance" << distance(cp, position[startedge.divisionvert]) << endl;
 		position[goaledge.divisionvert] = cp;
 	}
 	//position[startedge.divisionvert] = interpolate(startedge, float((float(rand() % 5) + 1) / 6));
@@ -344,11 +314,18 @@ LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<s
 	if (connectableEdges.size()) {
 		cyclicedge goaledge = getGoalEdge(g, connectableEdges, 0.7);
 		std::tie(result.posA1,result.posA2)= adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
-		connectEdges(g, startedge, goaledge, rc);
-		result.vertexA1 = boost::source(startedge.descriptor, *g);
-		result.vertexA2 = boost::target(startedge.descriptor, *g);
-		result.vertexB1 = boost::source(goaledge.descriptor, *g);
-		result.vertexB2 = boost::target(goaledge.descriptor, *g);
+		result.OldEdgeA= uniqueIndexPm[startedge.descriptor];
+		//console() << uniqueIndexPm[startedge.descriptor] << endl;
+		result.OldEdgeB = uniqueIndexPm[goaledge.descriptor];
+		vector<edge_t> newEdges = connectEdges(g, startedge, goaledge, rc);
+		result.NewEdgeC= uniqueIndexPm[newEdges[0]];
+		result.NewEdgeA1 = uniqueIndexPm[newEdges[1]];
+		result.NewEdgeA2 = uniqueIndexPm[newEdges[2]];
+		result.NewEdgeB1 = uniqueIndexPm[newEdges[3]];
+		result.NewEdgeB2 = uniqueIndexPm[newEdges[4]];
+
+
+		
 	}
 	else {
 		console() << " no cycles found, returning" << endl;

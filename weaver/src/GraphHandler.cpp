@@ -1,9 +1,131 @@
 #include "GraphHandler.h"
-#include <fstream>
 
 void GraphHandler::setup() {
 	nullVert = boost::graph_traits<Graph>::null_vertex();
 }
+
+void GraphHandler::addEdgeFromRecipe(int index) {
+	// add new vertices -
+	// connect new vertices to edge -
+	// set length of new edge, taken from edges csv -
+	// conncet new vertices with previus edges -
+	// 
+	// locate the indices of the edges that replace the divided edge.
+	// locate them by theor indices.
+	// 
+	// 
+	//
+	RecipeContainer& recipe = recipeInfo[index];
+	EdgeContainer ENC = edgeInfo[recipe.NewEdgeC];
+	EdgeContainer ENA1 = edgeInfo[recipe.NewEdgeA1];
+	EdgeContainer ENA2 = edgeInfo[recipe.NewEdgeA2];
+	EdgeContainer ENB1 = edgeInfo[recipe.NewEdgeB1];
+	EdgeContainer ENB2 = edgeInfo[recipe.NewEdgeB2];
+	EdgeContainer EOA = edgeInfo[recipe.OldEdgeA];
+	EdgeContainer EOB = edgeInfo[recipe.OldEdgeB];
+	//
+	
+	auto a = boost::add_vertex(g);
+	g[a].isfixed = false;
+	g[a].pos = { 0,0,0 };
+	auto b = boost::add_vertex(g);
+	g[b].isfixed = false;
+	g[b].pos = { 0,0,0 };
+	edge_t edgeC = boost::add_edge(a, b, g).first;
+	
+	edge_t edgeA1 = boost::add_edge(a, EOA.sourceV, g).first;
+	edge_t edgeA2 = boost::add_edge(a, EOA.targetV, g).first;
+	edge_t edgeB1 = boost::add_edge(b, EOB.sourceV, g).first;
+	edge_t edgeB2 = boost::add_edge(b, EOB.targetV, g).first;
+	
+	updateEdge(edgeC, ENC);
+	updateEdge(edgeA1, ENA1);
+	updateEdge(edgeA2, ENA2);
+	updateEdge(edgeB1, ENB1);
+	updateEdge(edgeB2, ENB2);
+
+	EdgeContainer EA = edgeInfo[recipe.OldEdgeA];
+	EdgeContainer EB = edgeInfo[recipe.OldEdgeB];	
+	boost::remove_edge(EA.sourceV, EA.targetV, g);
+	boost::remove_edge(EB.sourceV, EB.targetV, g);
+
+}
+
+void GraphHandler::updateEdge( edge_t edge_desc, EdgeContainer edge_cont) {
+	g[edge_desc].restlength = edge_cont.restlength;
+	g[edge_desc].uniqueIndex = edge_cont.uniqueIndex;
+	g[edge_desc].isforbidden = false;
+	g[edge_desc].index = edge_cont.index;
+
+
+}
+
+
+std::vector<EdgeContainer> GraphHandler::loadEdges(std::string fname) {
+	std::vector<EdgeContainer> content;
+	std::string row [5];
+	std::string line, word;
+
+	std::fstream file(fname, std::ios::in);
+	int countA = 0;
+	int countB = 0;
+	if (file.is_open())
+	{
+		while (getline(file, line))
+		{
+			if (countB != 0) {
+				countA = 0;
+
+				std::stringstream str(line);
+
+				while (getline(str, word, ','))
+					row[countA++] = (word);
+				content.push_back(EdgeContainer{ std::stoi(row[0]),std::stoi(row[1]) ,std::stof(row[2]) ,std::stoi(row[3]) ,std::stoi(row[4]) });
+			}
+			
+			countB++;
+		}
+	}
+	edgeInfo = content;
+	ci::app::console() << "added " << edgeInfo.size() << "edges" << std::endl;
+	return content;
+}
+
+
+std::vector<RecipeContainer> GraphHandler::loadRecipe(std::string fname) {
+	std::vector<RecipeContainer> content;
+	std::string row[9];
+	std::string line, word;
+	
+	std::fstream file(fname, std::ios::in);
+	int countA = 0;
+	int countB = 0;
+	if (file.is_open())
+	{
+		while (getline(file, line))
+		{
+			if (countB != 0) {
+				countA = 0;
+
+				std::stringstream str(line);
+
+				while (getline(str, word, ','))
+					row[countA++] = (word);
+				content.push_back(RecipeContainer{ std::stoi(row[0]),std::stoi(row[1]) ,
+													std::stoi(row[2]),std::stoi(row[3]) ,
+													std::stoi(row[4]),std::stoi(row[5]) ,
+													std::stoi(row[6]),
+													std::stof(row[7]) ,std::stof(row[8]) });
+			}
+
+			countB++;
+		}
+	}
+	recipeInfo = content;
+	ci::app::console() << "added " << recipeInfo.size() << "steps" << std::endl;
+	return content;
+}
+
 
 
 edge_t GraphHandler::connectAB(vertex_t endPointA, vertex_t endPointB, float rc, int ind, bool isforbidden) {

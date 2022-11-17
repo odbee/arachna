@@ -67,30 +67,7 @@ vector<vec3> getVertsFromFile(string filename) {
 	return result;
 }
 
-void InitialWebFromPc(Graph* g,  float rc, string filename) {
-	
-	vector<vec3>verts = getVertsFromFile(filename);
-	
-	auto cvert = boost::add_vertex(*g);
-	position[cvert]= {0, 0, 0};
-	fixedBool[cvert] = false;
 
-	for (const auto& vert : verts)
-	{
-		position[cvert]+= vert;
-
-	}
-	position[cvert] /= verts.size();
-	
-	for (const auto & vert: verts)
-	{
-		auto a = boost::add_vertex(*g);
-		position[a] = vert;
-		fixedBool[a] = true;
-		connectAB(g, a, cvert, rc);
-	}
-
-}
 
 
 

@@ -57,7 +57,6 @@ public:
 	cyclicedge A_goaledge, A_startedge;
 	std::vector<edge_t> A_connectableEdges;
 	std::vector<size_t>A_edgeinds;
-	WebLogger webLogger;
 
 };
 
@@ -68,6 +67,7 @@ void tarantula2App::setup()
 
 	Color h;
 	iniHand.initImGui("cached_ui.ini");
+	webLogger.initializelocation();
 
 	//console() << ImGui::ColorConvertU32ToFloat4( ImGui::GetColorU32(41)).x 
 	//	<< "   "
@@ -83,7 +83,6 @@ void tarantula2App::setup()
 
 
 	initWeb(g, relaxc, cycles);
-	webLogger.initializelocation();
 	std::ofstream ofs;
 
 	profile_out.open(profilername, std::ios_base::trunc);

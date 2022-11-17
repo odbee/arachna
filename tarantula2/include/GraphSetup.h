@@ -26,7 +26,9 @@ using namespace std;
 #define CYCLESDIRECTORYEXTENSION       "/cycles.txt"
 #define VOXELSDIRECTORYEXTENSION       "/voxels.txt"
 #define ANCHORPOINTSDIRECTORYEXTENSION       "/anchorpoints.txt"
-#define LOGDIRECTORYEXTENSION       "/log.txt"
+#define LOGDIRECTORYEXTENSION       "/log.csv"
+#define EDGEDATADIRECTORYEXTENSION       "/edges.csv"
+
 
 
 bool CHECKFORBIDDEN= true;
@@ -60,6 +62,7 @@ struct EdgeProperties
 	float restlength;
 	float currentlength;
 	int index;
+	int uniqueIndex;
 	bool isforbidden;
 	vector<array<float,2>> densityparams;
 	float probability;
@@ -99,6 +102,7 @@ boost::property_map< Graph, float EdgeProperties::* >::type probabilityPm = boos
 
 boost::property_map< Graph, float EdgeProperties::* >::type restLengthPm = boost::get(&EdgeProperties::restlength, g);
 boost::property_map< Graph, int EdgeProperties::* >::type indexPm = boost::get(&EdgeProperties::index, g);
+boost::property_map< Graph, int EdgeProperties::* >::type uniqueIndexPm = boost::get(&EdgeProperties::uniqueIndex, g);
 
 boost::property_map< Graph, bool EdgeProperties::* >::type forbiddenPm = boost::get(&EdgeProperties::isforbidden, g);
 boost::property_map< Graph, vector<array<float, 2>> EdgeProperties::* >::type densityPm = boost::get(&EdgeProperties::densityparams, g);
@@ -176,4 +180,70 @@ void addDrawInstance(edge_t edge, ColorA color, size_t time) {
 	Instances.push_back({ edge,color,time });
 }
 
+int UNIQUEINDEX = 0;
 
+
+struct LogInfo {
+	int OldEdgeA, OldEdgeB;
+	int NewEdgeA1, NewEdgeA2, NewEdgeB1, NewEdgeB2;
+	int NewEdgeC;
+	float posA1, posA2;
+};
+
+class WebLogger {
+private:
+	string logfilelocation;
+	string edgefilelocation;
+	ofstream logmyfileof;
+	std::ifstream logmyfileif;
+	ofstream edgemyfileof;
+	std::ifstream edgemyfileif;
+
+public:
+	void initializelocation() {
+		logfilelocation = dirPath + LOGDIRECTORYEXTENSION;
+		edgefilelocation = dirPath + EDGEDATADIRECTORYEXTENSION;
+
+		logmyfileif.open(logfilelocation, std::ifstream::out | std::ifstream::trunc);
+		logmyfileif.close();
+		
+		
+		logmyfileof << "OldEdgeA,OldEdgeB, NewEdgeA1,NewEdgeA2,NewEdgeB1,NewEdgeB2,NewEdgeC,posA1,posA2" << endl;
+		
+		edgemyfileif.open(edgefilelocation, std::ifstream::out | std::ifstream::trunc);
+
+
+
+
+		edgemyfileif.close();
+		edgemyfileof.open(edgefilelocation, std::ios_base::app);
+		edgemyfileof << "Unique Index, Index, restlegth, source vertex, target vertex" << endl;
+		edgemyfileof.close();
+
+
+
+
+	}
+
+	void addStep(LogInfo log) {
+		string in;
+
+		logmyfileof.open(logfilelocation, std::ios_base::app);
+		int OldEdgeA, OldEdgeB;
+		int NewEdgeA1, NewEdgeA2, NewEdgeB1, NewEdgeB2;
+		int ConnectionEdge;
+		logmyfileof << log.OldEdgeA << "," << log.OldEdgeB << "," << log.NewEdgeA1 << "," << log.NewEdgeA2 << "," << log.NewEdgeB1 << "," << log.NewEdgeB2 << 
+			"," << log.NewEdgeC << "," << log.posA1 << "," << log.posA2 << endl;
+		logmyfileof.close();
+	}
+	void addEdgeLog(edge_t* edge) {
+		edgemyfileof.open(edgefilelocation, std::ios_base::app);
+
+		edgemyfileof << g[*edge].uniqueIndex << "," << g[*edge].index << "," << g[*edge].restlength << "," << boost::source(*edge, g) << "," << boost::target(*edge, g) << endl;
+		edgemyfileof.close();
+	}
+
+	;
+};
+
+WebLogger webLogger;

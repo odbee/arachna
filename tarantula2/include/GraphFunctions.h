@@ -69,10 +69,10 @@ vector<edge_t> connectEdges(Graph* g, cyclicedge startedge, cyclicedge goaledge,
 	bool startforbidden=forbiddenPm[startedge.descriptor];
 	bool goalforbidden= forbiddenPm[goaledge.descriptor];
 	returnedges[0]=connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc, startforbidden&&goalforbidden);
-	returnedges[1] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
-	returnedges[2] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden);
-	returnedges[3] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
-	returnedges[4] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden);
+	returnedges[1] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
+	returnedges[2] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden);
+	returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+	returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden);
 	fixedBool[goaledge.divisionvert] = goalforbidden;
 	fixedBool[startedge.divisionvert] = startforbidden;
 	boost::remove_edge(startedge.descriptor, *g);
@@ -318,6 +318,8 @@ LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<s
 		//console() << uniqueIndexPm[startedge.descriptor] << endl;
 		result.OldEdgeB = uniqueIndexPm[goaledge.descriptor];
 		vector<edge_t> newEdges = connectEdges(g, startedge, goaledge, rc);
+		webLogger.addVertexLog(&startedge.divisionvert);
+		webLogger.addVertexLog(&goaledge.divisionvert);
 		result.NewEdgeC= uniqueIndexPm[newEdges[0]];
 		result.NewEdgeA1 = uniqueIndexPm[newEdges[1]];
 		result.NewEdgeA2 = uniqueIndexPm[newEdges[2]];

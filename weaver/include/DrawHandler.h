@@ -9,6 +9,13 @@
 #include "cinder/CinderImGui.h"
 #include "cinder/CameraUi.h"
 #include "DataContainer.h"
+
+#include "AdamsCameraUi.h"
+
+
+
+
+
 class DrawHandler
 {
 private:
@@ -25,10 +32,13 @@ public:
 
 	ci::gl::BatchRef		mWirePlane;
 	ci::gl::BatchRef		mWireCube;
-	ci::CameraUi			mCamUi;
+	ci::AdamsCameraUi			mCamUi = ci::AdamsCameraUi(data);
+	void mouseDown(ci::app::MouseEvent& event) ;
 	void setupCamera();
+	ci::Ray calculateRay(ci::vec2 mousePos);
 	void drawCamera();
 	void drawGraph(bool colorEdges = false, bool colorTension = true, bool colorLength = false);
 	void drawNthEdge();
+	void drawSelectedEdge();
 
 };

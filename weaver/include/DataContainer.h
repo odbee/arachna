@@ -17,12 +17,18 @@ public:
 	DataContainer() { setup(); }
 	
 	std::string initialGraphDE, cyclesDE, voxelsDE, anchorPDE, fullPath;
-	
-	int edgeIndex;
+	int INDEX = 0;
+
+	signed int  edgeIndex;
 	float alpha;
 	edge_t highlightedEdge;
 	bool highlightEdge;
+	edge_t hovered_edge;
 
+	edge_t selected_edge;
+	edge_t empty_edge;
+	bool justclicked = false;
+	bool is_hovered = false;
 	struct ExampleAppLog
 	{
 		ImGuiTextBuffer     Buf;

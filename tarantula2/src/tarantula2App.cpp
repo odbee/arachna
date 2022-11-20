@@ -214,6 +214,10 @@ void tarantula2App::draw()
 	//			CAMERA DRAW
 	{
 		drawHandler.setProjectionViewport();
+		drawHandler.projection = drawHandler.mCamera.getProjectionMatrix() * drawHandler.mCamera.getViewMatrix();
+		int w = getWindowWidth();
+		int h = getWindowHeight();
+		drawHandler.viewport = vec4(0, h, w, -h); // vertical flip is required
 		drawHandler.drawPoints(&g, drawHandler.getProjection(), drawHandler.getViewport(), mDrawNumbers, mDrawVertices, mDrawVertexInfo);
 		if (drawNCycle)
 			drawHandler.drawCycle(&g, projection, viewport, cycles, displayCycle_i);

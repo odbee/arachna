@@ -1,0 +1,269 @@
+/*
+ Copyright (c) 2015, The Cinder Project: http://libcinder.org All rights reserved.
+ This code is intended for use with the Cinder C++ library: http://libcinder.org
+
+ Portions of this code (C) Paul Houx
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+ the following conditions are met:
+
+	* Redistributions of source code must retain the above copyright notice, this list of conditions and
+	the following disclaimer.
+	* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and
+	the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+ WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+*/
+
+#include "AdamsCameraUi.h"
+
+namespace cinder {
+
+	AdamsCameraUi::AdamsCameraUi(DataContainer& DATA)
+		: data(DATA), mCamera(nullptr), mWindowSize(640, 480), mMouseWheelMultiplier(1.2f), mMinimumPivotDistance(1.0f),
+		mEnabled(true), mLastAction(ACTION_NONE)
+	{}
+
+	AdamsCameraUi::AdamsCameraUi(DataContainer& DATA, CameraPersp* camera, const app::WindowRef& window, int signalPriority)
+		: data(DATA), mCamera(camera), mWindowSize(640, 480), mMouseWheelMultiplier(1.2f), mMinimumPivotDistance(1.0f),
+		mEnabled(true)
+	{
+		connect(window, signalPriority);
+	}
+
+
+
+	AdamsCameraUi::~AdamsCameraUi()
+	{
+		disconnect();
+	}
+
+	AdamsCameraUi& AdamsCameraUi::operator=(const AdamsCameraUi& rhs)
+	{
+		mCamera = rhs.mCamera;
+		mWindowSize = rhs.mWindowSize;
+		mMouseWheelMultiplier = rhs.mMouseWheelMultiplier;
+		mMinimumPivotDistance = rhs.mMinimumPivotDistance;
+		mWindow = rhs.mWindow;
+		mSignalPriority = rhs.mSignalPriority;
+		mEnabled = rhs.mEnabled;
+		connect(mWindow, mSignalPriority);
+		return *this;
+	}
+
+	//! Connects to mouseDown, mouseDrag, mouseWheel and resize signals of \a window, with optional priority \a signalPriority
+	void AdamsCameraUi::connect(const app::WindowRef& window, int signalPriority)
+	{
+		if (!mConnections.empty()) {
+			disconnect();
+		}
+
+		mWindow = window;
+		mSignalPriority = signalPriority;
+		if (window) {
+			mConnections.push_back(window->getSignalMouseDown().connect(signalPriority,
+				[this](app::MouseEvent& event) { mouseDown(event); }));
+			mConnections.push_back(window->getSignalMouseUp().connect(signalPriority,
+				[this](app::MouseEvent& event) { mouseUp(event); }));
+			mConnections.push_back(window->getSignalMouseDrag().connect(signalPriority,
+				[this](app::MouseEvent& event) { mouseDrag(event); }));
+			mConnections.push_back(window->getSignalMouseWheel().connect(signalPriority,
+				[this](app::MouseEvent& event) { mouseWheel(event); }));
+			mConnections.push_back(window->getSignalResize().connect(signalPriority,
+				[this]() {
+				setWindowSize(mWindow->getSize());
+				if (mCamera)
+					mCamera->setAspectRatio(mWindow->getAspectRatio());
+			}
+			));
+		}
+
+		mLastAction = ACTION_NONE;
+	}
+
+	//! Disconnects all signal handlers
+	void AdamsCameraUi::disconnect()
+	{
+		for (auto& conn : mConnections)
+			conn.disconnect();
+		mConnections.clear();
+
+		mWindow.reset();
+	}
+
+	bool AdamsCameraUi::isConnected() const
+	{
+		return mWindow != nullptr;
+	}
+
+	signals::Signal<void()>& AdamsCameraUi::getSignalCameraChange()
+	{
+		return mSignalCameraChange;
+	}
+
+	void AdamsCameraUi::mouseDown(app::MouseEvent& event)
+	{
+		if (!mEnabled)
+			return;
+		if (event.isLeft() && event.isShiftDown()) {
+			data.selected_edge= data.hovered_edge;
+			data.justclicked = true;
+
+		}
+		cinder::app::console() << " mouse down" << std::endl;
+		mouseDown(event.getPos());
+		event.setHandled();
+	}
+
+	void AdamsCameraUi::mouseUp(app::MouseEvent& event)
+	{
+		if (!mEnabled)
+			return;
+
+		mouseUp(event.getPos());
+		event.setHandled();
+	}
+
+	void AdamsCameraUi::mouseWheel(app::MouseEvent& event)
+	{
+		if (!mEnabled)
+			return;
+
+		mouseWheel(event.getWheelIncrement());
+		event.setHandled();
+	}
+
+	void AdamsCameraUi::mouseUp(const vec2& /*mousePos*/)
+	{
+		mLastAction = ACTION_NONE;
+	}
+
+	void AdamsCameraUi::mouseDown(const vec2& mousePos)
+	{
+		if (!mCamera || !mEnabled)
+			return;
+		ci::app::console() << "clicking old item" << std::endl;
+		mInitialMousePos = mousePos;
+		mInitialCam = *mCamera;
+		mInitialPivotDistance = mCamera->getPivotDistance();
+		mLastAction = ACTION_NONE;
+
+
+	}
+
+	void AdamsCameraUi::mouseDrag(app::MouseEvent& event)
+	{
+		if (!mEnabled)
+			return;
+
+		bool isLeftDown = event.isLeftDown();
+		bool isMiddleDown = event.isMiddleDown() || event.isAltDown();
+		bool isRightDown = event.isRightDown() || event.isControlDown();
+
+		if (isMiddleDown)
+			isLeftDown = false;
+
+		mouseDrag(event.getPos(), isLeftDown, isMiddleDown, isRightDown);
+		event.setHandled();
+	}
+
+	void AdamsCameraUi::mouseDrag(const vec2& mousePos, bool leftDown, bool middleDown, bool rightDown)
+	{
+		if (!mCamera || !mEnabled)
+			return;
+
+		int action;
+		if (rightDown || (leftDown && middleDown))
+			action = ACTION_ZOOM;
+		else if (middleDown)
+			action = ACTION_PAN;
+		else if (leftDown)
+			action = ACTION_TUMBLE;
+		else
+			return;
+
+		if (action != mLastAction) {
+			mInitialCam = *mCamera;
+			mInitialPivotDistance = mCamera->getPivotDistance();
+			mInitialMousePos = mousePos;
+		}
+
+		mLastAction = action;
+
+		if (action == ACTION_ZOOM) { // zooming
+			auto mouseDelta = (mousePos.x - mInitialMousePos.x) + (mousePos.y - mInitialMousePos.y);
+
+			float newPivotDistance = powf(2.71828183f, 2 * -mouseDelta / length(vec2(getWindowSize()))) * mInitialPivotDistance;
+			vec3 oldTarget = mInitialCam.getEyePoint() + mInitialCam.getViewDirection() * mInitialPivotDistance;
+			vec3 newEye = oldTarget - mInitialCam.getViewDirection() * newPivotDistance;
+			mCamera->setEyePoint(newEye);
+			mCamera->setPivotDistance(std::max<float>(newPivotDistance, mMinimumPivotDistance));
+		}
+		else if (action == ACTION_PAN) { // panning
+			float deltaX = (mousePos.x - mInitialMousePos.x) / (float)getWindowSize().x * mInitialPivotDistance;
+			float deltaY = (mousePos.y - mInitialMousePos.y) / (float)getWindowSize().y * mInitialPivotDistance;
+			vec3 right, up;
+			mInitialCam.getBillboardVectors(&right, &up);
+			mCamera->setEyePoint(mInitialCam.getEyePoint() - right * deltaX + up * deltaY);
+		}
+		else { // tumbling
+			float deltaX = (mousePos.x - mInitialMousePos.x) / -100.0f;
+			float deltaY = (mousePos.y - mInitialMousePos.y) / 100.0f;
+			vec3 mW = normalize(mInitialCam.getViewDirection());
+			bool invertMotion = (mInitialCam.getOrientation() * mInitialCam.getWorldUp()).y < 0.0f;
+
+			vec3 mU = normalize(cross(mInitialCam.getWorldUp(), mW));
+
+			if (invertMotion) {
+				deltaX = -deltaX;
+				deltaY = -deltaY;
+			}
+
+			glm::vec3 rotatedVec = glm::angleAxis(deltaY, mU) * (-mInitialCam.getViewDirection() * mInitialPivotDistance);
+			rotatedVec = glm::angleAxis(deltaX, mInitialCam.getWorldUp()) * rotatedVec;
+
+			mCamera->setEyePoint(mInitialCam.getEyePoint() + mInitialCam.getViewDirection() * mInitialPivotDistance + rotatedVec);
+			mCamera->setOrientation(glm::angleAxis(deltaX, mInitialCam.getWorldUp()) * glm::angleAxis(deltaY, mU) * mInitialCam.getOrientation());
+		}
+
+		mSignalCameraChange.emit();
+	}
+
+	void AdamsCameraUi::mouseWheel(float increment)
+	{
+		if (!mCamera || !mEnabled)
+			return;
+
+		// some mice issue mouseWheel events during middle-clicks; filter that out
+		if (mLastAction != ACTION_NONE)
+			return;
+
+		float multiplier;
+		if (mMouseWheelMultiplier > 0)
+			multiplier = powf(mMouseWheelMultiplier, increment);
+		else
+			multiplier = powf(-mMouseWheelMultiplier, -increment);
+		vec3 newEye = mCamera->getEyePoint() + mCamera->getViewDirection() * (mCamera->getPivotDistance() * (1 - multiplier));
+		mCamera->setEyePoint(newEye);
+		mCamera->setPivotDistance(std::max<float>(mCamera->getPivotDistance() * multiplier, mMinimumPivotDistance));
+
+		mSignalCameraChange.emit();
+	}
+
+	ivec2 AdamsCameraUi::getWindowSize() const
+	{
+		if (mWindow)
+			return mWindow->getSize();
+		else
+			return mWindowSize;
+	}
+
+}; // namespace cinder

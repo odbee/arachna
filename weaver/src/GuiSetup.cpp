@@ -45,6 +45,14 @@ void GuiHandler::drawParametersWindow() {
 	bool isopen;
 	ImGui::Begin("Parameters");
 	data.my_log.Draw("Log");
+
+	if (data.selected_edge != data.empty_edge) {
+			ImGui::Text("highlighted edge:");
+			ImGui::Text("Unique Index: %i\n", g[data.selected_edge].uniqueIndex);
+			ImGui::Text(" Index: %i\n", g[data.selected_edge].index);
+			ImGui::Text("isforbidden?");			
+			ImGui::Text((g[data.selected_edge].isforbidden) ? "true" : "false");
+	}
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
 		if (ImGui::InputText("import directory path ", &data.fullPath)) {
 			iniHand.overwriteTagImGui("graph directory", data.fullPath);

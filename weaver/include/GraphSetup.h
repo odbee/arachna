@@ -21,6 +21,7 @@ struct EdgeContainer
 	int uniqueIndex;
 	int index;
 	float restlength;
+	int isForbidden;
 	int sourceV;
 	int targetV;
 	
@@ -31,6 +32,11 @@ struct RecipeContainer {
 	int NewEdgeA1, NewEdgeA2, NewEdgeB1, NewEdgeB2;
 	int NewEdgeC;
 	float posA1, posA2;
+};
+struct VertexContainer {
+	int index;
+	bool isfixed;
+	ci::vec3 pos;
 };
 
 

@@ -92,12 +92,12 @@ void InitialWebFromObj(Graph* g, float rc, string filename, std::vector<std::vec
 				else {
 					fixedBool[a] = true;
 				}
-				
+				webLogger.addVertexLog(&a);
 				
 				
 			}
 			if (vstrings[0] == "l") {
-				edge_t e = connectAB(g, stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
+				edge_t e = connectAB(g, stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc,0, stoi(vstrings[3]));
 				forbiddenPm[e] = stoi(vstrings[3]);
 			}
 		}

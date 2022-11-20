@@ -230,13 +230,14 @@ edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_des
 	forbiddenPm[edge] = isforbidden;
 	uniqueIndexPm[edge] = UNIQUEINDEX++;
 	if (ind == 0) {
-		indexPm[edge] = ++GLOBALINT;
+		indexPm[edge] = GLOBALINT++;
 	}
 	else {
 		indexPm[edge] = ind;
 	}
 	//console() << UNIQUEINDEX  << " " << boost::source(edge, *g) << " " << boost::target(edge, *g) << endl;
 	webLogger.addEdgeLog(&edge);
+	
 	return edge;
 }
 

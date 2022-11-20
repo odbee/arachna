@@ -10,9 +10,10 @@ class DrawHandler {
 		gl::BatchRef		mWirePlane;
 		gl::BatchRef		mWireCube;
 		CameraUi			mCamUi;
+
+	public:
 		mat4 projection;
 		vec4 viewport;
-	public:
 		mat4 getProjection() {
 			return projection;
 		}
@@ -36,7 +37,7 @@ class DrawHandler {
 
 
 					//gl::drawString(to_string(cLamp(currentLengthPm[*ei] / restLengthPm[*ei])), anchorp1);
-					gl::drawString(to_string(densityvalPm[*ei]), anchorp1);
+					gl::drawString(to_string(uniqueIndexPm[*ei]), anchorp1, Color::white(), Font("Times New Roman", 20));
 				}
 			}
 

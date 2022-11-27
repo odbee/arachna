@@ -128,6 +128,36 @@ void GraphHandler::AddAllVerts() {
 		
 	}
 }
+
+
+void GraphHandler::computeCurrentLength() {
+	vertex_t v1, v2;
+
+	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, g);
+		v2 = boost::target(*ei, g);
+		g[*ei].currentlength = distance(g[v1].pos, g[v2].pos);
+	}
+}
+
+void GraphHandler::replaceEdge(EdgeContainer edgeOld, EdgeContainer edgeNew1, EdgeContainer edgeNew2) {
+	std::vector<int >& edgesList= originalEdges[edgeOld.index];
+	auto foundEdge = std::find(edgesList.begin(), edgesList.end(), edgeOld.uniqueIndex);
+
+	if (foundEdge != std::end(edgesList)) {
+		edgesList.insert(foundEdge, { edgeNew1.uniqueIndex, edgeNew2.uniqueIndex });
+		foundEdge = std::find(edgesList.begin(), edgesList.end(), edgeOld.uniqueIndex);
+		edgesList.erase(foundEdge);
+	}
+	else {
+		ci::app::console() << "edge not found\n" << std::endl;
+	}
+	
+	
+
+}
+
+
 void GraphHandler::addEdgeFromRecipe(int index) {
 	// add new vertices -
 	// connect new vertices to edge -
@@ -139,7 +169,6 @@ void GraphHandler::addEdgeFromRecipe(int index) {
 	// 
 	// 
 	//
-	vertex_t v1, v2;
 	RecipeContainer& recipe = recipeInfo[index];
 	EdgeContainer ENC = edgeMap[recipe.NewEdgeC];
 	EdgeContainer ENA1 = edgeMap[recipe.NewEdgeA1];
@@ -149,57 +178,25 @@ void GraphHandler::addEdgeFromRecipe(int index) {
 	EdgeContainer EOA = edgeMap[recipe.OldEdgeA];
 	EdgeContainer EOB = edgeMap[recipe.OldEdgeB];
 
-	//
-	//g[ENC.sourceV].isfixed = false;
-	//g[ENC.targetV].isfixed = false;
-	//if (g[ENC.sourceV].isfixed)
-	//	g[ENC.sourceV].pos = interpolate(g[EOA.sourceV].pos, g[EOA.targetV].pos,0.5);
-	//
-	ci::app::console() << "source fixed?" << g[ENC.sourceV].isfixed << std::endl;
-	ci::app::console() << "target fixed?" << g[ENC.targetV].isfixed << std::endl;
-	
-	
-	//if(g[ENC.targetV].isfixed)
-	//	g[ENC.targetV].pos = interpolate(g[EOB.sourceV].pos, g[EOB.targetV].pos, 0.5);
-	edge_t edgeC = boost::add_edge(ENC.sourceV, ENC.targetV, g).first;
-	
-	edge_t edgeA1 = boost::add_edge(ENC.sourceV, EOA.sourceV, g).first;
-	edge_t edgeA2 = boost::add_edge(ENC.sourceV, EOA.targetV, g).first;
-	edge_t edgeB1 = boost::add_edge(ENC.targetV, EOB.sourceV, g).first;
-	edge_t edgeB2 = boost::add_edge(ENC.targetV, EOB.targetV, g).first;
-	
-	updateEdge(edgeC, ENC);
-	updateEdge(edgeA1, ENA1);
-	updateEdge(edgeA2, ENA2);
-	updateEdge(edgeB1, ENB1);
-	updateEdge(edgeB2, ENB2);
 
+	edge_t edgeC = weaverConnect(ENC.sourceV, ENC.targetV, ENC);
+	edge_t edgeA1 = weaverConnect(ENC.sourceV, EOA.sourceV, ENA1);
+	edge_t edgeA2 = weaverConnect(ENC.sourceV, EOA.targetV, ENA2);
+	edge_t edgeB1 = weaverConnect(ENC.targetV, EOB.sourceV, ENB1);
+	edge_t edgeB2 = weaverConnect(ENC.targetV, EOB.targetV, ENB2);
 
 	boost::remove_edge(EOA.sourceV, EOA.targetV, g);
 	boost::remove_edge(EOB.sourceV, EOB.targetV, g);
 	ci::app::console() << "nwew edge at vertex " << ENC.sourceV << " and " << ENC.targetV << std::endl;
 
-	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
-		v1 = boost::source(*ei, g);
-		v2 = boost::target(*ei, g);
-		g[*ei].currentlength = distance(g[v1].pos, g[v2].pos);
-	}
-	data.my_log.AddLog("[info]  added edge, from recipe step %i.\n", data.INDEX);
+	computeCurrentLength();
 
+	data.my_log.AddLog("[info]  added edge, from recipe step %i.\n", data.INDEX);
+	//printoriginalEdges();
 }
 
 void GraphHandler::removeEdgeFromRecipe(int index) {
-	// add new vertices -
-	// connect new vertices to edge -
-	// set length of new edge, taken from edges csv -
-	// conncet new vertices with previus edges -
-	// 
-	// locate the indices of the edges that replace the divided edge.
-	// locate them by theor indices.
-	// 
-	// 
-	//
-	vertex_t v1, v2;
+
 	RecipeContainer& recipe = recipeInfo[index];
 	EdgeContainer ENC = edgeMap[recipe.NewEdgeC];
 	EdgeContainer ENA1 = edgeMap[recipe.NewEdgeA1];
@@ -214,21 +211,12 @@ void GraphHandler::removeEdgeFromRecipe(int index) {
 	boost::remove_edge(ENB2.sourceV, ENB2.targetV, g);
 	boost::remove_edge(ENA1.sourceV, ENA1.targetV, g);
 	boost::remove_edge(ENA2.sourceV, ENA2.targetV, g);
-	edge_t edgeOA = boost::add_edge(EOA.sourceV, EOA.targetV, g).first;
-	edge_t edgeOB = boost::add_edge(EOB.sourceV, EOB.targetV, g).first;
-
-	updateEdge(edgeOA, EOA);
-	updateEdge(edgeOB, EOB);
+	//edge_t edgeOA = boost::add_edge(EOA.sourceV, EOA.targetV, g).first;
+	//edge_t edgeOB = boost::add_edge(EOB.sourceV, EOB.targetV, g).first;
+	weaverConnect(EOA.sourceV, EOA.targetV, EOA);
+	weaverConnect(EOB.sourceV, EOB.targetV, EOB);
 	ci::app::console() << "removing edge at vertex " << ENC.sourceV << " and " << ENC.targetV << std::endl;
-
-	//boost::remove_vertex(ENC.sourceV, g);
-	//boost::remove_vertex(ENC.targetV, g);
-
-	for (tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
-		v1 = boost::source(*ei, g);
-		v2 = boost::target(*ei, g);
-		g[*ei].currentlength = distance(g[v1].pos, g[v2].pos);
-	}
+	computeCurrentLength();
 	//data.my_log.AddLog("[info]  added edge, from recipe step.");
 
 
@@ -267,13 +255,14 @@ std::vector<EdgeContainer> GraphHandler::loadEdges(std::string fname) {
 					row[countA++] = (word);
 				edgeMap[std::stoi(row[0])] = EdgeContainer{ std::stoi(row[0]),std::stoi(row[1]) ,std::stof(row[2]) ,std::stoi(row[3]) ,std::stoi(row[4]) ,std::stoi(row[5]) };
 				content.push_back(EdgeContainer{ std::stoi(row[0]),std::stoi(row[1]) ,std::stof(row[2]) ,std::stoi(row[3]) ,std::stoi(row[4]) ,std::stoi(row[5]) });
+				//ci::app::console() << row[0] << " ,  " << row[1] << " ,  " << row[2] << " ,  " << row[3] << " ,  " << row[4] << " ,  " << row[5] << std::endl;
 			}
 			
 			countB++;
 		}
 	}
 	edgeInfo = content;
-	ci::app::console() << "added " << edgeInfo.size() << "edges" << std::endl;
+	ci::app::console() << "added " << edgeInfo.size() << " edges to loadEdges" << std::endl;
 	return content;
 }
 
@@ -308,7 +297,7 @@ std::vector<RecipeContainer> GraphHandler::loadRecipe(std::string fname) {
 		}
 	}
 	recipeInfo = content;
-	ci::app::console() << "added " << recipeInfo.size() << "recipe steps" << std::endl;
+	ci::app::console() << "added " << recipeInfo.size() << " recipe steps to loadRecipe" << std::endl;
 	return content;
 }
 
@@ -339,7 +328,7 @@ std::vector<VertexContainer> GraphHandler::loadVertices(std::string fname) {
 		}
 	}
 	vertexInfo = content;
-	ci::app::console() << "added " << recipeInfo.size() << "vertices" << std::endl;
+	ci::app::console() << "added " << recipeInfo.size() << " vertices to loadVertices" << std::endl;
 	return content;
 }
 
@@ -352,6 +341,14 @@ edge_t GraphHandler::connectAB(vertex_t endPointA, vertex_t endPointB, float rc,
 	g[edge].isforbidden = isforbidden;
 	g[edge].index = ind;
 
+	return edge;
+}
+edge_t GraphHandler::weaverConnect(vertex_t endPointA, vertex_t endPointB, EdgeContainer edgeInfo) {
+	edge_t edge = boost::add_edge(endPointA, endPointB, g).first;
+	g[edge].restlength = edgeInfo.restlength;
+	g[edge].uniqueIndex = edgeInfo.uniqueIndex;
+	g[edge].isforbidden = edgeInfo.isForbidden;
+	g[edge].index = edgeInfo.index;
 	return edge;
 }
 
@@ -403,27 +400,34 @@ void GraphHandler::InitialWebFromObj(float rc, std::string filename) {
 
 				}
 				if (vstrings[0] == "l") {
-					edge_t e = connectAB(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
-					g[e].isforbidden = stoi(vstrings[3]);
-					g[e].uniqueIndex = edgeMap[numberOfEdges].uniqueIndex;
-					g[e].index = edgeMap[numberOfEdges].index;
 
-					numberOfEdges++;
+
+
+					edge_t e = weaverConnect(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, edgeMap[numberOfEdges+1]);
+					//edge_t e = connectAB(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
+					//g[e].isforbidden = stoi(vstrings[3]);
+					////ci::app::console() << "UI: " << edgeMap[numberOfEdges].uniqueIndex << " IF: " << stoi(vstrings[3]) << std::endl;
+//g[e].uniqueIndex = edgeMap[numberOfEdges].uniqueIndex;
+//g[e].index = edgeMap[numberOfEdges].index;
+
+
+numberOfEdges++;
 				}
 			}
 
 		}
 
-		data.my_log.AddLog("added %i vertices \n", numberOfVertices);
+
 	}
 	else {
-		data.my_log.AddLog("[warning] Initial Graph not found. check in your directory.\n");
+	data.my_log.AddLog("[warning] Initial Graph not found. check in your directory.\n");
 	}
-
+	data.my_log.AddLog("added %i vertices \n", numberOfVertices);
+	data.my_log.AddLog("added %i xxxx edges \n", numberOfEdges);
 }
 //
 ci::vec3 GraphHandler::interpolate(ci::vec3 start, ci::vec3 end, float t) {
-	return start+ (end - start) * t;
+	return start + (end - start) * t;
 }
 
 
@@ -481,4 +485,53 @@ edge_t GraphHandler::getClosestEdgeFromRay(ci::Ray ray) {
 		}
 	}
 	return closestEdge;
+}
+
+void GraphHandler::printoriginalEdges() {
+	std::stringstream text;
+	for (auto const& pair : originalEdges) {
+		text << "{" << pair.first << ": ";
+		for (auto it = pair.second.begin(); it != pair.second.end(); it++) {
+			text << *it << " , ";
+		}
+		text << " " << "}\n";
+	}
+	ci::app::console() << text.str() << std::endl;
+
+}
+
+void GraphHandler::setupEdgesGraph() {
+	boost::add_vertex(edgesG);
+	int edgeC_index;
+	 boost::graph_traits<EdgesGraph>::vertex_descriptor KVertex;
+
+	std::vector<int> listOfIndices;
+	for (auto edgeC = edgeInfo.begin();	edgeC != edgeInfo.end(); edgeC++) {
+		
+		KVertex= boost::add_vertex(edgesG);
+		edgesG[KVertex].uniqueIndex = edgeC->uniqueIndex;
+
+	}
+	for (auto recipeC = recipeInfo.begin(); recipeC != recipeInfo.end(); recipeC++) {
+
+		boost::add_edge(recipeC->OldEdgeA, recipeC->NewEdgeA1,edgesG);
+		boost::add_edge(recipeC->OldEdgeA, recipeC->NewEdgeA2, edgesG);
+		boost::add_edge(recipeC->OldEdgeB, recipeC->NewEdgeB1, edgesG);
+		boost::add_edge(recipeC->OldEdgeB, recipeC->NewEdgeB2, edgesG);
+	}
+}
+
+void GraphHandler::calculateDivEdgeLengths(int edgeInt)
+{
+	boost::graph_traits<EdgesGraph>::out_edge_iterator oei, oeiend;
+	std::vector<float> DivEdgeLengths;
+	std::vector<int> daughterEdges;
+	std::tie(oei, oeiend) = boost::out_edges(edgeInt, edgesG); int outEdgeIndex;
+	for (oei, oeiend; oei != oeiend; ++oei) {
+		outEdgeIndex = edgesG[boost::target(*oei, edgesG)].uniqueIndex;
+		DivEdgeLengths.push_back(edgeMap[outEdgeIndex].restlength);
+		daughterEdges.push_back(outEdgeIndex);
+	}
+	edgesG[edgeInt].daughterEdges = daughterEdges;
+	edgesG[edgeInt].DivEdgeLengths = DivEdgeLengths;
 }

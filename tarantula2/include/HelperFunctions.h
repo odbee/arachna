@@ -230,7 +230,7 @@ edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_des
 	forbiddenPm[edge] = isforbidden;
 	uniqueIndexPm[edge] = UNIQUEINDEX++;
 	if (ind == 0) {
-		indexPm[edge] = GLOBALINT++;
+		indexPm[edge] = UNIQUEINDEX-1;
 	}
 	else {
 		indexPm[edge] = ind;

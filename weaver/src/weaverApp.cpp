@@ -71,7 +71,7 @@ void weaverApp::setup()
 	GH.loadVertices(data.fullPath + "vertices.csv");
 
 	GH.AddAllVerts();
-
+	GH.setupEdgesGraph();
 }
 
 void weaverApp::mouseDown( MouseEvent event )
@@ -92,14 +92,22 @@ void weaverApp::draw()
 {
 	gl::clear( Color( 0, 0, 0 ) ); 
 	GuiH.drawParametersWindow();
+	dh.drawCamera();
+	//dh.proj = dh.mCamera.getProjectionMatrix() * dh.mCamera.getViewMatrix();
+	//int w = getWindowWidth();
+	//int h = getWindowHeight();
+	//dh.viewp = vec4(0, h, w, -h); // vertical flip is required
+	dh.drawPoints();
+
 	{
 		dh.drawCamera();
+
+		ci::gl::ScopedMatrices push;
 		ci::gl::setMatrices(dh.mCamera);
 		dh.drawGraph();
 		dh.drawNthEdge();
 		dh.drawSelectedEdge();
-
-		//gl::color(ColorA(0.0f, 1.0f, 0.0f, 0.4f));
+		dh.drawDivisionPoints(GH.edgesG,GH.edgeMap);
 
 	}
 }

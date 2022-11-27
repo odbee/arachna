@@ -5,6 +5,7 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/graph/connected_components.hpp>
 
 
 struct EdgeProperties
@@ -46,10 +47,22 @@ struct VertexProperties
 	bool isfixed;
 	ci::vec3 pos;
 	ci::vec3 movevec;
+	bool isActive = false;
 };
+
+
+struct VertexProperties2 {
+	int uniqueIndex;
+	std::vector < float > DivEdgeLengths;
+	std::vector < int> daughterEdges;
+
+};
+
 
 typedef boost::adjacency_list<boost::vecS,
 	boost::vecS, boost::undirectedS, VertexProperties, EdgeProperties> Graph;
+
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, VertexProperties2> EdgesGraph;
 
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 

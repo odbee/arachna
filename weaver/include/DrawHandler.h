@@ -12,7 +12,7 @@
 
 #include "AdamsCameraUi.h"
 
-
+#include <numeric>
 
 
 
@@ -40,5 +40,6 @@ public:
 	void drawGraph(bool colorEdges = false, bool colorTension = true, bool colorLength = false);
 	void drawNthEdge();
 	void drawSelectedEdge();
-
+	void drawDivisionPoints(EdgesGraph& edgesGraph ,std::map<int, EdgeContainer>& edgeMap);
+	void drawPoints();
 };

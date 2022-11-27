@@ -6,6 +6,58 @@ void DrawHandler::setup() {
 
 }
 
+void DrawHandler::drawPoints() {
+	ci::vec2 anchorp1;
+	boost::graph_traits<Graph>::out_edge_iterator oei, oeiend;
+	std::vector<ci::vec2> anchorpoints;
+	for (std::tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+		std::tie(oei, oeiend) = boost::out_edges(*vi,g);
+
+		if (oei!=oeiend) 
+		{
+			anchorp1 = glm::project(g[*vi].pos, ci::mat4(), proj, viewp);
+			while (std::find(anchorpoints.begin(), anchorpoints.end(), anchorp1) != anchorpoints.end()) {
+				anchorp1 =anchorp1+ ci::vec2{25, 0};
+			}
+			anchorpoints.push_back(anchorp1);
+			
+			ci::gl::drawString(std::to_string(*vi), anchorp1, ci::Color::white(), ci::Font("Arial", 25));
+		}
+		
+	}
+}
+
+
+
+void DrawHandler::drawDivisionPoints(EdgesGraph& edgesGraph, std::map<int, EdgeContainer>& edgeMap) {
+	boost::graph_traits<EdgesGraph>::out_edge_iterator oei, oeiend;
+	std::vector<float> DivEdgeLengths;
+	float sumOfAllLengths = 0;
+	int outEdgeIndex;
+	ci::vec3 startpoint, endpoint;
+	for (std::tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
+		DivEdgeLengths.clear();
+		sumOfAllLengths = 0;
+		startpoint = g[boost::source(*ei, g)].pos;
+		endpoint = g[boost::target(*ei, g)].pos;
+		edgesGraph[g[*ei].uniqueIndex];
+		std::tie(oei,oeiend) = boost::out_edges(g[*ei].uniqueIndex, edgesGraph);
+		
+		for (oei, oeiend ; oei != oeiend; ++oei) {
+			outEdgeIndex= edgesGraph[boost::target(*oei, edgesGraph)].uniqueIndex;
+			DivEdgeLengths.push_back(edgeMap[outEdgeIndex].restlength);
+		}
+		sumOfAllLengths = std::accumulate(DivEdgeLengths.begin(), DivEdgeLengths.end(), sumOfAllLengths);
+		for (auto iter : DivEdgeLengths) {
+			ci::gl::color(ci::ColorA(0.0f, 1.0f, 0.0f, 0.4f));
+
+			ci::gl::drawSphere(startpoint + (endpoint - startpoint) * iter / sumOfAllLengths,0.05);
+		}
+	}
+	
+
+}
+
 
 
 
@@ -37,14 +89,12 @@ void DrawHandler::drawGraph(bool colorEdges, bool colorTension, bool colorLength
 }
 
 void DrawHandler::drawCamera() {
-	ci::mat4 projection = mCamera.getProjectionMatrix() * mCamera.getViewMatrix();
+	proj = mCamera.getProjectionMatrix() * mCamera.getViewMatrix();
 	int w = ci::app::getWindowWidth();
 	int h = ci::app::getWindowHeight();
-	ci::vec4 viewport = ci::vec4(0, h, w, -h); // vertical flip is required
+	viewp = ci::vec4(0, h, w, -h); // vertical flip is required
 
 
-	ci::gl::ScopedMatrices push;
-	ci::gl::setMatrices(mCamera);
 
 }
 

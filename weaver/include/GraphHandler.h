@@ -8,6 +8,11 @@
 #include <boost/graph/graph_utility.hpp>
 #include <boost/property_map/property_map.hpp>
 #include "cinder/Ray.h"
+#include <numeric>
+#include "VERBOSITYLEVEL.h"
+#include <boost/bind/bind.hpp>
+
+
 class GraphHandler
 {
 private:
@@ -18,16 +23,112 @@ private:
 	vertex_t nullVert;
 	std::vector<EdgeContainer> edgeInfo;
 
-
 	std::vector<RecipeContainer> recipeInfo;
 	std::vector<VertexContainer> vertexInfo;
 	std::string edgesFilename;
 	std::string recipeFilename;
 	std::string verticesFilename;
-	std::map<int, std::vector<int>> originalEdges;
+	
+
 	
 	
 public:
+	struct originalEdge {
+		std::vector<int> listOfVertices;
+
+		std::vector<EdgeContainer> listOfEdges;
+		std::vector<int> listOfEdgeInds;
+		int startVert;
+		int endVert;
+
+		std::string printEdges() {
+			std::stringstream text;
+			text << "{ " ;
+			for (auto& x : listOfEdges) {
+				text << x.uniqueIndex << " , ";
+			}
+			text.seekp(-2, std::ios_base::end);
+
+			text << "} ";
+			return text.str();
+		};
+
+		std::vector<EdgeContainer> findVertexInEdges(int vert) {
+			std::vector< EdgeContainer > containingEdges;
+			std::vector< EdgeContainer >::iterator it;
+			it = listOfEdges.begin();
+			it = std::find_if(it, listOfEdges.end(), boost::bind(&EdgeContainer::sourceV, boost::placeholders::_1) == vert);
+			if (it != listOfEdges.end()) {
+				ci::app::console() << it->uniqueIndex << std::endl;
+				containingEdges.push_back(*it);
+			}
+			while (it != listOfEdges.end()) {
+				it = std::find_if(it+1, listOfEdges.end(), boost::bind(&EdgeContainer::sourceV, boost::placeholders::_1) == vert);
+				if (it != listOfEdges.end()) {
+					ci::app::console() << it->uniqueIndex << std::endl;
+					containingEdges.push_back(*it);
+				}
+			}
+			it = listOfEdges.begin();
+			it = std::find_if(it, listOfEdges.end(), boost::bind(&EdgeContainer::targetV, boost::placeholders::_1) == vert);
+			if (it != listOfEdges.end()) {
+				ci::app::console() << it->uniqueIndex << std::endl;
+
+				containingEdges.push_back(*it);
+			}
+			while (it != listOfEdges.end()) {
+				it = std::find_if(it+1, listOfEdges.end(), boost::bind(&EdgeContainer::targetV, boost::placeholders::_1) == vert);
+				if (it != listOfEdges.end()) {
+					ci::app::console() << it->uniqueIndex << std::endl;
+					
+					containingEdges.push_back(*it);
+				}
+			}
+			return containingEdges;
+			
+		};
+		std::string printEdgeVerts() {
+			std::stringstream text;
+			text << "{ ";
+			for (auto& x : listOfEdges) {
+				text << "("<< x.sourceV <<"," << x.targetV << ")" << " , ";
+			}
+			text.seekp(-2, std::ios_base::end);
+
+			text << "} ";
+			return text.str();
+		};
+		void calculateVertexSeries() {
+
+		};
+		std::vector<EdgeContainer> returnInbetweenEdges(int start, int end) {
+			ci::app::console() << "list:" << stringfromVec(listOfVertices) << std::endl;
+			ci::app::console() << "startVert:" << start << ", endVert:" << end << std::endl;
+
+			int startdist = std::distance(listOfVertices.begin(), std::find(listOfVertices.begin(), listOfVertices.end(), start));
+			int enddist = std::distance(listOfVertices.begin(), std::find(listOfVertices.begin(), listOfVertices.end(), end));
+			if (startdist > enddist) {
+				std::swap(startdist, enddist);// TODO IF SWAPPING, HAVE TO REVERSE THE RESULTING VECTOR AS WELL
+			}
+			ci::app::console() << "startdist: " << startdist << "enddist:" << enddist << std::endl;
+			std::vector<EdgeContainer> result;
+			ci::app::console() << "list of edges:" << printEdges() << std::endl;
+
+			if (enddist < listOfVertices.size() - 1) {
+					result = std::vector<EdgeContainer>{ listOfEdges.begin() + startdist, listOfEdges.begin() + enddist  };
+					ci::app::console() << "start item:" << (listOfEdges.begin() + startdist)->uniqueIndex << ", end item:" << (listOfEdges.begin() + enddist - 1)->uniqueIndex << std::endl;
+					ci::app::console() << "created inbetween edges of size " << result.size() << std::endl;
+
+			}
+			else {
+				result = std::vector<EdgeContainer>{ listOfEdges.begin() + startdist, listOfEdges.end() };
+			}
+				
+
+			return result;
+		};
+	};
+	std::map<int,originalEdge> originalEdges;
 	std::map<int, EdgeContainer> edgeMap;
 	GraphHandler(DataContainer& DATA) : data(DATA) { setup(); } //https://www.mygreatlearning.com/blog/constructor-in-cpp/#:~:text=What%20is%20Constructor%20in%20C%2B%2B%3F,of%20a%20class%20is%20created. , https://stackoverflow.com/questions/33260261/can-i-automatically-call-a-method-of-a-class-on-object-declaration-in-c
 	std::vector<RecipeContainer> getRecipeInfo();
@@ -51,8 +152,9 @@ public:
 	edge_t getClosestEdgeFromRay(ci::Ray ray);
 	float determinant(ci::vec3 a, ci::vec3 b, ci::vec3 c);
 	float closestDist(ci::vec3 a0, ci::vec3 a1, ci::vec3 b0, ci::vec3 b1, ci::vec3& firstpoint, ci::vec3& secondpoint, bool clampAll = false, bool clampA0 = false, bool clampA1 = false, bool clampB0 = false, bool clampB1 = false);
-	void printoriginalEdges();
-	void replaceEdge(EdgeContainer edgeOld, EdgeContainer edgeNew1, EdgeContainer edgeNew2);
+	void initOriginalEdges();
+	void printOriginalEdges();
+	//void printoriginalEdges();
 	void setupEdgesGraph();
 	void calculateDivEdgeLengths(int edgeInt);
 };

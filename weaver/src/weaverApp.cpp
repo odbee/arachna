@@ -27,7 +27,7 @@ class weaverApp : public App {
 	GraphHandler GH=GraphHandler(data);
 	DrawHandler dh = DrawHandler(GH.g ,data);
 	IniHandler ih = IniHandler(data);
-	GuiHandler GuiH = GuiHandler(data, ih,GH.g);
+	GuiHandler GuiH = GuiHandler(data, ih,GH.g,GH.edgesG);
 	ci::vec2 mMousePos;
 };
 
@@ -58,6 +58,10 @@ void weaverApp::keyDown(KeyEvent event) {
 		}
 		
 	}
+	if (event.getChar() == 'o') { // "c"
+		GH.printOriginalEdges();
+
+	}
 }
 void weaverApp::setup()
 {
@@ -65,13 +69,16 @@ void weaverApp::setup()
 	GuiH.setupImGui();
 	GH.loadEdges(data.fullPath + "edges.csv");
 	GH.loadRecipe(data.fullPath + "log.csv");
+	GH.setupEdgesGraph();
+	GH.initOriginalEdges();
+	GH.loadVertices(data.fullPath + "vertices.csv");
+
+	
 	GH.InitialWebFromObj(0.9, data.fullPath + data.initialGraphDE);
 
 
-	GH.loadVertices(data.fullPath + "vertices.csv");
-
 	GH.AddAllVerts();
-	GH.setupEdgesGraph();
+
 }
 
 void weaverApp::mouseDown( MouseEvent event )

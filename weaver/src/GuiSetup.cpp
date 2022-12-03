@@ -52,6 +52,17 @@ void GuiHandler::drawParametersWindow() {
 			ImGui::Text(" Index: %i\n", g[data.selected_edge].index);
 			ImGui::Text("isforbidden?");			
 			ImGui::Text((g[data.selected_edge].isforbidden) ? "true" : "false");
+			ImGui::Text("daughter edges : ");
+			ImGui::Text(stringfromVec(edgesG[g[data.selected_edge].uniqueIndex-1].daughterEdges).c_str());
+			ImGui::Text("\n");
+			ImGui::Text("edge lengths : ");
+			ImGui::Text(stringfromVec(edgesG[g[data.selected_edge].uniqueIndex-1].DivEdgeLengths).c_str());
+			ImGui::Text("\n");
+			ImGui::Text("inter points : ");
+			ImGui::Text(stringfromVec(edgesG[g[data.selected_edge].uniqueIndex-1].interPts).c_str());
+			ImGui::Text("\n");
+			
+
 	}
 	if (ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen)) {
 		if (ImGui::InputText("import directory path ", &data.fullPath)) {

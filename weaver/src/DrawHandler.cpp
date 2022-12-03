@@ -30,32 +30,27 @@ void DrawHandler::drawPoints() {
 
 
 void DrawHandler::drawDivisionPoints(EdgesGraph& edgesGraph, std::map<int, EdgeContainer>& edgeMap) {
-	boost::graph_traits<EdgesGraph>::out_edge_iterator oei, oeiend;
-	std::vector<float> DivEdgeLengths;
+	std::vector<float>* DivEdgeLengths;
 	float sumOfAllLengths = 0;
 	int outEdgeIndex;
 	ci::vec3 startpoint, endpoint;
+	float interpoint;
 	for (std::tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
-		DivEdgeLengths.clear();
-		sumOfAllLengths = 0;
+		interpoint = 0;
+		//DivEdgeLengths = &edgesGraph[g[*ei].uniqueIndex].DivEdgeLengths;
+		DivEdgeLengths = &edgesGraph[g[*ei].uniqueIndex-1].interPts;
 		startpoint = g[boost::source(*ei, g)].pos;
 		endpoint = g[boost::target(*ei, g)].pos;
-		edgesGraph[g[*ei].uniqueIndex];
-		std::tie(oei,oeiend) = boost::out_edges(g[*ei].uniqueIndex, edgesGraph);
+		//edgesGraph[g[*ei].uniqueIndex];
+		//sumOfAllLengths = std::accumulate(DivEdgeLengths->begin(), DivEdgeLengths->end(), (float)0);
 		
-		for (oei, oeiend ; oei != oeiend; ++oei) {
-			outEdgeIndex= edgesGraph[boost::target(*oei, edgesGraph)].uniqueIndex;
-			DivEdgeLengths.push_back(edgeMap[outEdgeIndex].restlength);
-		}
-		sumOfAllLengths = std::accumulate(DivEdgeLengths.begin(), DivEdgeLengths.end(), sumOfAllLengths);
-		for (auto iter : DivEdgeLengths) {
+		for (auto iter : edgesGraph[g[*ei].uniqueIndex-1].interPts) {
 			ci::gl::color(ci::ColorA(0.0f, 1.0f, 0.0f, 0.4f));
-
-			ci::gl::drawSphere(startpoint + (endpoint - startpoint) * iter / sumOfAllLengths,0.05);
+			interpoint += iter;
+			if (interpoint<0.9999)
+				ci::gl::drawSphere(startpoint + (endpoint - startpoint) * (interpoint) ,0.05);
 		}
 	}
-	
-
 }
 
 

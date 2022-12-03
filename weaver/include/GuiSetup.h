@@ -12,10 +12,13 @@ class GuiHandler
 private:
 	void setup();
 public:
-	GuiHandler(DataContainer& DATA, IniHandler& IH,Graph&graph) : data(DATA), iniHand(IH),g(graph) { setup(); }
+	GuiHandler(DataContainer& DATA, IniHandler& IH,Graph&graph,EdgesGraph& edgesGraph) : data(DATA), iniHand(IH),g(graph),edgesG(edgesGraph) { setup(); }
 	DataContainer& data;
 	Graph& g;
+	EdgesGraph& edgesG;
 	IniHandler& iniHand;
 	void setupImGui();
 	void drawParametersWindow();
 };
+
+

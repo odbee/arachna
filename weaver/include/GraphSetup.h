@@ -55,6 +55,7 @@ struct VertexProperties2 {
 	int uniqueIndex;
 	std::vector < float > DivEdgeLengths;
 	std::vector < int> daughterEdges;
+	std::vector < float > interPts;
 
 };
 
@@ -71,3 +72,19 @@ typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 typedef boost::graph_traits<Graph>::edge_iterator edge_ti;
 typedef std::map<std::array<signed int, 3>, float> voxel_map;
 typedef std::vector<ci::vec3> anchor_points;
+
+
+
+typedef boost::graph_traits<EdgesGraph>::vertex_iterator evertex_ti;
+
+
+template <typename T>
+std::string stringfromVec(std::vector<T> vec) {
+	std::string result = "[ ";
+	for (auto it = vec.begin(); it != vec.end(); it++) {
+		result.append(std::to_string(*it));
+		result.append(" ");
+	}
+	result.append(" ]");
+	return result;
+}

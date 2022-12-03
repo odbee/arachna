@@ -40,7 +40,7 @@ void    DataContainer::ExampleAppLog::Draw(const char* title, bool* p_open)
 
 
 	ImGui::Separator();
-	ImGui::BeginChild("scrolling", ImVec2(0, 50), false, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild("scrolling", ImVec2(0, 200), false, ImGuiWindowFlags_HorizontalScrollbar);
 
 	if (clear)
 		Clear();

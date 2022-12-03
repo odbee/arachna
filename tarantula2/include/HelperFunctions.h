@@ -222,6 +222,9 @@ string stringfromCyclesShort(std::vector<size_t> cycleslist) {
 
 
 edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind =0, bool isforbidden=false) {
+	if (endPointA > endPointB)
+		std::swap(endPointA, endPointB);
+
 	float dd = distance(position[endPointA], position[endPointB]);
 
 	edge_t edge = boost::add_edge(endPointA, endPointB, *g).first;

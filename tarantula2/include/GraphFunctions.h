@@ -68,11 +68,29 @@ vector<edge_t> connectEdges(Graph* g, cyclicedge startedge, cyclicedge goaledge,
 	vector<edge_t> returnedges(5);
 	bool startforbidden=forbiddenPm[startedge.descriptor];
 	bool goalforbidden= forbiddenPm[goaledge.descriptor];
+	
 	returnedges[0]=connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc, startforbidden&&goalforbidden);
-	returnedges[1] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
-	returnedges[2] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden);
-	returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
-	returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+	
+	if (startedge.start.index > startedge.end.index) {
+		//console() << "is_bigger" << endl;
+		returnedges[1] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden); 
+		returnedges[2] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
+
+	}
+	else {
+		returnedges[1] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
+		returnedges[2] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden);
+	}
+	if (goaledge.start.index > goaledge.end.index) {
+		//console() << "goal_is_bigger" << endl;
+		returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden); 
+		returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+	}
+	else {
+		returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+		returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+	}
+
 	fixedBool[goaledge.divisionvert] = goalforbidden;
 	fixedBool[startedge.divisionvert] = startforbidden;
 	boost::remove_edge(startedge.descriptor, *g);
@@ -303,7 +321,21 @@ std::tuple<float, float> adjustGraphToNewEdges(Graph * g, std::vector<std::vecto
 	return make_tuple(val1,val2);
 }
 
+void orderNewEdgesByIndex(vector<edge_t>& newEdges) {
+	for (const auto edg : newEdges) {
+		ci::app::console() << uniqueIndexPm[edg] <<"- ";
+	}
+	ci::app::console() << std::endl;
+	if (newEdges[1].m_source > newEdges[2].m_source)
+		std::swap(newEdges[1] , newEdges[2]);
+	if (newEdges[3].m_source > newEdges[4].m_source)
+		std::swap(newEdges[3],newEdges[4]);
 
+	for (const auto edg : newEdges) {
+		ci::app::console() << uniqueIndexPm[edg] << "- ";
+	}
+	ci::app::console() << std::endl;
+}
 
 LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<size_t>>* cycs) {
 	LogInfo result;
@@ -313,6 +345,7 @@ LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<s
 	auto connectableEdges = getConnectableEdges(g, startedge, cycs, edgeinds, false);
 	if (connectableEdges.size()) {
 		cyclicedge goaledge = getGoalEdge(g, connectableEdges, 0.7);
+		
 		std::tie(result.posA1,result.posA2)= adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
 		result.OldEdgeA= uniqueIndexPm[startedge.descriptor];
 		//console() << uniqueIndexPm[startedge.descriptor] << endl;
@@ -320,6 +353,10 @@ LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<s
 		vector<edge_t> newEdges = connectEdges(g, startedge, goaledge, rc);
 		webLogger.addVertexLog(&startedge.divisionvert);
 		webLogger.addVertexLog(&goaledge.divisionvert);
+		//orderNewEdgesByIndex(newEdges);
+		//for (const auto edg : newEdges) {
+		//	ci::app::console() << uniqueIndexPm[edg] << "- ";
+		//}
 		result.NewEdgeC= uniqueIndexPm[newEdges[0]];
 		result.NewEdgeA1 = uniqueIndexPm[newEdges[1]];
 		result.NewEdgeA2 = uniqueIndexPm[newEdges[2]];

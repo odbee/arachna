@@ -118,7 +118,8 @@ namespace cinder {
 			data.justclicked = true;
 
 		}
-		cinder::app::console() << " mouse down" << std::endl;
+		
+		//cinder::app::console() << " mouse down" << std::endl;
 		mouseDown(event.getPos());
 		event.setHandled();
 	}
@@ -150,7 +151,6 @@ namespace cinder {
 	{
 		if (!mCamera || !mEnabled)
 			return;
-		ci::app::console() << "clicking old item" << std::endl;
 		mInitialMousePos = mousePos;
 		mInitialCam = *mCamera;
 		mInitialPivotDistance = mCamera->getPivotDistance();

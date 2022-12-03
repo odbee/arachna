@@ -1,8 +1,123 @@
 #include "GraphHandler.h"
 
+
+
+
 void GraphHandler::setup() {
 	nullVert = boost::graph_traits<Graph>::null_vertex();
 }
+
+
+void GraphHandler::initOriginalEdges() {
+
+		evertex_ti evi, eviend;
+		boost::graph_traits<EdgesGraph>::out_edge_iterator outei, outeind;
+		ci::app::console() << "number of edges" << edgesG.m_vertices.size() << std::endl;
+		edgesG.m_vertices.size();
+		for (std::tie(evi, eviend) = boost::vertices(edgesG); evi != eviend; ++evi) {
+			auto& uInd=edgesG[*evi].uniqueIndex;
+			std::tie(outei, outeind) = boost::out_edges(*evi, edgesG);
+			if (outei == outeind) {
+				
+				ci::app::console() << "adding edge number " << edgesG[*evi].uniqueIndex<< ", edge index" << edgeMap[edgesG[*evi].uniqueIndex].index << std::endl;
+				originalEdges[edgeMap[edgesG[*evi].uniqueIndex].index].listOfEdges.push_back(edgeMap[edgesG[*evi].uniqueIndex]);
+			}
+			if (uInd == edgeMap[uInd].index) {
+				originalEdges[edgeMap[uInd].index].startVert = edgeMap[uInd].sourceV;
+				originalEdges[edgeMap[uInd].index].endVert = edgeMap[uInd].targetV;
+			}
+		}
+		for (auto const& pair : originalEdges) {
+			std::map<int, int> verts;
+			for (auto const& edg : pair.second.listOfEdges) {
+				verts[edg.sourceV]++;
+				verts[edg.targetV]++;
+				if (verts[edg.sourceV] == 2)
+					verts.erase(edg.sourceV);
+				if (verts[edg.targetV] == 2)
+					verts.erase(edg.targetV);
+			}
+
+		}
+
+		
+
+
+		for (auto it = originalEdges.begin(); it != originalEdges.end(); it++)
+		{			
+			std::vector<EdgeContainer> newEdgeList;
+			std::vector<int> VertexList;
+
+			ci::app::console() << "--------------------"  << std::endl;
+			ci::app::console() << "starting edgeVerts: " << it->second.printEdgeVerts() << std::endl;
+
+			int newVertex;
+			//it->second.findVertexInEdges
+			std::vector<EdgeContainer> items;
+			
+			ci::app::console() << "startV: " << it->second.startVert << ", endV: " << it->second.endVert << std::endl;
+			VertexList.push_back(it->second.startVert);
+			
+			items =it->second.findVertexInEdges(it->second.startVert);
+			ci::app::console() << "items UI: " << items[0].uniqueIndex << std::endl;
+
+			newEdgeList.push_back(items[0]);
+			ci::app::console() << " NEL size: " << newEdgeList.size()<< std::endl;
+
+			newVertex= (it->second.startVert == items[0].sourceV) ? items[0].targetV : items[0].sourceV;
+			VertexList.push_back(newVertex);
+
+			while (newVertex!=it->second.endVert) {
+				ci::app::console() << "vertex being looed for:  " << newVertex << std::endl;
+				items = it->second.findVertexInEdges(newVertex);
+				ci::app::console() << "previous NEL UI" << newEdgeList.back().uniqueIndex << std::endl;
+
+				if (items[0].uniqueIndex == newEdgeList.back().uniqueIndex)
+					newEdgeList.push_back(items[1]);
+				else if (items[1].uniqueIndex == newEdgeList.back().uniqueIndex) 
+					newEdgeList.push_back(items[0]);
+				ci::app::console() << "new NEL UI" << newEdgeList.back().uniqueIndex << std::endl;
+				newVertex = (newVertex == newEdgeList.back().sourceV) ? newEdgeList.back().targetV : newEdgeList.back().sourceV;
+				VertexList.push_back(newVertex);
+				ci::app::console() << newVertex << std::endl;
+			}
+			std::vector<int > edgeInds;
+			for (const auto& eitem : newEdgeList) {
+				edgeInds.push_back(eitem.uniqueIndex);
+			}
+			it->second.listOfEdges = newEdgeList;
+			it->second.listOfVertices = VertexList;
+			ci::app::console() << "ending edge verts:" << it->second.printEdgeVerts() << std::endl;
+
+		}
+
+
+		
+}
+
+void GraphHandler::printOriginalEdges() {
+	for (auto const& pair : originalEdges) {
+	std:: stringstream text;
+	text << "[" << pair.first << "]: " << " { ";
+	for (auto const& edg : pair.second.listOfEdges) {
+		text << edg.uniqueIndex << ", ";
+	}
+
+	text.seekp(-2, std::ios_base::end);
+	text << " } , (";
+	for (auto const& edg : pair.second.listOfVertices) {
+		text << edg << ", ";
+	}
+
+	text.seekp(-2, std::ios_base::end);
+	text << ") \n";
+
+		data.my_log.AddLog(text.str().c_str());
+	}
+	
+
+}
+
 
 float GraphHandler::determinant(ci::vec3 a, ci::vec3 b, ci::vec3 c) {
 	//https://en.wikipedia.org/wiki/Determinant
@@ -140,23 +255,6 @@ void GraphHandler::computeCurrentLength() {
 	}
 }
 
-void GraphHandler::replaceEdge(EdgeContainer edgeOld, EdgeContainer edgeNew1, EdgeContainer edgeNew2) {
-	std::vector<int >& edgesList= originalEdges[edgeOld.index];
-	auto foundEdge = std::find(edgesList.begin(), edgesList.end(), edgeOld.uniqueIndex);
-
-	if (foundEdge != std::end(edgesList)) {
-		edgesList.insert(foundEdge, { edgeNew1.uniqueIndex, edgeNew2.uniqueIndex });
-		foundEdge = std::find(edgesList.begin(), edgesList.end(), edgeOld.uniqueIndex);
-		edgesList.erase(foundEdge);
-	}
-	else {
-		ci::app::console() << "edge not found\n" << std::endl;
-	}
-	
-	
-
-}
-
 
 void GraphHandler::addEdgeFromRecipe(int index) {
 	// add new vertices -
@@ -169,6 +267,10 @@ void GraphHandler::addEdgeFromRecipe(int index) {
 	// 
 	// 
 	//
+#if VERBOSITYLEVEL>0
+	ci::app::console() << "---------------------------------------------" << std::endl;
+	ci::app::console() << "adding edge from recipe step " << index << std::endl;
+#endif 
 	RecipeContainer& recipe = recipeInfo[index];
 	EdgeContainer ENC = edgeMap[recipe.NewEdgeC];
 	EdgeContainer ENA1 = edgeMap[recipe.NewEdgeA1];
@@ -180,23 +282,36 @@ void GraphHandler::addEdgeFromRecipe(int index) {
 
 
 	edge_t edgeC = weaverConnect(ENC.sourceV, ENC.targetV, ENC);
-	edge_t edgeA1 = weaverConnect(ENC.sourceV, EOA.sourceV, ENA1);
-	edge_t edgeA2 = weaverConnect(ENC.sourceV, EOA.targetV, ENA2);
-	edge_t edgeB1 = weaverConnect(ENC.targetV, EOB.sourceV, ENB1);
-	edge_t edgeB2 = weaverConnect(ENC.targetV, EOB.targetV, ENB2);
-
+	if (ENA1.sourceV > ENA2.sourceV)
+		std::swap(ENA1, ENA2);
+	if (ENB1.sourceV > ENB2.sourceV)
+		std::swap(ENB1, ENB2);
+	edge_t edgeA1 = weaverConnect(EOA.sourceV,ENC.sourceV, ENA1);
+	edge_t edgeA2 = weaverConnect(EOA.targetV, ENC.sourceV, ENA2);
+	edge_t edgeB1 = weaverConnect(EOB.sourceV, ENC.targetV, ENB1);// INDEX PROBLEM
+	edge_t edgeB2 = weaverConnect(EOB.targetV, ENC.targetV, ENB2);//INDEX PROBLEM
+#if VERBOSITYLEVEL>2
+	ci::app::console() << "removing edge with index" << EOA.uniqueIndex <<" by vertex " << EOA.sourceV << " and " << EOA.targetV << std::endl;
+	ci::app::console() << "removing edge with index" << EOB.uniqueIndex << " by vertex " << EOB.sourceV << " and " << EOB.targetV << std::endl;
+#endif
 	boost::remove_edge(EOA.sourceV, EOA.targetV, g);
 	boost::remove_edge(EOB.sourceV, EOB.targetV, g);
-	ci::app::console() << "nwew edge at vertex " << ENC.sourceV << " and " << ENC.targetV << std::endl;
-
+#if VERBOSITYLEVEL>2
+	ci::app::console() << "removed edges"<< std::endl;
+	
+#endif
 	computeCurrentLength();
-
-	data.my_log.AddLog("[info]  added edge, from recipe step %i.\n", data.INDEX);
+#if VERBOSITYLEVEL>0
+	data.my_log.AddLog("[info]  added edge, from recipe step %i.\n", index);
+#endif
 	//printoriginalEdges();
 }
 
 void GraphHandler::removeEdgeFromRecipe(int index) {
-
+#if VERBOSITYLEVEL>0
+	ci::app::console() << "---------------------------------------------"  << std::endl;
+	ci::app::console() << "removing edge from recipe step " << index << std::endl;
+#endif 
 	RecipeContainer& recipe = recipeInfo[index];
 	EdgeContainer ENC = edgeMap[recipe.NewEdgeC];
 	EdgeContainer ENA1 = edgeMap[recipe.NewEdgeA1];
@@ -215,7 +330,15 @@ void GraphHandler::removeEdgeFromRecipe(int index) {
 	//edge_t edgeOB = boost::add_edge(EOB.sourceV, EOB.targetV, g).first;
 	weaverConnect(EOA.sourceV, EOA.targetV, EOA);
 	weaverConnect(EOB.sourceV, EOB.targetV, EOB);
-	ci::app::console() << "removing edge at vertex " << ENC.sourceV << " and " << ENC.targetV << std::endl;
+#if VERBOSITYLEVEL>2
+	ci::app::console() << "removing edge by vertex " << ENC.sourceV << " and " << ENC.targetV << std::endl;
+	ci::app::console() << "removing edge by vertex " << ENA1.sourceV << " and " << ENA1.targetV << std::endl;
+	ci::app::console() << "removing edge by vertex " << ENA2.sourceV << " and " << ENA2.targetV << std::endl;
+	ci::app::console() << "removing edge by vertex " << ENB1.sourceV << " and " << EOB.targetV << std::endl;
+	ci::app::console() << "removing edge by vertex " << ENB2.sourceV << " and " << ENB2.targetV << std::endl;
+	ci::app::console() << "removing edge by vertex " << ENA1.sourceV << " and " << ENA1.targetV << std::endl;
+	ci::app::console() << "removing edge by vertex " << ENA2.sourceV << " and " << ENA2.targetV << std::endl;
+#endif
 	computeCurrentLength();
 	//data.my_log.AddLog("[info]  added edge, from recipe step.");
 
@@ -256,12 +379,17 @@ std::vector<EdgeContainer> GraphHandler::loadEdges(std::string fname) {
 				edgeMap[std::stoi(row[0])] = EdgeContainer{ std::stoi(row[0]),std::stoi(row[1]) ,std::stof(row[2]) ,std::stoi(row[3]) ,std::stoi(row[4]) ,std::stoi(row[5]) };
 				content.push_back(EdgeContainer{ std::stoi(row[0]),std::stoi(row[1]) ,std::stof(row[2]) ,std::stoi(row[3]) ,std::stoi(row[4]) ,std::stoi(row[5]) });
 				//ci::app::console() << row[0] << " ,  " << row[1] << " ,  " << row[2] << " ,  " << row[3] << " ,  " << row[4] << " ,  " << row[5] << std::endl;
+#if VERBOSITYLEVEL>2
+				ci::app::console() << row[0] << ": " << row[1] << " ,  " << row[2] << " ,  " << row[3] << " ,  " << row[4] << " ,  " << row[5]<< std::endl;
+#endif 
+
 			}
 			
 			countB++;
 		}
 	}
 	edgeInfo = content;
+
 	ci::app::console() << "added " << edgeInfo.size() << " edges to loadEdges" << std::endl;
 	return content;
 }
@@ -291,6 +419,9 @@ std::vector<RecipeContainer> GraphHandler::loadRecipe(std::string fname) {
 													std::stoi(row[4]),std::stoi(row[5]) ,
 													std::stoi(row[6]),
 													std::stof(row[7]) ,std::stof(row[8]) });
+#if VERBOSITYLEVEL>2
+				ci::app::console() << row[0] << " , " << row[1] << " ,  " << row[2] << " ,  " << row[3] << " ,  " << row[4] << " ,  " << row[5] << " ,  " << row[6] << " ,  " << row[7] << " ,  " << row[8] << std::endl;
+#endif 
 			}
 
 			countB++;
@@ -349,6 +480,12 @@ edge_t GraphHandler::weaverConnect(vertex_t endPointA, vertex_t endPointB, EdgeC
 	g[edge].uniqueIndex = edgeInfo.uniqueIndex;
 	g[edge].isforbidden = edgeInfo.isForbidden;
 	g[edge].index = edgeInfo.index;
+	ci::app::console() << "edgeInfo.uniqueindex" << edgeInfo.uniqueIndex << std::endl;
+	ci::app::console() << "edgeInfo.index" << edgeInfo.index << std::endl;
+	calculateDivEdgeLengths(edgeInfo.uniqueIndex);
+#if VERBOSITYLEVEL>2
+	ci::app::console() << "connecting edge by vertex " << endPointA << " and " << endPointB << ", giving it unique index: " << edgeInfo.uniqueIndex << std::endl;
+#endif 
 	return edge;
 }
 
@@ -376,6 +513,7 @@ void GraphHandler::InitialWebFromObj(float rc, std::string filename) {
 	int numberOfVertices = 0;
 	int numberOfEdges = 0;
 	data.my_log.AddLog("[info] initializing starting graph.\n");
+	ci::app::console() << "[info] initializing starting graph." << std::endl;
 	if (MyReadFile.good()) {
 		while (getline(MyReadFile, line)) {
 			std::stringstream ss(line);
@@ -402,7 +540,7 @@ void GraphHandler::InitialWebFromObj(float rc, std::string filename) {
 				if (vstrings[0] == "l") {
 
 
-
+					ci::app::console() << "UI: " << edgeMap[numberOfEdges+1].uniqueIndex << " IF: " << stoi(vstrings[3]) << std::endl;
 					edge_t e = weaverConnect(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, edgeMap[numberOfEdges+1]);
 					//edge_t e = connectAB(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
 					//g[e].isforbidden = stoi(vstrings[3]);
@@ -487,51 +625,75 @@ edge_t GraphHandler::getClosestEdgeFromRay(ci::Ray ray) {
 	return closestEdge;
 }
 
-void GraphHandler::printoriginalEdges() {
-	std::stringstream text;
-	for (auto const& pair : originalEdges) {
-		text << "{" << pair.first << ": ";
-		for (auto it = pair.second.begin(); it != pair.second.end(); it++) {
-			text << *it << " , ";
-		}
-		text << " " << "}\n";
-	}
-	ci::app::console() << text.str() << std::endl;
-
-}
+//void GraphHandler::printoriginalEdges() {
+//	std::stringstream text;
+//	for (auto const& pair : originalEdges) {
+//		text << "{" << pair.first << ": ";
+//		for (auto it = pair.second.begin(); it != pair.second.end(); it++) {
+//			text << *it << " , ";
+//		}
+//		text << " " << "}\n";
+//	}
+//	ci::app::console() << text.str() << std::endl;
+//
+//}
 
 void GraphHandler::setupEdgesGraph() {
-	boost::add_vertex(edgesG);
+
 	int edgeC_index;
 	 boost::graph_traits<EdgesGraph>::vertex_descriptor KVertex;
-
-	std::vector<int> listOfIndices;
-	for (auto edgeC = edgeInfo.begin();	edgeC != edgeInfo.end(); edgeC++) {
+	 int asdfasd = 0;
+	for (auto edgeC = edgeInfo.begin();	edgeC != edgeInfo.end(); ++edgeC) {
 		
 		KVertex= boost::add_vertex(edgesG);
 		edgesG[KVertex].uniqueIndex = edgeC->uniqueIndex;
-
+		asdfasd++;
 	}
+	ci::app::console() << "added " << edgesG.m_vertices.size() << " vertices to edgesgraph" << std::endl;
+
 	for (auto recipeC = recipeInfo.begin(); recipeC != recipeInfo.end(); recipeC++) {
 
-		boost::add_edge(recipeC->OldEdgeA, recipeC->NewEdgeA1,edgesG);
-		boost::add_edge(recipeC->OldEdgeA, recipeC->NewEdgeA2, edgesG);
-		boost::add_edge(recipeC->OldEdgeB, recipeC->NewEdgeB1, edgesG);
-		boost::add_edge(recipeC->OldEdgeB, recipeC->NewEdgeB2, edgesG);
+		boost::add_edge(recipeC->OldEdgeA-1, recipeC->NewEdgeA1 - 1,edgesG);
+		boost::add_edge(recipeC->OldEdgeA - 1, recipeC->NewEdgeA2 - 1, edgesG);
+		boost::add_edge(recipeC->OldEdgeB - 1, recipeC->NewEdgeB1 - 1, edgesG);
+		boost::add_edge(recipeC->OldEdgeB - 1, recipeC->NewEdgeB2 - 1, edgesG);
 	}
+	ci::app::console() << "added recipesteps to to edgesgraph" << std::endl;
+
 }
 
 void GraphHandler::calculateDivEdgeLengths(int edgeInt)
 {
-	boost::graph_traits<EdgesGraph>::out_edge_iterator oei, oeiend;
-	std::vector<float> DivEdgeLengths;
+	//edgeInt -= 1;
+	std::vector<float> DivEdgeLengths; 
+	std::vector<float> DivEdgeLengthsInterp;
 	std::vector<int> daughterEdges;
-	std::tie(oei, oeiend) = boost::out_edges(edgeInt, edgesG); int outEdgeIndex;
-	for (oei, oeiend; oei != oeiend; ++oei) {
-		outEdgeIndex = edgesG[boost::target(*oei, edgesG)].uniqueIndex;
-		DivEdgeLengths.push_back(edgeMap[outEdgeIndex].restlength);
-		daughterEdges.push_back(outEdgeIndex);
+	ci::app::console() << "---------------------------" << std::endl;
+	ci::app::console() << "edgeint:" << edgeInt<< std::endl;
+	ci::app::console() << "UIND" << edgeMap[edgeInt].index << std::endl;
+	auto edges = originalEdges[edgeMap[edgeInt].index].returnInbetweenEdges(edgeMap[edgeInt].sourceV, edgeMap[edgeInt].targetV);
+	
+	for (std::vector<EdgeContainer>::iterator ei = edges.begin(); ei != edges.end(); ++ei) {
+		DivEdgeLengths.push_back(ei->restlength);
+		DivEdgeLengthsInterp.push_back(ei->restlength);
+		daughterEdges.push_back(ei->uniqueIndex);
 	}
-	edgesG[edgeInt].daughterEdges = daughterEdges;
-	edgesG[edgeInt].DivEdgeLengths = DivEdgeLengths;
+
+	float  sumOfAllLengths = std::accumulate(DivEdgeLengths.begin(), DivEdgeLengths.end(), (float)0);
+	
+	std::vector<float>::iterator de1, de2;
+	de1 = DivEdgeLengthsInterp.begin();
+	de2 = DivEdgeLengthsInterp.end();
+	for (de1, de2; de1!= de2; ++de1) {
+		*de1 = *de1 / sumOfAllLengths;
+	}
+
+
+	
+	
+
+	edgesG[edgeInt-1].daughterEdges = daughterEdges;
+	edgesG[edgeInt-1].DivEdgeLengths = DivEdgeLengths;
+	edgesG[edgeInt-1].interPts = DivEdgeLengthsInterp;
+	ci::app::console() << "---------------------------" << std::endl;
 }

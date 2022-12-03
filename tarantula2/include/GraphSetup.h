@@ -238,6 +238,7 @@ public:
 		int OldEdgeA, OldEdgeB;
 		int NewEdgeA1, NewEdgeA2, NewEdgeB1, NewEdgeB2;
 		int ConnectionEdge;
+
 		myfileof << log.OldEdgeA << "," << log.OldEdgeB << "," << log.NewEdgeA1 << "," << log.NewEdgeA2 << "," << log.NewEdgeB1 << "," << log.NewEdgeB2 <<
 			"," << log.NewEdgeC << "," << log.posA1 << "," << log.posA2 << endl;
 		myfileof.close();

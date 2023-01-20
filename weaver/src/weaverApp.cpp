@@ -9,6 +9,8 @@
 #include "IniHandler.h"
 #include "GuiSetup.h"
 #include "cinder/CameraUi.h"
+#include "ArduPort.h"
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -27,7 +29,8 @@ class weaverApp : public App {
 	GraphHandler GH=GraphHandler(data);
 	DrawHandler dh = DrawHandler(GH.g ,data);
 	IniHandler ih = IniHandler(data);
-	GuiHandler GuiH = GuiHandler(data, ih,GH.g,GH.edgesG);
+	ArduPort ap = ArduPort(data,GH);
+	GuiHandler GuiH = GuiHandler(data, ih,GH.g,GH.edgesG,ap,GH);
 	ci::vec2 mMousePos;
 };
 
@@ -62,6 +65,11 @@ void weaverApp::keyDown(KeyEvent event) {
 		GH.printOriginalEdges();
 
 	}
+	if (event.getChar() == 's') { // "c"
+		//serialH.enumerate_ports();
+
+	}
+
 }
 void weaverApp::setup()
 {

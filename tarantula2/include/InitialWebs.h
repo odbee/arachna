@@ -97,7 +97,7 @@ void InitialWebFromObj(Graph* g, float rc, string filename, std::vector<std::vec
 				
 			}
 			if (vstrings[0] == "l") {
-				edge_t e = connectAB(g, stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc,0, stoi(vstrings[3]));
+				edge_t e = connectAB(g, stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc,0, stoi(vstrings[3]),0);
 				forbiddenPm[e] = stoi(vstrings[3]);
 			}
 		}

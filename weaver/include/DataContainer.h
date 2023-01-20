@@ -29,6 +29,8 @@ public:
 	edge_t empty_edge;
 	bool justclicked = false;
 	bool is_hovered = false;
+	int selectedOriginalEdgeInd = 0;
+	std::string COMPort;
 	struct ExampleAppLog
 	{
 		ImGuiTextBuffer     Buf;

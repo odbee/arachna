@@ -48,7 +48,7 @@ void DrawHandler::drawDivisionPoints(EdgesGraph& edgesGraph, std::map<int, EdgeC
 			ci::gl::color(ci::ColorA(0.0f, 1.0f, 0.0f, 0.4f));
 			interpoint += iter;
 			if (interpoint<0.9999)
-				ci::gl::drawSphere(startpoint + (endpoint - startpoint) * (interpoint) ,0.05);
+				ci::gl::drawSphere(startpoint + (endpoint - startpoint) * (interpoint) ,0.3);
 		}
 	}
 }

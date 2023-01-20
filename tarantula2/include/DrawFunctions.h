@@ -264,7 +264,7 @@ class DrawHandler {
 				if (inst->time > 0) {
 					inst->time--;
 
-				} if (inst->time == 0) {
+				} if (inst->time == 0) { 
 					removableEdges.push_back(inst);
 				}
 			}

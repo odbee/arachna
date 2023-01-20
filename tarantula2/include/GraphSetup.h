@@ -154,7 +154,7 @@ string EXPORTTITLE;
 std::string dirPath = "web";
 
 // GUI PARAMS
-float relaxc = 0.4f;
+float relaxc = 0.8f;
 bool hasCycle = false;
 bool mDrawVertices = false;
 bool mDrawNumbers = false;

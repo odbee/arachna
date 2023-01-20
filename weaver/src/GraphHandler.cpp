@@ -570,20 +570,21 @@ ci::vec3 GraphHandler::interpolate(ci::vec3 start, ci::vec3 end, float t) {
 
 
 void GraphHandler::relaxPhysics() {
-	float k = 1.1f;
-	float eps = 0.1f;
+	float k = 5.900f;
+
+	float eps = 0.04f;
 	Graph::vertex_descriptor v1, v2;
 	for (std::tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
 		v1 = boost::source(*ei, g);
 		v2 = boost::target(*ei, g);
 
-		if (length(g[v2].pos - g[v1].pos) > 0.01) {
+		if (length(g[v2].pos - g[v1].pos) > 0.000001 && g[*ei].restlength > 0.000001) {
 			if (!g[v1].isfixed) {
-				g[v1].movevec += 1 * k * (g[*ei].currentlength - g[*ei].restlength) *
+				g[v1].movevec += 1 * k * (1 / g[*ei].restlength)*(g[*ei].currentlength - g[*ei].restlength) *
 					normalize(g[v2].pos - g[v1].pos);
 			}
 			if (!g[v2].isfixed) {
-				g[v2].movevec += 1 * k * (g[*ei].currentlength - g[*ei].restlength) *
+				g[v2].movevec += 1 * k * (1 / g[*ei].restlength) * (g[*ei].currentlength - g[*ei].restlength) *
 					normalize(g[v1].pos - g[v2].pos);
 			}
 		}

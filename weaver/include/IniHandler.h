@@ -14,6 +14,8 @@ public:
 	IniHandler(DataContainer& DATA) : data(DATA) { setup(); }
 	DataContainer& data;
 	std::string& dirPath = data.fullPath;
+	std::string& comPort = data.COMPort;
+
 	void makeStartIni();
 
 	void initImGui(const std::string& inputfile);

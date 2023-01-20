@@ -14,21 +14,24 @@ vec3 interpolate(cyclicedge edge, float t) {
 	return edge.start.pos + (edge.end.pos - edge.start.pos) * t;
 }
 
-
+//TODO: armito schrittweiten
 void relaxPhysics(Graph* g) {
-	float k = 1.1f;
-	float eps = 0.1f;
+	//
+	//K = 0.59 FÜR METER
+	//K = 59.00 FÜR CENTIMETER
+	float k = 5.900f;
+	float eps = 0.04f;
 	Graph::vertex_descriptor v1, v2;
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
 		v1 = boost::source(*ei, *g);
 		v2 = boost::target(*ei, *g);
-		if (length(position[v2] - position[v1]) > 0.01) {
+		if (length(position[v2] - position[v1]) > 0.000001&& restLengthPm[*ei] > 0.000001 ) {
 			if (!fixedBool[v1]) {
-				moveVecPm[v1] += 1 * k * (currentLengthPm[*ei] - restLengthPm[*ei]) *
+				moveVecPm[v1] += 1 * k * (1 / restLengthPm[*ei]) *(currentLengthPm[*ei] - restLengthPm[*ei]) *
 					normalize(position[v2] - position[v1]);
 			}
 			if (!fixedBool[v2]) {
-				moveVecPm[v2] += 1 * k * (currentLengthPm[*ei] - restLengthPm[*ei]) *
+				moveVecPm[v2] += 1 * k * (1 / restLengthPm[*ei]) * (currentLengthPm[*ei] - restLengthPm[*ei]) *
 					normalize(position[v1] - position[v2]);
 			}
 		}
@@ -69,26 +72,38 @@ vector<edge_t> connectEdges(Graph* g, cyclicedge startedge, cyclicedge goaledge,
 	bool startforbidden=forbiddenPm[startedge.descriptor];
 	bool goalforbidden= forbiddenPm[goaledge.descriptor];
 	
-	returnedges[0]=connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc, startforbidden&&goalforbidden);
+	returnedges[0]=connectAB(g, startedge.divisionvert, goaledge.divisionvert, rc, startforbidden&&goalforbidden,0);
 	
+	float distA1 = distance(startedge.start.pos, position[startedge.divisionvert]);
+	float distA2 = distance(startedge.end.pos, position[startedge.divisionvert]);
+	float distB1 = distance(goaledge.start.pos, position[goaledge.divisionvert]);
+	float distB2 = distance(goaledge.end.pos, position[goaledge.divisionvert]);
+
+
+	float restlengthA1 = restLengthPm[startedge.descriptor] * distA1 / (distA1 + distA2);
+	float restlengthA2 = restLengthPm[startedge.descriptor] * distA2 / (distA1 + distA2);
+	float restlengthB1 = restLengthPm[goaledge.descriptor] * distB1 / (distB1 + distB2);
+	float restlengthB2 = restLengthPm[goaledge.descriptor] * distB2 / (distB1 + distB2);
+
+
 	if (startedge.start.index > startedge.end.index) {
 		//console() << "is_bigger" << endl;
-		returnedges[1] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden); 
-		returnedges[2] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
+		returnedges[1] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden, restlengthA2);
+		returnedges[2] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden,restlengthA1);
 
 	}
 	else {
-		returnedges[1] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden);
-		returnedges[2] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden);
+		returnedges[1] = connectAB(g, startedge.divisionvert, startedge.start.index, rc, indexPm[startedge.descriptor], startforbidden, restlengthA1);
+		returnedges[2] = connectAB(g, startedge.divisionvert, startedge.end.index, rc, indexPm[startedge.descriptor], startforbidden, restlengthA2);
 	}
 	if (goaledge.start.index > goaledge.end.index) {
 		//console() << "goal_is_bigger" << endl;
-		returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden); 
-		returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+		returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden,restlengthB2);
+		returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden, restlengthB1);
 	}
 	else {
-		returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden);
-		returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden);
+		returnedges[3] = connectAB(g, goaledge.divisionvert, goaledge.start.index, rc, indexPm[goaledge.descriptor], goalforbidden, restlengthB1);
+		returnedges[4] = connectAB(g, goaledge.divisionvert, goaledge.end.index, rc, indexPm[goaledge.descriptor], goalforbidden, restlengthB2);
 	}
 
 	fixedBool[goaledge.divisionvert] = goalforbidden;

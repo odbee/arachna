@@ -221,15 +221,17 @@ string stringfromCyclesShort(std::vector<size_t> cycleslist) {
 
 
 
-edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind =0, bool isforbidden=false) {
+edge_t connectAB(Graph* g, Graph::vertex_descriptor endPointA, Graph::vertex_descriptor endPointB, float rc, int ind = 0, bool isforbidden = false, float oldrestlength = 0) {
 	if (endPointA > endPointB)
 		std::swap(endPointA, endPointB);
 
 	float dd = distance(position[endPointA], position[endPointB]);
 
 	edge_t edge = boost::add_edge(endPointA, endPointB, *g).first;
+	
 	currentLengthPm[edge] = dd;
-	restLengthPm[edge] = dd * rc;
+	
+	restLengthPm[edge] = (oldrestlength==0) ? dd * rc : oldrestlength;
 	forbiddenPm[edge] = isforbidden;
 	uniqueIndexPm[edge] = UNIQUEINDEX++;
 	if (ind == 0) {

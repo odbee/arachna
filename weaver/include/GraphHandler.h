@@ -33,6 +33,7 @@ private:
 	
 	
 public:
+	GraphHandler(DataContainer& DATA) : data(DATA) { setup(); } //https://www.mygreatlearning.com/blog/constructor-in-cpp/#:~:text=What%20is%20Constructor%20in%20C%2B%2B%3F,of%20a%20class%20is%20created. , https://stackoverflow.com/questions/33260261/can-i-automatically-call-a-method-of-a-class-on-object-declaration-in-c
 	struct originalEdge {
 		std::vector<int> listOfVertices;
 
@@ -40,7 +41,7 @@ public:
 		std::vector<int> listOfEdgeInds;
 		int startVert;
 		int endVert;
-
+		bool isDrawn = false;
 		std::string printEdges() {
 			std::stringstream text;
 			text << "{ " ;
@@ -108,7 +109,7 @@ public:
 			int startdist = std::distance(listOfVertices.begin(), std::find(listOfVertices.begin(), listOfVertices.end(), start));
 			int enddist = std::distance(listOfVertices.begin(), std::find(listOfVertices.begin(), listOfVertices.end(), end));
 			if (startdist > enddist) {
-				std::swap(startdist, enddist);// TODO IF SWAPPING, HAVE TO REVERSE THE RESULTING VECTOR AS WELL
+				std::swap(startdist, enddist);
 			}
 			ci::app::console() << "startdist: " << startdist << "enddist:" << enddist << std::endl;
 			std::vector<EdgeContainer> result;
@@ -123,14 +124,17 @@ public:
 			else {
 				result = std::vector<EdgeContainer>{ listOfEdges.begin() + startdist, listOfEdges.end() };
 			}
-				
+			
+			if (startdist > enddist) {
+				std::reverse(result.begin(), result.end());// REVERSING THE RESULT AFTER SWAP
+			}
 
 			return result;
 		};
 	};
 	std::map<int,originalEdge> originalEdges;
 	std::map<int, EdgeContainer> edgeMap;
-	GraphHandler(DataContainer& DATA) : data(DATA) { setup(); } //https://www.mygreatlearning.com/blog/constructor-in-cpp/#:~:text=What%20is%20Constructor%20in%20C%2B%2B%3F,of%20a%20class%20is%20created. , https://stackoverflow.com/questions/33260261/can-i-automatically-call-a-method-of-a-class-on-object-declaration-in-c
+
 	std::vector<RecipeContainer> getRecipeInfo();
 	edge_t connectAB(vertex_t endPointA, vertex_t endPointB, float rc, int ind = 0, bool isforbidden = false);
 	edge_t weaverConnect(vertex_t endPointA, vertex_t endPointB, EdgeContainer edgeInfo);

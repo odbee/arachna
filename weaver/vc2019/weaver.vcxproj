@@ -68,6 +68,9 @@
       <DataExecutionPrevention />
       <IgnoreSpecificDefaultLibraries>LIBCMT;LIBCPMT</IgnoreSpecificDefaultLibraries>
     </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -105,15 +108,18 @@
   <ItemGroup />
   <ItemGroup>
     <ClCompile Include="..\source\AdamsCameraUi.cpp" />
+    <ClCompile Include="..\src\ArduPort.cpp" />
     <ClCompile Include="..\src\DataContainer.cpp" />
     <ClCompile Include="..\src\DrawHandler.cpp" />
     <ClCompile Include="..\src\GraphHandler.cpp" />
     <ClCompile Include="..\src\GuiSetup.cpp" />
     <ClCompile Include="..\src\IniHandler.cpp" />
+    <ClCompile Include="..\src\serialib.cpp" />
     <ClCompile Include="..\src\weaverApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\AdamsCameraUi.h" />
+    <ClInclude Include="..\include\ArduPort.h" />
     <ClInclude Include="..\include\DataContainer.h" />
     <ClInclude Include="..\include\DrawHandler.h" />
     <ClInclude Include="..\include\GraphHandler.h" />

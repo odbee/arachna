@@ -11,6 +11,8 @@ void IniHandler::makeStartIni() {
 	//Add new key value pairs
 	pt.add("graph directory", "dir");
 	dirPath = "dir";
+	pt.add("communication port", "COM0");
+	comPort = "COM0";
 	boost::property_tree::ini_parser::write_ini(filename, pt);
 }
 
@@ -24,6 +26,8 @@ void IniHandler::initImGui(const std::string& inputfile) {
 	else {
 		boost::property_tree::ini_parser::read_ini(filename, pt);
 		dirPath = pt.get<std::string>("graph directory");
+		comPort = pt.get<std::string>("communication port");
+		
 	}
 
 	//std::cout << pt.get<std::string>("Section1.Value1") << std::endl;

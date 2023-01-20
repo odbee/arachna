@@ -58,6 +58,12 @@ void GuiHandler::drawParametersWindow() {
 			ImGui::Text("edge lengths : ");
 			ImGui::Text(stringfromVec(edgesG[g[data.selected_edge].uniqueIndex-1].DivEdgeLengths).c_str());
 			ImGui::Text("\n");
+			ImGui::Text("current length : ");
+			ImGui::Text("%f",g[data.selected_edge].currentlength);
+			ImGui::Text("\n");
+			ImGui::Text("rest length : ");
+			ImGui::Text("%f", g[data.selected_edge].restlength);
+			ImGui::Text("\n");
 			ImGui::Text("inter points : ");
 			ImGui::Text(stringfromVec(edgesG[g[data.selected_edge].uniqueIndex-1].interPts).c_str());
 			ImGui::Text("\n");
@@ -90,6 +96,55 @@ void GuiHandler::drawParametersWindow() {
 
 	}
 
+	drawArduPortTab();
 	ImGui::End();
+
+}
+
+void  GuiHandler::drawArduPortTab() {
+	if (ImGui::CollapsingHeader("Arduino Port", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+
+		if (ImGui::InputText("COM Port ", &data.COMPort)) {
+			iniHand.overwriteTagImGui("communication port", data.COMPort);
+		}
+		if (ImGui::Button("start connection")) {
+			
+			data.my_log.AddLog((arduP.connectArduino(data.COMPort) + "\n").c_str());
+			data.my_log.AddLog("Waiting To Receive Init Signal...\n");
+			
+			if (arduP.checkForInit()) {
+				data.my_log.AddLog("Successfully Received Init Signal\n");
+			}
+		}
+		
+		if (ImGui::Button("Print Edge")) {
+			arduP.printEdge(data.selectedOriginalEdgeInd);
+			//TODO UNSELECTABLE WHEN NOT CONNECTED
+		}
+		if (ImGui::ListBoxHeader("listBox 1")) {
+			
+			for (auto it = gh.originalEdges.begin(); it != gh.originalEdges.end(); it++)
+			{
+				const bool is_selected = (data.selectedOriginalEdgeInd == it->first);
+				if (it->second.isDrawn)
+					ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+
+				if (ImGui::Selectable(std::to_string(it->first).c_str(), is_selected)) {
+					data.selectedOriginalEdgeInd = it->first;
+				}
+				if (it->second.isDrawn)
+					ImGui::PopStyleColor();
+
+				//if (is_selected)
+				//	ImGui::SetItemDefaultFocus();
+				//TODO: bei anklicken auf den iterationsschritt springen wo die kante gebaut wird und die kante highlighten.ist eigentlich sekundär
+
+			}
+			ImGui::ListBoxFooter();
+
+		}
+	}
+
 
 }

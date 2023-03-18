@@ -42,6 +42,7 @@ void weaverApp::keyDown(KeyEvent event) {
 	if (event.getCode() == 99) { // "c"
 		if (data.INDEX < GH.getRecipeInfo().size()) {
 			GH.addEdgeFromRecipe(data.INDEX++);
+			data.selected_edge = data.empty_edge;
 		}
 		else {
 			data.my_log.AddLog("[warning] Max steps received! you can only go back.\n");
@@ -52,6 +53,7 @@ void weaverApp::keyDown(KeyEvent event) {
 	}
 	if (event.getChar() == 'x') { // "c"
 		if (data.INDEX > 0) {
+			data.selected_edge = data.empty_edge;
 			GH.removeEdgeFromRecipe(--data.INDEX);
 		}
 		else {
@@ -63,6 +65,7 @@ void weaverApp::keyDown(KeyEvent event) {
 	}
 	if (event.getChar() == 'o') { // "c"
 		GH.printOriginalEdges();
+		GH.exportOriginalEdges();
 
 	}
 	if (event.getChar() == 's') { // "c"

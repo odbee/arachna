@@ -117,11 +117,18 @@ void  GuiHandler::drawArduPortTab() {
 				data.my_log.AddLog("Successfully Received Init Signal\n");
 			}
 		}
-		
+		ImGui::InputText("edges to print", &data.customEdges);
+		if (ImGui::Button("Print custom Edges")) {
+			arduP.printEdgeFromList(data.customEdges);
+			//TODO UNSELECTABLE WHEN NOT CONNECTED
+		}
+
+
 		if (ImGui::Button("Print Edge")) {
 			arduP.printEdge(data.selectedOriginalEdgeInd);
 			//TODO UNSELECTABLE WHEN NOT CONNECTED
 		}
+
 		if (ImGui::ListBoxHeader("listBox 1")) {
 			
 			for (auto it = gh.originalEdges.begin(); it != gh.originalEdges.end(); it++)
@@ -132,6 +139,14 @@ void  GuiHandler::drawArduPortTab() {
 
 				if (ImGui::Selectable(std::to_string(it->first).c_str(), is_selected)) {
 					data.selectedOriginalEdgeInd = it->first;
+					data.selected_edge = data.empty_edge;
+					//if (gh.edgeMap[data.selectedOriginalEdgeInd].isVisbile)
+					//{
+					//	edge_ti edgi= boost::edges(g).first;
+					//	for (int i = 2; i < data.selectedOriginalEdgeInd; i++)
+					//		edgi++;
+					//	data.selected_edge = *edgi;
+					//} TODO: FIX HIGHTLIGHTING EDGE. DOESNT WORK RIGHT NOW BECAUSE YOU CANT COUNT THE INDICES UP, NEED TO PICK THE EDGE BY ITS VERTICES
 				}
 				if (it->second.isDrawn)
 					ImGui::PopStyleColor();

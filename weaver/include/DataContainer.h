@@ -21,10 +21,11 @@ public:
 
 	signed int  edgeIndex;
 	float alpha;
-	edge_t highlightedEdge;
+	edge_t 
+		edEdge;
 	bool highlightEdge;
 	edge_t hovered_edge;
-
+	std::string customEdges;
 	edge_t selected_edge;
 	edge_t empty_edge;
 	bool justclicked = false;

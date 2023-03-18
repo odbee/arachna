@@ -158,7 +158,7 @@ public:
 	float closestDist(ci::vec3 a0, ci::vec3 a1, ci::vec3 b0, ci::vec3 b1, ci::vec3& firstpoint, ci::vec3& secondpoint, bool clampAll = false, bool clampA0 = false, bool clampA1 = false, bool clampB0 = false, bool clampB1 = false);
 	void initOriginalEdges();
 	void printOriginalEdges();
-	//void printoriginalEdges();
+	void exportOriginalEdges();
 	void setupEdgesGraph();
 	void calculateDivEdgeLengths(int edgeInt);
 };

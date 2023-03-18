@@ -14,13 +14,45 @@ vec3 interpolate(cyclicedge edge, float t) {
 	return edge.start.pos + (edge.end.pos - edge.start.pos) * t;
 }
 
-//TODO: armito schrittweiten
 void relaxPhysics(Graph* g) {
+	float k = 1.1f;
+	float eps = 0.1f;
+	Graph::vertex_descriptor v1, v2;
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, *g);
+		v2 = boost::target(*ei, *g);
+		if (length(position[v2] - position[v1]) > 0.01) {
+			if (!fixedBool[v1]) {
+				moveVecPm[v1] += 1 * k * (currentLengthPm[*ei] - restLengthPm[*ei]) *
+					normalize(position[v2] - position[v1]);
+			}
+			if (!fixedBool[v2]) {
+				moveVecPm[v2] += 1 * k * (currentLengthPm[*ei] - restLengthPm[*ei]) *
+					normalize(position[v1] - position[v2]);
+			}
+		}
+	}
+
+	for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
+
+		//position[*vi] += moveVecPm[*vi];
+		position[*vi] += eps * moveVecPm[*vi];
+		moveVecPm[*vi] = vec3(0, 0, 0);
+	}
+	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
+		v1 = boost::source(*ei, *g);
+		v2 = boost::target(*ei, *g);
+		currentLengthPm[*ei] = distance(position[v1], position[v2]);
+	}
+}
+//TODO: armito schrittweiten
+void relaxPhysicsNew(Graph* g) {
 	//
 	//K = 0.59 FÜR METER
+	// 
 	//K = 59.00 FÜR CENTIMETER
-	float k = 5.900f;
-	float eps = 0.04f;
+	float k = 19.200f;
+	float eps = 0.02f;
 	Graph::vertex_descriptor v1, v2;
 	for (tie(ei, eiend) = boost::edges(*g); ei != eiend; ++ei) {
 		v1 = boost::source(*ei, *g);

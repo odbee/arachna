@@ -94,6 +94,24 @@ void GraphHandler::initOriginalEdges() {
 
 		
 }
+void GraphHandler::exportOriginalEdges() {
+	std::ofstream myfile;
+	myfile.open(data.fullPath+ "originalEdges.txt", std::ofstream::trunc);
+
+	for (auto const& pair : originalEdges) {
+		std::stringstream text;
+		text << pair.first <<",";
+		for (auto const& edg : pair.second.listOfEdges) {
+			text << edg.uniqueIndex << ",";
+		}
+		text.seekp(-1, std::ios_base::end);
+		text << " \n";
+
+		myfile << text.rdbuf();
+	}
+
+	myfile.close();
+}
 
 void GraphHandler::printOriginalEdges() {
 	for (auto const& pair : originalEdges) {
@@ -282,6 +300,14 @@ void GraphHandler::addEdgeFromRecipe(int index) {
 
 
 	edge_t edgeC = weaverConnect(ENC.sourceV, ENC.targetV, ENC);
+	edgeMap[recipe.NewEdgeC].isVisbile = true;
+	edgeMap[recipe.NewEdgeA1].isVisbile = true;
+	edgeMap[recipe.NewEdgeA2].isVisbile = true;
+	edgeMap[recipe.NewEdgeB1].isVisbile = true;
+	edgeMap[recipe.NewEdgeB2].isVisbile = true;
+	edgeMap[recipe.OldEdgeA].isVisbile = false;
+	edgeMap[recipe.OldEdgeB].isVisbile = false;
+
 	if (ENA1.sourceV > ENA2.sourceV)
 		std::swap(ENA1, ENA2);
 	if (ENB1.sourceV > ENB2.sourceV)
@@ -320,6 +346,14 @@ void GraphHandler::removeEdgeFromRecipe(int index) {
 	EdgeContainer ENB2 = edgeMap[recipe.NewEdgeB2];
 	EdgeContainer EOA = edgeMap[recipe.OldEdgeA];
 	EdgeContainer EOB = edgeMap[recipe.OldEdgeB];
+
+	edgeMap[recipe.NewEdgeC].isVisbile = false;
+	edgeMap[recipe.NewEdgeA1].isVisbile = false;
+	edgeMap[recipe.NewEdgeA2].isVisbile = false;
+	edgeMap[recipe.NewEdgeB1].isVisbile = false;
+	edgeMap[recipe.NewEdgeB2].isVisbile = false;
+	edgeMap[recipe.OldEdgeA].isVisbile = false;
+	edgeMap[recipe.OldEdgeB].isVisbile = false;
 
 	boost::remove_edge(ENC.sourceV, ENC.targetV, g);
 	boost::remove_edge(ENB1.sourceV, ENB1.targetV, g);
@@ -542,6 +576,7 @@ void GraphHandler::InitialWebFromObj(float rc, std::string filename) {
 
 					ci::app::console() << "UI: " << edgeMap[numberOfEdges+1].uniqueIndex << " IF: " << stoi(vstrings[3]) << std::endl;
 					edge_t e = weaverConnect(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, edgeMap[numberOfEdges+1]);
+					edgeMap[numberOfEdges + 1].isVisbile = true;
 					//edge_t e = connectAB(stoi(vstrings[1]) - 1, stoi(vstrings[2]) - 1, rc);
 					//g[e].isforbidden = stoi(vstrings[3]);
 					////ci::app::console() << "UI: " << edgeMap[numberOfEdges].uniqueIndex << " IF: " << stoi(vstrings[3]) << std::endl;

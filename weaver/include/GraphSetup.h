@@ -25,6 +25,7 @@ struct EdgeContainer
 	int isForbidden;
 	int sourceV;
 	int targetV;
+	bool isVisbile= false;
 	
 };
 

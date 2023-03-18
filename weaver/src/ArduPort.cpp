@@ -115,3 +115,39 @@ void ArduPort::printEdge(int edgeIndex) {
     sendCommandAndWait("D2 1", 3);
     sendCommandAndWait("D2 0", 3);
 }
+std::vector<int> ArduPort::split(const std::string& s, char delimiter) {
+    std::vector<int> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (getline(tokenStream, token, delimiter)) {
+        tokens.push_back(stoi(token));
+    }
+    return tokens;
+}
+
+void ArduPort::printEdgeFromList(std::string edgesString) {
+    float rl;
+    std::vector<int> newEdges_ints = split(edgesString, ',');
+
+    if (newEdges_ints.size()) {
+    std::vector<float> edgeLengths;
+    sendCommandAndWait("MB 50 MM", 3);
+    sendCommandAndWait("D2 1", 3);
+    sendCommandAndWait("D2 0", 3);
+    for (auto var : newEdges_ints)
+    {
+        rl = gh.edgeMap[var].restlength;
+        sendCommandAndWait("MB " + std::to_string(rl     * 10) + "  MM", 30);
+        sendCommandAndWait("D1 1", 3);
+        sendCommandAndWait("D1 0", 3);
+    }
+
+
+    sendCommandAndWait("D2 1", 3);
+    sendCommandAndWait("D2 0", 3);
+
+    }
+
+
+}
+

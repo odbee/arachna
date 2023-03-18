@@ -337,6 +337,8 @@ vector<int> split(const string& s, char delimiter) {
 }
 
 
+
+
 void removeActiveCycle(Graph* g, std::vector<std::vector<size_t>>& cycs, int& currCycIndex, int& indinCyc, std::vector<size_t>& commoncyclelist) {
 	int cachedIndex = currCycIndex;
 	if (commoncyclelist.size() > 1) {

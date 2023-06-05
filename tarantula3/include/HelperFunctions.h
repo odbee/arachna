@@ -395,6 +395,7 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end,float rati
 	int iteratorLength = 0;	int randiter;
 	float fulllength = 0, tensionlength = 0, voxellength = 0;
 	float forbiddensum = 0;
+	float sanityval = 0;
 	
 	bool isforbidden = true;
 
@@ -414,7 +415,7 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end,float rati
 				tensionlength += restLengthPm[*iter] / currentLengthPm[*iter];
 			}
 		}
-
+		// set probablilty for each edge
 		for (auto iter = begin; iter != end; ++iter) {
 
 			if (forbiddenPm[*iter]) {
@@ -424,9 +425,14 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end,float rati
 				probabilityPm[*iter]= ratioInteriorExterior*(
 					(G_density* densityvalPm[*iter]/voxellength)+
 					(G_length * currentLengthPm[*iter] / fulllength)+
-					(G_tension*(restLengthPm[*iter] / currentLengthPm[*iter]) * tensionlength));
+					(G_tension*(restLengthPm[*iter] / currentLengthPm[*iter]) / tensionlength));
 			}
+
+			// SANITYCHECK
+			sanityval += probabilityPm[*iter];
+
 		}
+
 	std::uniform_real_distribution<> dis(0.0, 1.0);
 	auto randn = dis(gen);
 	for (auto iter = begin; iter != end; ++iter) {
@@ -440,7 +446,7 @@ edge_t getRandomEdgeFromEdgeListIntegrated(Graph* g, T& begin, T& end,float rati
 		//randn -= currentLengthPm[*ei] / fulllength / 2;
 
 	}
-
+	console() << "sanity val:" << sanityval << endl;
 	return ed_resultedge;
 }
 

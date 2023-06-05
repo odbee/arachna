@@ -392,10 +392,10 @@ LogInfo addRandomCyclicEdgeTesting(Graph* g, float rc, std::vector<std::vector<s
 	LogInfo result;
 	// TODO FIX THE ISSUE WHEN THERE ARE NO AVAILABLE EDEGES
 	std::vector<size_t>edgeinds;
-	cyclicedge startedge= getStartEdge(g, 1);
+	cyclicedge startedge= getStartEdge(g, .6);
 	auto connectableEdges = getConnectableEdges(g, startedge, cycs, edgeinds, false);
 	if (connectableEdges.size()) {
-		cyclicedge goaledge = getGoalEdge(g, connectableEdges, 0.4);
+		cyclicedge goaledge = getGoalEdge(g, connectableEdges,1);
 		std::tie(result.posA1,result.posA2)= adjustGraphToNewEdges(g, cycs, startedge, goaledge, connectableEdges, edgeinds);
 		result.OldEdgeA= uniqueIndexPm[startedge.descriptor];
 		result.OldEdgeB = uniqueIndexPm[goaledge.descriptor];

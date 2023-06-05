@@ -82,8 +82,8 @@ void tarantulaApp::render()
 void tarantulaApp::keyDown(KeyEvent event) {
 	console() << ":" << event.getCode() << ":" << endl;
 	if (event.getCode() == 99) { // "c"
-		//addRandomEdge(&g, relaxc);
-		addRandomCyclicEdge(&g, relaxc, &cycles,mText);
+		addRandomEdge(&g, relaxc);
+		//addRandomCyclicEdge(&g, relaxc, &cycles,mText);
 		
 		if (hasCycle==false) // find cycles every time it has no cycles
 		{

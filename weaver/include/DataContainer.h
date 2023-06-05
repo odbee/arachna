@@ -28,6 +28,10 @@ public:
 	std::string customEdges;
 	edge_t selected_edge;
 	edge_t empty_edge;
+	std::vector<ci::vec3> anchorPoints;
+	float greenscale = 0.025;
+	float greenopacity = 0.4;
+	float yellowopacity = 0.4;
 	bool justclicked = false;
 	bool is_hovered = false;
 	int selectedOriginalEdgeInd = 0;

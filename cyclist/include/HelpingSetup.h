@@ -261,12 +261,26 @@ float getDistLineLine(vec3 a1, vec3 a2, vec3 b1, vec3 b2) {
 	vec3 dP = w + (sc * u) - (tc * v);
 	return length(dP);
 }
-void drawPoints(Graph* g, mat4 proj, vec4 viewp,bool drawRedtext=true) {
+
+void drawPoints(Graph* g, mat4 proj, vec4 viewp, bool drawRedtext = true) {
 	boost::graph_traits< Graph >::vertex_iterator vi, viend;
 
 	for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
+		gl::color(1.0f, 1.0f, 1.0f, 1.0f);
 
-		gl::drawStrokedCube(position[*vi], vec3(0.2f, 0.2f, 0.2f));
+		//gl::drawStrokedCube(position[*vi], vec3(05.2f, 05.2f, 05.2f));
+		gl::drawSphere(position[*vi], .01,3);
+
+	}
+}
+
+void drawPointInfo(Graph* g, mat4 proj, vec4 viewp,bool drawRedtext=true) {
+	boost::graph_traits< Graph >::vertex_iterator vi, viend;
+
+	for (tie(vi, viend) = boost::vertices(*g); vi != viend; ++vi) {
+		gl::color(1.0f, 1.0f, 1.0f, 1.0f);
+
+		//gl::drawStrokedCube(position[*vi], vec3(05.2f, 05.2f, 05.2f));
 		vec2 anchorp1 = glm::project(position[*vi], mat4(), proj, viewp);
 
 		gl::drawString(to_string(*vi), anchorp1, Color::white(), Font("Arial", 20));
@@ -490,6 +504,31 @@ vector<vec3> getVertsFromFile(string filename) {
 }
 
 
+
+
+void PointsFromObj(Graph* g, string filename) {
+	bool hasCycle;
+	ifstream MyReadFile(filename);
+	string line;
+	
+	while (getline(MyReadFile, line)) {
+		std::stringstream ss(line);
+		std::istream_iterator<std::string> begin(ss);
+		std::istream_iterator<std::string> end;
+		std::vector<std::string> vstrings(begin, end);
+		if (!vstrings.empty()) {
+			if (vstrings[0] == "v") {
+				auto a = boost::add_vertex(*g);
+				position[a] = { stof(vstrings[1]),stof(vstrings[2]),stof(vstrings[3]) };
+				fixedBool[a] = true;
+			}
+
+		}
+
+	}
+	console() << "loaded " << g->m_vertices.size() << "points" << endl;
+}
+
 void InitialWebFromPc(Graph* g, float rc, string filename) {
 
 	vector<vec3>verts = getVertsFromFile(filename);
@@ -513,6 +552,30 @@ void InitialWebFromPc(Graph* g, float rc, string filename) {
 		fixedBool[a] = true;
 		connectAB(g, a, cvert, rc);
 	}
+
+}
+void addCenterVertex(Graph& g, std::vector<std::vector<size_t>>& cycles) {
+	boost::graph_traits< Graph >::vertex_iterator vi, viend;
+
+	vector<size_t> verts;
+	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+
+		verts.push_back(*vi);
+	}
+	auto cvert = boost::add_vertex(g);
+	position[cvert] = { 0, 0, 0 };
+	fixedBool[cvert] = false;
+
+	for (const auto& vert : verts)
+	{
+		position[cvert] += position[vert];
+		connectAB(&g, vert, cvert,0.7);
+	}
+
+	position[cvert] /= verts.size();
+
+
+
 
 }
 
@@ -585,7 +648,7 @@ void exportGraphTXT(Graph g, string title = "initialgraph.txt") {
 
 	for (tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
 		//gl::drawStrokedCube(position[*vi], vec3(0.2f, 0.2f, 0.2f));
-		myfile << "v " << to_string(position[*vi].x) << " " << to_string(position[*vi].y) << " " << to_string(position[*vi].z) << endl;
+		myfile << "v " << to_string(position[*vi].x) << " " << to_string(position[*vi].y) << " " << to_string(position[*vi].z) << " " << to_string(fixedBool[*vi]) << endl;
 
 	}
 

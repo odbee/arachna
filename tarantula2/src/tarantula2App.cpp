@@ -69,11 +69,7 @@ void tarantula2App::setup()
 	iniHand.initImGui("cached_ui.ini");
 	webLogger.initializelocation();
 
-	//console() << ImGui::ColorConvertU32ToFloat4( ImGui::GetColorU32(41)).x 
-	//	<< "   "
-	//	<< ImGui::ColorConvertU32ToFloat4(ImGui::GetColorU32(41)).y 
-	//	<< "   "
-	//	<< ImGui::ColorConvertU32ToFloat4(ImGui::GetColorU32(41)).z << endl;
+
 	//			CAMERA SETUP
 	drawHandler.setupCamera();
 	//			END CAMERA SETUP
@@ -178,7 +174,7 @@ void tarantula2App::update()
 	}
 
 
-	addRandomCyclicEdgeAnimated(&g, relaxc, &cycles, runAnimation,A_startedge,A_goaledge,A_connectableEdges,A_edgeinds);
+	//addRandomCyclicEdgeAnimated(&g, relaxc, &cycles, runAnimation,A_startedge,A_goaledge,A_connectableEdges,A_edgeinds);
 	if (runAnimation == 90) {
 		getConnectableEdges(&g, A_startedge, &cycles, A_edgeinds, false);
 		//console() << g[A_startedge.descriptor].isforbidden << endl;
@@ -198,7 +194,7 @@ using namespace ImGui;
 
 void tarantula2App::draw()
 {
-	imGuiHandler.drawEdgesDiagram();
+	//imGuiHandler.drawEdgesDiagram();
 	mat4 projection = drawHandler.mCamera.getProjectionMatrix() * drawHandler.mCamera.getViewMatrix();
 	int w = getWindowWidth();
 	int h = getWindowHeight();

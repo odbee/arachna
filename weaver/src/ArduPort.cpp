@@ -6,9 +6,13 @@ void ArduPort::setup() {
 
 
 }
+std::string ArduPort::disconnectArduino() {
+    arduino.closeDevice();
+    return "successfully disconnected from Arduino";
+}
+
 std::string ArduPort::connectArduino(std::string port, unsigned int baudrate) {
 
-	
     switch (arduino.openDevice(port.c_str(), baudrate)) {
         case 1:
             return "Successfully Connected to Device on Port \"" + port + "\" on baudrate " + std::to_string(baudrate);
@@ -108,12 +112,13 @@ void ArduPort::printEdge(int edgeIndex) {
 
     for (const auto edg : edges) {
         edg.restlength;
-        sendCommandAndWait("MB " + std::to_string(edg.restlength*10) +"  MM", 30);
+        sendCommandAndWait("MB " + std::to_string(edg.restlength*100) +"  MM", 30);
         sendCommandAndWait("D1 1", 3);
         sendCommandAndWait("D1 0", 3);
     }
     sendCommandAndWait("D2 1", 3);
     sendCommandAndWait("D2 0", 3);
+    gh.originalEdges[edgeIndex].isDrawn = true;
 }
 std::vector<int> ArduPort::split(const std::string& s, char delimiter) {
     std::vector<int> tokens;
@@ -137,7 +142,7 @@ void ArduPort::printEdgeFromList(std::string edgesString) {
     for (auto var : newEdges_ints)
     {
         rl = gh.edgeMap[var].restlength;
-        sendCommandAndWait("MB " + std::to_string(rl     * 10) + "  MM", 30);
+        sendCommandAndWait("MB " + std::to_string(rl     * 100) + "  MM", 30);
         sendCommandAndWait("D1 1", 3);
         sendCommandAndWait("D1 0", 3);
     }

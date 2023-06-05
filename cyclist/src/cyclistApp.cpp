@@ -97,8 +97,8 @@ private:
 
 void cyclistApp::setup()
 {
-	mCamera.lookAt(vec3(30.0f, 20.0f, 40.0f), vec3(0));
-	mCamera.setPerspective(40.0f, getWindowAspectRatio(), 0.01f, 1000.0f);
+	mCamera.lookAt(vec3(-30.0f, 20.0f, 40.0f), vec3(0));
+	mCamera.setPerspective(40.0f, getWindowAspectRatio(), 0.01f, 100.0f);
 	
 	mCamUi.setCamera(&mCamera);
 	mCamUi.setWindowSize( { 640,480 });
@@ -186,9 +186,15 @@ void cyclistApp::draw()
 		if (ImGui::Button("load pointcloud")) {
 			//g.clear();
 			//cycles.clear();
-			InitialWebFromPc(&g, 0.9, dirPath +PCDIRECTORYEXTENSION);
-			
-			addcyclesfromPc(0.9, g, cycles);
+			PointsFromObj(&g, dirPath + "initialPoints.obj");
+			//console() << stringfromCyclesShort(cycles) << endl;
+		}
+
+		if (ImGui::Button("create a graph from points")) {
+			//g.clear();
+			//cycles.clear();
+			addCenterVertex(g,cycles);
+			addcyclesfromPc(0.7, g, cycles);
 			//console() << stringfromCyclesShort(cycles) << endl;
 		}
 
@@ -305,8 +311,9 @@ void cyclistApp::draw()
 		int w = getWindowWidth();
 		int h = getWindowHeight();
 		vec4 viewport = vec4(0, h, w, -h); // vertical flip is required
+		
 		if (!cycles.empty()) {
-			drawPoints(&g, projection, viewport, redText);
+			drawPointInfo(&g, projection, viewport, redText);
 		}
 		
 
@@ -315,7 +322,10 @@ void cyclistApp::draw()
 
 		{
 			gl::color(1.0f, 1.0f, 1.0f, 0.1f);
-
+			
+			if (!g.m_vertices.empty()) {
+				drawPoints(&g, projection, viewport, redText);
+			}
 			drawGraph(&g, projection, viewport,ColorA(255.0f / 255, 214.0f / 255, 235.0f / 255, 1.0f));
 			if (!cycles.empty()){
 				if (cycles[cycleN].size()) {

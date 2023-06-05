@@ -94,6 +94,42 @@ void GraphHandler::initOriginalEdges() {
 
 		
 }
+
+
+void GraphHandler::initAnchorPoints(std::string filename) {
+
+	std::ifstream MyReadFile(filename);
+	std::string line;
+	std::vector<ci::vec3> result;
+	ci::vec3 cachevec = {};
+	std::array<int, 3> key{ {0, 0, 0} };
+	size_t counter = 0;
+	while (getline(MyReadFile, line)) {
+		counter = 0;
+		std::string s = line;
+		std::string delimiter = ",";
+		size_t pos = 0;
+		std::string token;
+		while ((pos = s.find(delimiter)) != std::string::npos) {
+			token = s.substr(0, pos);
+			if (counter == 0) {
+				cachevec.x = (stof(token));
+			}
+			else if (counter == 1) {
+				cachevec.y = (stof(token));
+			}
+			s.erase(0, pos + delimiter.length());
+			counter++;
+		}
+
+		cachevec.z = stof(s);
+
+		data.anchorPoints.push_back(cachevec);
+		//console() << "added point at" << cachevec.x << ", " << cachevec.y << ", " << cachevec.z << endl;
+	}
+}
+
+
 void GraphHandler::exportOriginalEdges() {
 	std::ofstream myfile;
 	myfile.open(data.fullPath+ "originalEdges.txt", std::ofstream::trunc);
@@ -111,6 +147,48 @@ void GraphHandler::exportOriginalEdges() {
 	}
 
 	myfile.close();
+}
+
+void GraphHandler::exportCurrentVertices() {
+	std::ofstream	myfileof;
+	std::ifstream myfileif;
+	std::string vertexfilelocation = data.fullPath + "movedvertices.csv";
+
+	myfileif.open(vertexfilelocation, std::ifstream::out | std::ifstream::trunc);
+	myfileif.close();
+	myfileof.open(vertexfilelocation, std::ios_base::app);
+	myfileof << "index, isfixed(bool), pos.x,pos.y,pos.z" << std::endl;
+	for (std::tie(vi, viend) = boost::vertices(g); vi != viend; ++vi) {
+
+		myfileof << *vi << "," << g[*vi].isfixed << "," << g[*vi].pos.x << "," << g[*vi].pos.y << "," << g[*vi].pos.z << std::endl;
+	}
+	myfileof.close();
+}
+
+void GraphHandler::exportCurrentEdges() {
+	std::ofstream	myfileof;
+	std::ifstream myfileif;
+	std::string edgefilelocation = data.fullPath + "movededges.csv";
+
+	myfileif.open(edgefilelocation, std::ifstream::out | std::ifstream::trunc);
+	myfileif.close();
+	myfileof.open(edgefilelocation, std::ios_base::app);
+	myfileof << "Unique Index, Index, restlegth,isvisible(bool), isforbidden(bool), source vertex, target vertex" << std::endl;
+
+	std::map<int, EdgeContainer>::iterator it;
+
+	for (it = edgeMap.begin(); it != edgeMap.end(); it++)
+	{
+		
+			myfileof << it->second.uniqueIndex << "," << it->second.index << "," << it->second.restlength<< "," << it->second.isVisbile<< "," << it->second.isForbidden << "," << it->second.sourceV << "," << it->second.targetV << std::endl;
+		}
+	myfileof.close();
+}
+
+
+
+void addVertexLog(vertex_t* vertex) {
+
 }
 
 void GraphHandler::printOriginalEdges() {
@@ -514,6 +592,8 @@ edge_t GraphHandler::weaverConnect(vertex_t endPointA, vertex_t endPointB, EdgeC
 	g[edge].uniqueIndex = edgeInfo.uniqueIndex;
 	g[edge].isforbidden = edgeInfo.isForbidden;
 	g[edge].index = edgeInfo.index;
+	g[endPointA].pos = vertexInfo[endPointA].pos;
+	g[endPointB].pos = vertexInfo[endPointB].pos;
 	ci::app::console() << "edgeInfo.uniqueindex" << edgeInfo.uniqueIndex << std::endl;
 	ci::app::console() << "edgeInfo.index" << edgeInfo.index << std::endl;
 	calculateDivEdgeLengths(edgeInfo.uniqueIndex);
@@ -605,15 +685,17 @@ ci::vec3 GraphHandler::interpolate(ci::vec3 start, ci::vec3 end, float t) {
 
 
 void GraphHandler::relaxPhysics() {
-	float k = 5.900f;
+	float k = 6.0f;
+	float eps = 0.0025f;
+	//float k = 5.900f;
 
-	float eps = 0.04f;
+	//float eps = 0.04f;
 	Graph::vertex_descriptor v1, v2;
 	for (std::tie(ei, eiend) = boost::edges(g); ei != eiend; ++ei) {
 		v1 = boost::source(*ei, g);
 		v2 = boost::target(*ei, g);
 
-		if (length(g[v2].pos - g[v1].pos) > 0.000001 && g[*ei].restlength > 0.000001) {
+		if (length(g[v2].pos - g[v1].pos) > 0.01 && g[*ei].restlength > 0.000001) {
 			if (!g[v1].isfixed) {
 				g[v1].movevec += 1 * k * (1 / g[*ei].restlength)*(g[*ei].currentlength - g[*ei].restlength) *
 					normalize(g[v2].pos - g[v1].pos);

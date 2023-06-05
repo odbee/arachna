@@ -74,6 +74,10 @@ void GuiHandler::drawParametersWindow() {
 		if (ImGui::InputText("import directory path ", &data.fullPath)) {
 			iniHand.overwriteTagImGui("graph directory", data.fullPath);
 		}
+		ImGui::SliderFloat("green dot opacity", &data.greenopacity,0,5);
+		ImGui::SliderFloat("yellow dot opacity", &data.yellowopacity, 0, 5);
+		ImGui::SliderFloat("green dot scale", &data.greenscale, 0, .03);
+		
 
 		//ImGui::InputInt("x iterations", &x_iterations, 50, 200);
 		//if (ImGui::Button("run x iterations")) {
@@ -117,6 +121,14 @@ void  GuiHandler::drawArduPortTab() {
 				data.my_log.AddLog("Successfully Received Init Signal\n");
 			}
 		}
+		if (ImGui::Button("disconnect Device")) {
+			
+			data.my_log.AddLog((arduP.disconnectArduino() + "\n").c_str());
+
+		}
+
+
+
 		ImGui::InputText("edges to print", &data.customEdges);
 		if (ImGui::Button("Print custom Edges")) {
 			arduP.printEdgeFromList(data.customEdges);
@@ -129,13 +141,14 @@ void  GuiHandler::drawArduPortTab() {
 			//TODO UNSELECTABLE WHEN NOT CONNECTED
 		}
 
-		if (ImGui::ListBoxHeader("listBox 1")) {
+		if (ImGui::ListBoxHeader("listBox 1", {100,400})) {
 			
 			for (auto it = gh.originalEdges.begin(); it != gh.originalEdges.end(); it++)
 			{
 				const bool is_selected = (data.selectedOriginalEdgeInd == it->first);
 				if (it->second.isDrawn)
 					ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255));
+
 
 				if (ImGui::Selectable(std::to_string(it->first).c_str(), is_selected)) {
 					data.selectedOriginalEdgeInd = it->first;
@@ -159,6 +172,7 @@ void  GuiHandler::drawArduPortTab() {
 			ImGui::ListBoxFooter();
 
 		}
+
 	}
 
 

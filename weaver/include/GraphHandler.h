@@ -134,7 +134,7 @@ public:
 	};
 	std::map<int,originalEdge> originalEdges;
 	std::map<int, EdgeContainer> edgeMap;
-
+	void initAnchorPoints(std::string filename);
 	std::vector<RecipeContainer> getRecipeInfo();
 	edge_t connectAB(vertex_t endPointA, vertex_t endPointB, float rc, int ind = 0, bool isforbidden = false);
 	edge_t weaverConnect(vertex_t endPointA, vertex_t endPointB, EdgeContainer edgeInfo);
@@ -159,6 +159,9 @@ public:
 	void initOriginalEdges();
 	void printOriginalEdges();
 	void exportOriginalEdges();
+	void exportCurrentVertices();
+	void exportCurrentEdges();
+
 	void setupEdgesGraph();
 	void calculateDivEdgeLengths(int edgeInt);
 };

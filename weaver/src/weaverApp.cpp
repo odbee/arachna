@@ -72,6 +72,26 @@ void weaverApp::keyDown(KeyEvent event) {
 		//serialH.enumerate_ports();
 
 	}
+	if (event.getChar() == 'n') { // "c"
+		ci::app::console() << "selecting index " << data.selectedOriginalEdgeInd<< std::endl;
+
+		data.selectedOriginalEdgeInd += 1;
+
+	}
+
+	if (event.getChar() == 'p') {
+		ap.printEdge(data.selectedOriginalEdgeInd);
+		GH.originalEdges[data.selectedOriginalEdgeInd].isDrawn = true;
+
+		//TODO UNSELECTABLE WHEN NOT CONNECTED
+	}
+
+	if (event.getChar() == '0') {
+		GH.exportCurrentVertices();
+		GH.exportCurrentEdges();
+	}
+
+
 
 }
 void weaverApp::setup()
@@ -82,6 +102,7 @@ void weaverApp::setup()
 	GH.loadRecipe(data.fullPath + "log.csv");
 	GH.setupEdgesGraph();
 	GH.initOriginalEdges();
+	GH.initAnchorPoints(data.fullPath + data.anchorPDE);
 	GH.loadVertices(data.fullPath + "vertices.csv");
 
 	
@@ -115,7 +136,7 @@ void weaverApp::draw()
 	//int w = getWindowWidth();
 	//int h = getWindowHeight();
 	//dh.viewp = vec4(0, h, w, -h); // vertical flip is required
-	dh.drawPoints();
+	//dh.drawPoints();
 
 	{
 		dh.drawCamera();
@@ -126,6 +147,7 @@ void weaverApp::draw()
 		dh.drawNthEdge();
 		dh.drawSelectedEdge();
 		dh.drawDivisionPoints(GH.edgesG,GH.edgeMap);
+		dh.drawAnchorPoints();
 
 	}
 }

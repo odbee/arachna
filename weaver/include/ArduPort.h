@@ -23,4 +23,6 @@ public:
 	std::vector<int> split(const std::string& s, char delimiter);
 	void printEdgeFromList(std::string edgesString);
 	int sendCommandAndWait(std::string command, int timeout=10);
+	std::string disconnectArduino();
+
 };

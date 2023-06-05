@@ -26,6 +26,13 @@ void DrawHandler::drawPoints() {
 		
 	}
 }
+void DrawHandler::drawAnchorPoints() {
+	ci::gl::color(ci::ColorA(1.0f, 1.0f, 0.0f, data.yellowopacity));
+	for (const auto& anchorp : data.anchorPoints) {
+		ci::gl::drawSphere(anchorp, 0.05);
+	}
+
+}
 
 
 
@@ -48,7 +55,7 @@ void DrawHandler::drawDivisionPoints(EdgesGraph& edgesGraph, std::map<int, EdgeC
 			ci::gl::color(ci::ColorA(0.0f, 1.0f, 0.0f, 0.4f));
 			interpoint += iter;
 			if (interpoint<0.9999)
-				ci::gl::drawSphere(startpoint + (endpoint - startpoint) * (interpoint) ,0.3);
+				ci::gl::drawSphere(startpoint + (endpoint - startpoint) * (interpoint) , data.greenscale);
 		}
 	}
 }
